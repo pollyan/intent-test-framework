@@ -150,6 +150,54 @@ def step_editor_page():
     except Exception as e:
         return jsonify({'error': f'无法加载步骤编辑器页面: {str(e)}'}), 500
 
+@app.route('/local-proxy')
+def local_proxy_page():
+    """本地代理下载页面"""
+    try:
+        from flask import render_template
+        return render_template('local_proxy.html')
+    except Exception as e:
+        return jsonify({'error': f'无法加载本地代理页面: {str(e)}'}), 500
+
+@app.route('/download/local-proxy')
+def download_local_proxy():
+    """下载本地代理包"""
+    try:
+        import zipfile
+        import tempfile
+        from pathlib import Path
+        from flask import send_file
+
+        # 代理包路径
+        proxy_dir = Path(__file__).parent.parent / 'dist' / 'intent-test-proxy'
+
+        if not proxy_dir.exists():
+            return jsonify({
+                'success': False,
+                'error': '代理包不存在，请先构建代理包'
+            }), 404
+
+        # 创建临时ZIP文件
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as tmp_file:
+            with zipfile.ZipFile(tmp_file.name, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for file_path in proxy_dir.rglob('*'):
+                    if file_path.is_file():
+                        arcname = file_path.relative_to(proxy_dir)
+                        zipf.write(file_path, arcname)
+
+            return send_file(
+                tmp_file.name,
+                as_attachment=True,
+                download_name='intent-test-proxy.zip',
+                mimetype='application/zip'
+            )
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'下载失败: {str(e)}'
+        }), 500
+
 # 设置环境变量
 os.environ['VERCEL'] = '1'
 
