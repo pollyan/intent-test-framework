@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "name": "intent-test-framework",
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "50mb",
+        "runtime": "python3.9"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/web_gui/templates/index_enhanced.html"
+    }
+  ],
+  "env": {
+    "PLAYWRIGHT_BROWSERS_PATH": "/tmp/playwright",
+    "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "0"
+  },
+  "functions": {
+    "api/index.py": {
+      "maxDuration": 300,
+      "memory": 1024
+    }
+  },
+  "installCommand": "pip install -r requirements.txt && pip install -r requirements_cloud.txt && playwright install chromium",
+  "buildCommand": "echo 'Build completed'"
+}

@@ -350,7 +350,7 @@ try:
                 'connection_info': connection_info if 'connection_info' in locals() else None
             }), 500
 
-    # 真实的AI驱动执行API
+    # 智能执行API - 支持云端和本地模式
     @app.route('/api/executions/start', methods=['POST'])
     def start_execution():
         try:
@@ -362,6 +362,7 @@ try:
             data = request.get_json() or {}
             testcase_id = data.get('testcase_id')
             mode = data.get('mode', 'headless')  # headless 或 browser
+            execution_type = data.get('execution_type', 'auto')  # auto, cloud, local
 
             if not testcase_id:
                 return jsonify({
@@ -387,11 +388,12 @@ try:
                 'testcase_id': testcase_id,
                 'testcase_name': testcase.name,
                 'mode': mode,
+                'execution_type': execution_type,
                 'status': 'running',
                 'start_time': datetime.utcnow().isoformat(),
                 'steps': [],
                 'current_step': 0,
-                'total_steps': len(testcase.steps) if testcase.steps else 0,
+                'total_steps': len(json.loads(testcase.steps)) if testcase.steps else 0,
                 'screenshots': []
             }
 
@@ -400,24 +402,36 @@ try:
                 app.executions = {}
             app.executions[execution_id] = execution_record
 
-            # 启动后台执行线程
-            thread = threading.Thread(
-                target=execute_testcase_background,
-                args=(execution_id, testcase, mode)
-            )
+            # 选择执行方式
+            if execution_type == 'cloud' or (execution_type == 'auto' and is_cloud_environment()):
+                # 云端执行
+                thread = threading.Thread(
+                    target=execute_testcase_cloud,
+                    args=(execution_id, testcase, mode)
+                )
+                execution_message = f'正在云端执行测试用例: {testcase.name}'
+            else:
+                # 本地执行（原有方式）
+                thread = threading.Thread(
+                    target=execute_testcase_background,
+                    args=(execution_id, testcase, mode)
+                )
+                execution_message = f'正在本地执行测试用例: {testcase.name}'
+
             thread.daemon = True
             thread.start()
 
             return jsonify({
                 'code': 200,
-                'message': '真实AI执行已启动',
+                'message': '智能AI执行已启动',
                 'data': {
                     'execution_id': execution_id,
                     'testcase_id': testcase_id,
                     'testcase_name': testcase.name,
                     'mode': mode,
+                    'execution_type': execution_record['execution_type'],
                     'status': 'running',
-                    'message': f'正在使用AI执行测试用例: {testcase.name}'
+                    'message': execution_message
                 }
             })
         except Exception as e:
@@ -425,6 +439,57 @@ try:
                 'code': 500,
                 'message': f'启动执行失败: {str(e)}'
             }), 500
+
+    def is_cloud_environment():
+        """检测是否在云端环境"""
+        # 检查是否有Playwright可用
+        try:
+            import playwright
+            return True
+        except ImportError:
+            return False
+
+    def execute_testcase_cloud(execution_id, testcase, mode):
+        """云端执行测试用例"""
+        import asyncio
+        import sys
+        import os
+
+        # 添加当前目录到路径
+        sys.path.append(os.path.dirname(__file__))
+
+        try:
+            from cloud_execution_service import CloudExecutionService
+
+            # 创建云端执行服务
+            service = CloudExecutionService()
+
+            # 准备测试用例数据
+            testcase_data = {
+                'name': testcase.name,
+                'steps': testcase.steps
+            }
+
+            # 在新的事件循环中执行
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+            try:
+                result = loop.run_until_complete(
+                    service.execute_testcase(testcase_data, mode)
+                )
+
+                # 更新执行记录
+                execution = app.executions[execution_id]
+                execution.update(result)
+
+            finally:
+                loop.close()
+
+        except Exception as e:
+            # 云端执行失败，回退到模拟执行
+            print(f"云端执行失败，回退到模拟执行: {e}")
+            execute_testcase_background(execution_id, testcase, mode)
 
     # 执行状态查询API
     @app.route('/api/executions/<execution_id>/status')
