@@ -1178,6 +1178,9 @@ try:
             try:
                 from web_gui.models import ExecutionHistory, db
                 with app.app_context():
+                    # 确保数据库表已创建
+                    db.create_all()
+                    
                     db_execution = ExecutionHistory(
                         execution_id=execution_id,
                         test_case_id=testcase.id,
@@ -1194,6 +1197,9 @@ try:
                     print(f"✅ 创建执行记录: {execution_id}")
             except Exception as db_error:
                 print(f"⚠️ 创建执行记录失败: {db_error}")
+                print(f"⚠️ 数据库错误详情: {type(db_error).__name__}: {str(db_error)}")
+                # 即使数据库失败，也继续执行，只是统计数据会丢失
+                pass
 
             # 尝试导入AI执行引擎
             try:
@@ -1239,20 +1245,7 @@ try:
                 execution['message'] = '测试执行完成'
                 
                 # 更新数据库记录
-                try:
-                    from web_gui.models import ExecutionHistory, db
-                    with app.app_context():
-                        db_execution = ExecutionHistory.query.filter_by(execution_id=execution_id).first()
-                        if db_execution:
-                            db_execution.status = 'success'
-                            db_execution.end_time = datetime.utcnow()
-                            db_execution.steps_passed = sum(1 for step in execution['steps'] if step.get('status') == 'success')
-                            db_execution.steps_failed = sum(1 for step in execution['steps'] if step.get('status') == 'failed')
-                            db_execution.duration = int((datetime.utcnow() - db_execution.start_time).total_seconds())
-                            db.session.commit()
-                            print(f"✅ 更新执行记录: {execution_id} -> success")
-                except Exception as db_error:
-                    print(f"⚠️ 更新执行记录失败: {db_error}")
+                update_execution_status(execution_id, 'success', execution['steps'])
 
             except ImportError as e:
                 # AI引擎不可用，使用模拟执行
@@ -1270,20 +1263,7 @@ try:
                 execution['message'] = '模拟执行完成'
                 
                 # 更新数据库记录
-                try:
-                    from web_gui.models import ExecutionHistory, db
-                    with app.app_context():
-                        db_execution = ExecutionHistory.query.filter_by(execution_id=execution_id).first()
-                        if db_execution:
-                            db_execution.status = 'success'
-                            db_execution.end_time = datetime.utcnow()
-                            db_execution.steps_passed = sum(1 for step in execution['steps'] if step.get('status') == 'success')
-                            db_execution.steps_failed = sum(1 for step in execution['steps'] if step.get('status') == 'failed')
-                            db_execution.duration = int((datetime.utcnow() - db_execution.start_time).total_seconds())
-                            db.session.commit()
-                            print(f"✅ 更新执行记录: {execution_id} -> success (模拟)")
-                except Exception as db_error:
-                    print(f"⚠️ 更新执行记录失败: {db_error}")
+                update_execution_status(execution_id, 'success', execution['steps'], '模拟执行')
 
         except Exception as e:
             execution['status'] = 'failed'
@@ -1292,19 +1272,36 @@ try:
             print(f"执行失败: {e}")
             
             # 更新数据库记录为失败
+            update_execution_status(execution_id, 'failed', execution.get('steps', []), error_message=str(e))
+
+    def update_execution_status(execution_id, status, steps, note='', error_message=None):
+        """统一的数据库状态更新函数"""
+        try:
+            from web_gui.models import ExecutionHistory, db
+            with app.app_context():
+                db_execution = ExecutionHistory.query.filter_by(execution_id=execution_id).first()
+                if db_execution:
+                    # 开始事务
+                    db_execution.status = status
+                    db_execution.end_time = datetime.utcnow()
+                    db_execution.steps_passed = sum(1 for step in steps if step.get('status') == 'success')
+                    db_execution.steps_failed = sum(1 for step in steps if step.get('status') == 'failed')
+                    db_execution.duration = int((datetime.utcnow() - db_execution.start_time).total_seconds())
+                    
+                    if error_message:
+                        db_execution.error_message = error_message
+                    
+                    db.session.commit()
+                    print(f"✅ 更新执行记录: {execution_id} -> {status} {note}")
+                else:
+                    print(f"⚠️ 执行记录不存在: {execution_id}")
+        except Exception as db_error:
+            print(f"⚠️ 更新执行记录失败: {db_error}")
+            print(f"⚠️ 数据库错误详情: {type(db_error).__name__}: {str(db_error)}")
             try:
-                from web_gui.models import ExecutionHistory, db
-                with app.app_context():
-                    db_execution = ExecutionHistory.query.filter_by(execution_id=execution_id).first()
-                    if db_execution:
-                        db_execution.status = 'failed'
-                        db_execution.end_time = datetime.utcnow()
-                        db_execution.error_message = str(e)
-                        db_execution.duration = int((datetime.utcnow() - db_execution.start_time).total_seconds())
-                        db.session.commit()
-                        print(f"✅ 更新执行记录: {execution_id} -> failed")
-            except Exception as db_error:
-                print(f"⚠️ 更新执行记录失败: {db_error}")
+                db.session.rollback()
+            except:
+                pass
 
     def execute_single_step(ai, step, step_index):
         """执行单个测试步骤"""

@@ -301,6 +301,8 @@ def get_executions():
         size = request.args.get('size', 20, type=int)
         testcase_id = request.args.get('testcase_id', type=int)
         
+        print(f"🔍 获取执行历史 - page: {page}, size: {size}, testcase_id: {testcase_id}")
+        
         query = ExecutionHistory.query
         
         if testcase_id:
@@ -313,7 +315,9 @@ def get_executions():
             page=page, per_page=size, error_out=False
         )
         
-        return jsonify({
+        print(f"📊 执行历史查询结果: 总数={pagination.total}, 当前页={pagination.page}, 项目数={len(pagination.items)}")
+        
+        result = {
             'code': 200,
             'data': {
                 'items': [ex.to_dict() for ex in pagination.items],
@@ -322,8 +326,12 @@ def get_executions():
                 'size': size,
                 'pages': pagination.pages
             }
-        })
+        }
+        
+        print(f"📊 执行历史返回: {len(result['data']['items'])} 条记录")
+        return jsonify(result)
     except Exception as e:
+        print(f"❌ 获取执行历史失败: {str(e)}")
         return jsonify({
             'code': 500,
             'message': f'获取执行历史失败: {str(e)}'
@@ -382,18 +390,23 @@ def create_template():
 def get_dashboard_stats():
     """获取仪表板统计数据"""
     try:
+        print("🔍 开始获取仪表板统计数据...")
+        
         # 测试用例统计
         total_testcases = TestCase.query.filter(TestCase.is_active == True).count()
+        print(f"📊 测试用例总数: {total_testcases}")
         
         # 执行统计
         total_executions = ExecutionHistory.query.count()
         success_executions = ExecutionHistory.query.filter(ExecutionHistory.status == 'success').count()
         failed_executions = ExecutionHistory.query.filter(ExecutionHistory.status == 'failed').count()
+        print(f"📊 执行总数: {total_executions}, 成功: {success_executions}, 失败: {failed_executions}")
         
         # 成功率
         success_rate = (success_executions / total_executions * 100) if total_executions > 0 else 0
+        print(f"📊 成功率: {success_rate}%")
         
-        return jsonify({
+        result = {
             'code': 200,
             'data': {
                 'total_testcases': total_testcases,
@@ -402,9 +415,166 @@ def get_dashboard_stats():
                 'failed_executions': failed_executions,
                 'success_rate': round(success_rate, 2)
             }
-        })
+        }
+        
+        print(f"📊 统计数据返回: {result}")
+        return jsonify(result)
     except Exception as e:
+        print(f"❌ 获取统计数据失败: {str(e)}")
         return jsonify({
             'code': 500,
             'message': f'获取统计数据失败: {str(e)}'
+        }), 500
+
+@api_bp.route('/db-status', methods=['GET'])
+def get_db_status():
+    """获取数据库状态和调试信息"""
+    try:
+        # 数据库连接状态
+        db_info = {
+            'connected': False,
+            'tables': [],
+            'errors': []
+        }
+        
+        # 测试数据库连接
+        try:
+            # 尝试执行简单查询
+            from sqlalchemy import text
+            db.session.execute(text('SELECT 1'))
+            db_info['connected'] = True
+            print("✅ 数据库连接正常")
+        except Exception as conn_error:
+            db_info['connected'] = False
+            db_info['errors'].append(f"数据库连接失败: {str(conn_error)}")
+            print(f"❌ 数据库连接失败: {conn_error}")
+        
+        # 检查表结构
+        try:
+            # 检查主要表是否存在
+            from sqlalchemy import text
+            tables_to_check = ['test_cases', 'execution_history', 'step_executions', 'templates']
+            for table in tables_to_check:
+                try:
+                    result = db.session.execute(text(f"SELECT COUNT(*) FROM {table}"))
+                    count = result.scalar()
+                    db_info['tables'].append({
+                        'name': table,
+                        'exists': True,
+                        'count': count
+                    })
+                    print(f"✅ 表 {table}: {count} 条记录")
+                except Exception as table_error:
+                    db_info['tables'].append({
+                        'name': table,
+                        'exists': False,
+                        'error': str(table_error)
+                    })
+                    print(f"❌ 表 {table} 检查失败: {table_error}")
+        except Exception as table_check_error:
+            db_info['errors'].append(f"表检查失败: {str(table_check_error)}")
+        
+        # 检查最近的执行记录
+        recent_executions = []
+        try:
+            executions = ExecutionHistory.query.order_by(ExecutionHistory.created_at.desc()).limit(5).all()
+            for exec in executions:
+                recent_executions.append({
+                    'execution_id': exec.execution_id,
+                    'test_case_id': exec.test_case_id,
+                    'status': exec.status,
+                    'created_at': exec.created_at.isoformat() if exec.created_at else None
+                })
+            print(f"📊 最近执行记录: {len(recent_executions)} 条")
+        except Exception as exec_error:
+            db_info['errors'].append(f"获取执行记录失败: {str(exec_error)}")
+            print(f"❌ 获取执行记录失败: {exec_error}")
+        
+        # 环境信息
+        import os
+        env_info = {
+            'database_url': os.getenv('DATABASE_URL', 'Not set')[:50] + '...' if os.getenv('DATABASE_URL') else 'Not set',
+            'environment': os.getenv('VERCEL_ENV', 'local'),
+            'region': os.getenv('VERCEL_REGION', 'unknown')
+        }
+        
+        return jsonify({
+            'code': 200,
+            'data': {
+                'database': db_info,
+                'recent_executions': recent_executions,
+                'environment': env_info
+            }
+        })
+    except Exception as e:
+        print(f"❌ 数据库状态检查失败: {str(e)}")
+        return jsonify({
+            'code': 500,
+            'message': f'数据库状态检查失败: {str(e)}'
+        }), 500
+
+@api_bp.route('/db-status/create-test-data', methods=['POST'])
+def create_test_data():
+    """创建测试数据来验证数据库功能"""
+    try:
+        import uuid
+        from datetime import datetime, timedelta
+        
+        # 确保数据库表存在
+        db.create_all()
+        
+        # 创建测试用例
+        test_case = TestCase(
+            name='测试用例 - 数据库验证',
+            description='用于验证数据库功能的测试用例',
+            steps='[{"action": "navigate", "params": {"url": "https://www.baidu.com"}, "description": "打开百度首页"}]',
+            category='系统测试',
+            priority=3,
+            created_by='系统',
+            created_at=datetime.utcnow()
+        )
+        
+        db.session.add(test_case)
+        db.session.flush()  # 获取ID
+        
+        # 创建执行历史记录
+        execution_records = []
+        for i in range(5):
+            execution_id = str(uuid.uuid4())
+            status = ['success', 'failed', 'success', 'success', 'failed'][i]
+            
+            execution = ExecutionHistory(
+                execution_id=execution_id,
+                test_case_id=test_case.id,
+                status=status,
+                mode='headless',
+                start_time=datetime.utcnow() - timedelta(days=i),
+                end_time=datetime.utcnow() - timedelta(days=i) + timedelta(minutes=2),
+                duration=120,
+                steps_total=3,
+                steps_passed=3 if status == 'success' else 2,
+                steps_failed=0 if status == 'success' else 1,
+                executed_by='系统',
+                created_at=datetime.utcnow() - timedelta(days=i)
+            )
+            execution_records.append(execution)
+            db.session.add(execution)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'code': 200,
+            'message': '测试数据创建成功',
+            'data': {
+                'test_case_id': test_case.id,
+                'execution_count': len(execution_records),
+                'execution_ids': [e.execution_id for e in execution_records]
+            }
+        })
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ 创建测试数据失败: {str(e)}")
+        return jsonify({
+            'code': 500,
+            'message': f'创建测试数据失败: {str(e)}'
         }), 500
