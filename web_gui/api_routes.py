@@ -13,7 +13,7 @@ except ImportError:
     from web_gui.models import db, TestCase, ExecutionHistory, StepExecution, Template
 
 # 创建蓝图
-api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
+api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 # ==================== 测试用例相关API ====================
 
