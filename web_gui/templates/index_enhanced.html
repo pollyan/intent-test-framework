@@ -352,11 +352,6 @@
                                         <div class="action-title">使用模板</div>
                                         <div class="action-desc">从模板库选择预设测试场景</div>
                                     </div>
-                                    <div class="quick-action" onclick="initDatabase()" style="cursor: pointer;">
-                                        <div class="action-icon">🔧</div>
-                                        <div class="action-title">初始化数据库</div>
-                                        <div class="action-desc">创建示例测试用例和模板</div>
-                                    </div>
                                 </div>
                             </div>
 
@@ -393,23 +388,6 @@
             loadDashboardData();
             setupWebSocket();
             setupNavigation();
-        }
-
-        // 数据库初始化函数
-        async function initDatabase() {
-            try {
-                const response = await fetch('/api/init-db', {method: 'POST'});
-                const data = await response.json();
-
-                if (data.status === 'success') {
-                    alert('数据库初始化成功！\n测试用例: ' + data.data.test_cases + '\n模板: ' + data.data.templates);
-                    loadDashboardData(); // 重新加载数据
-                } else {
-                    alert('初始化失败: ' + data.message);
-                }
-            } catch (error) {
-                alert('初始化出错: ' + error.message);
-            }
         }
 
         function setupWebSocket() {

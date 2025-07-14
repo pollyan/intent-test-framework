@@ -23,6 +23,7 @@ app = Flask(__name__,
 
 # 基本配置
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
+app.config['JSON_AS_ASCII'] = False  # 支持中文JSON输出
 
 # 简单的HTML模板
 HTML_TEMPLATE = """
