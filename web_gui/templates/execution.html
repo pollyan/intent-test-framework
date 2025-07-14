@@ -658,51 +658,8 @@
 
             // 添加日志
             if (status.current_step) {
-                    addLog(`步骤 ${data.step_index + 1} 执行成功 (${data.duration}秒)`, 'success');
-                } else {
-                    addLog(`步骤 ${data.step_index + 1} 执行失败: ${data.error_message}`, 'error');
-                }
-
-                // 处理截图
-                if (data.screenshot) {
-                    // 新格式：完整的截图对象
-                    addScreenshotToHistory(data.screenshot);
-                    showScreenshot(data.screenshot.path);
-                } else if (data.screenshot_path) {
-                    // 兼容旧格式：只有路径
-                    const screenshot = {
-                        path: data.screenshot_path,
-                        step_index: data.step_index || screenshotHistory.length,
-                        step_name: `步骤 ${(data.step_index || screenshotHistory.length) + 1}`,
-                        timestamp: Date.now()
-                    };
-                    addScreenshotToHistory(screenshot);
-                    showScreenshot(data.screenshot_path);
-                }
-
-                // 调试输出
-                console.log('步骤完成事件:', data);
-                console.log('截图历史:', screenshotHistory);
-            });
-
-            socket.on('execution_completed', function(data) {
-                currentExecution = null;
-                const status = data.status === 'success' ? 'success' : 'failed';
-                updateExecutionStatus(status, `执行完成: ${data.status}`);
-                addLog(`测试执行完成: ${data.steps_passed}/${data.total_steps} 步骤成功`, 
-                       data.status === 'success' ? 'success' : 'error');
-                
-                document.getElementById('startBtn').disabled = false;
-                document.getElementById('stopBtn').disabled = true;
-            });
-
-            socket.on('execution_error', function(data) {
-                currentExecution = null;
-                updateExecutionStatus('failed', '执行错误');
-                addLog(`执行错误: ${data.message}`, 'error');
-                document.getElementById('startBtn').disabled = false;
-                document.getElementById('stopBtn').disabled = true;
-            });
+                addLog(`当前步骤: ${status.current_step}`, 'info');
+            }
         }
 
         async function loadTestcases() {
