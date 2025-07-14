@@ -199,6 +199,49 @@ def index():
     """主页"""
     return render_template('index.html')
 
+@app.route('/local-proxy')
+def local_proxy():
+    """本地代理下载页面"""
+    return render_template('local_proxy.html')
+
+@app.route('/download/local-proxy')
+def download_local_proxy():
+    """下载本地代理包"""
+    import zipfile
+    import tempfile
+    from pathlib import Path
+
+    try:
+        # 代理包路径
+        proxy_dir = Path(__file__).parent.parent / 'dist' / 'intent-test-proxy'
+
+        if not proxy_dir.exists():
+            return jsonify({
+                'success': False,
+                'error': '代理包不存在，请先构建代理包'
+            }), 404
+
+        # 创建临时ZIP文件
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as tmp_file:
+            with zipfile.ZipFile(tmp_file.name, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for file_path in proxy_dir.rglob('*'):
+                    if file_path.is_file():
+                        arcname = file_path.relative_to(proxy_dir)
+                        zipf.write(file_path, arcname)
+
+            return send_from_directory(
+                directory=Path(tmp_file.name).parent,
+                path=Path(tmp_file.name).name,
+                as_attachment=True,
+                download_name='intent-test-proxy.zip'
+            )
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'下载失败: {str(e)}'
+        }), 500
+
 @app.route('/api/test-cases', methods=['GET'])
 def get_test_cases():
     """获取所有测试用例"""

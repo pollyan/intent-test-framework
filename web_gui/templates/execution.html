@@ -630,6 +630,7 @@
                 <div class="execution-type-selector">
                     <label>执行类型:</label>
                     <label><input type="radio" name="execution_type" value="auto" checked> 🤖 智能选择</label>
+                    <label><input type="radio" name="execution_type" value="local-proxy"> 🖥️ 本地代理 <span id="localProxyStatus" class="badge bg-secondary">检测中...</span></label>
                     <label><input type="radio" name="execution_type" value="bridge"> 🌉 Chrome桥接</label>
                     <label><input type="radio" name="execution_type" value="cloud"> ☁️ 云端执行</label>
                     <label><input type="radio" name="execution_type" value="local"> 🏠 本地执行</label>
@@ -730,11 +731,15 @@
     </div>
 
     <script src="https://unpkg.com/axios@1.6.0/dist/axios.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.0/socket.io.min.js"></script>
     <script>
         // 全局变量
         const API_BASE = '/api';
+        const LOCAL_PROXY_URL = 'http://localhost:3001';
         let currentExecution = null;
         let pollingInterval = null;
+        let localProxySocket = null;
+        let localProxyConnected = false;
         let testcases = [];
         let screenshotHistory = []; // 存储所有步骤的截图历史
 
@@ -744,6 +749,14 @@
             setupEventListeners();
             setupExecutionTypeListeners();
             checkBridgeStatus();
+
+            // 初始化本地代理连接
+            checkLocalProxyConnection();
+            connectLocalProxyWebSocket();
+
+            // 定期检查本地代理连接状态
+            setInterval(checkLocalProxyConnection, 30000);
+
             addLog('执行控制台已就绪', 'success');
         });
 
@@ -937,7 +950,10 @@
             addLog(`执行类型: ${execution_type}`, 'info');
 
             // 根据执行类型选择不同的执行路径
-            if (execution_type === 'bridge') {
+            if (execution_type === 'local-proxy') {
+                // 本地代理模式：通过本地服务器执行
+                await startLocalProxyExecution(testcaseId, mode);
+            } else if (execution_type === 'bridge') {
                 // Chrome桥接模式：客户端执行
                 await startBridgeExecution(testcaseId, mode);
             } else {
@@ -1508,6 +1524,164 @@
 
             img.src = path;
             container.style.display = 'block';
+        }
+
+        // 本地代理相关函数
+        async function checkLocalProxyConnection() {
+            try {
+                const response = await fetch(`${LOCAL_PROXY_URL}/health`, {
+                    method: 'GET',
+                    timeout: 3000
+                });
+
+                if (response.ok) {
+                    localProxyConnected = true;
+                    updateLocalProxyStatus('connected');
+                    return true;
+                } else {
+                    throw new Error('服务器响应异常');
+                }
+            } catch (error) {
+                localProxyConnected = false;
+                updateLocalProxyStatus('disconnected');
+                return false;
+            }
+        }
+
+        function updateLocalProxyStatus(status) {
+            const statusElement = document.getElementById('localProxyStatus');
+            if (!statusElement) return;
+
+            switch (status) {
+                case 'connected':
+                    statusElement.className = 'badge bg-success';
+                    statusElement.textContent = '已连接';
+                    break;
+                case 'disconnected':
+                    statusElement.className = 'badge bg-danger';
+                    statusElement.textContent = '未连接';
+                    break;
+                case 'checking':
+                default:
+                    statusElement.className = 'badge bg-secondary';
+                    statusElement.textContent = '检测中...';
+                    break;
+            }
+        }
+
+        function connectLocalProxyWebSocket() {
+            if (localProxySocket) {
+                localProxySocket.disconnect();
+            }
+
+            try {
+                localProxySocket = io(LOCAL_PROXY_URL);
+
+                localProxySocket.on('connect', () => {
+                    console.log('✅ WebSocket连接到本地代理服务器');
+                    localProxyConnected = true;
+                    updateLocalProxyStatus('connected');
+                });
+
+                localProxySocket.on('disconnect', () => {
+                    console.log('❌ WebSocket断开连接');
+                    localProxyConnected = false;
+                    updateLocalProxyStatus('disconnected');
+                });
+
+                // 监听执行事件
+                localProxySocket.on('execution-start', (data) => {
+                    addLog(`🚀 开始执行: ${data.testcase}`, 'info');
+                });
+
+                localProxySocket.on('step-progress', (data) => {
+                    addLog(`🔄 步骤 ${data.stepIndex + 1}/${data.totalSteps}: ${data.step}`, 'info');
+                    updateProgress(data.stepIndex + 1, data.totalSteps);
+                });
+
+                localProxySocket.on('step-complete', (data) => {
+                    addLog(`✅ 步骤 ${data.stepIndex + 1} 完成`, 'success');
+                });
+
+                localProxySocket.on('log-message', (data) => {
+                    addLog(data.message, data.level);
+                });
+
+                localProxySocket.on('screenshot-taken', (data) => {
+                    // 显示截图
+                    const screenshot = {
+                        step_index: data.stepIndex,
+                        step_name: `步骤 ${data.stepIndex + 1}`,
+                        path: `data:image/png;base64,${data.screenshot}`
+                    };
+                    addScreenshotToHistory(screenshot);
+                });
+
+                localProxySocket.on('execution-complete', (data) => {
+                    addLog(`🎉 执行完成！耗时: ${Math.round(data.duration / 1000)}秒`, 'success');
+                    document.getElementById('startBtn').disabled = false;
+                    document.getElementById('stopBtn').disabled = true;
+                });
+
+                localProxySocket.on('execution-error', (data) => {
+                    addLog(`❌ 执行失败: ${data.error}`, 'error');
+                    document.getElementById('startBtn').disabled = false;
+                    document.getElementById('stopBtn').disabled = true;
+                });
+
+                localProxySocket.on('execution-stopped', (data) => {
+                    addLog('⏹️ 执行已停止', 'warning');
+                    document.getElementById('startBtn').disabled = false;
+                    document.getElementById('stopBtn').disabled = true;
+                });
+
+            } catch (error) {
+                console.error('WebSocket连接失败:', error);
+                localProxyConnected = false;
+                updateLocalProxyStatus('disconnected');
+            }
+        }
+
+        async function startLocalProxyExecution(testcaseId, mode) {
+            try {
+                // 获取测试用例数据
+                const testcaseResponse = await axios.get(`${API_BASE}/testcases/${testcaseId}`);
+                if (testcaseResponse.data.code !== 200) {
+                    addLog('获取测试用例失败', 'error');
+                    return;
+                }
+
+                const testcase = testcaseResponse.data.data;
+
+                // 发送执行请求到本地代理服务器
+                const response = await fetch(`${LOCAL_PROXY_URL}/api/execute-testcase`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        testcase: testcase,
+                        mode: mode
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    addLog(`✅ 测试用例已提交执行: ${result.executionId}`, 'success');
+                    currentExecution = result.executionId;
+
+                    // 更新按钮状态
+                    document.getElementById('startBtn').disabled = true;
+                    document.getElementById('stopBtn').disabled = false;
+                } else {
+                    addLog(`❌ 提交执行失败: ${result.error}`, 'error');
+                }
+
+            } catch (error) {
+                addLog(`❌ 本地代理执行失败: ${error.message}`, 'error');
+                console.error('本地代理执行错误:', error);
+            }
         }
 
         // 截图历史处理函数

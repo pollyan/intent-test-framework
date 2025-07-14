@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>本地代理服务器 - Intent Test Framework</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 0;
+        }
+        .feature-card {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .connection-status {
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+        .status-checking {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .status-connected {
+            background-color: #d1edff;
+            border: 1px solid #74b9ff;
+            color: #0984e3;
+        }
+        .status-disconnected {
+            background-color: #ffe0e0;
+            border: 1px solid #ff7675;
+            color: #d63031;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-robot me-2"></i>Intent Test Framework
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">首页</a>
+                <a class="nav-link" href="/testcases">测试用例</a>
+                <a class="nav-link" href="/execution">执行控制台</a>
+                <a class="nav-link active" href="/local-proxy">本地代理</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 英雄区域 -->
+    <section class="hero-section">
+        <div class="container text-center">
+            <h1 class="display-4 mb-4">
+                <i class="fas fa-server me-3"></i>本地代理服务器
+            </h1>
+            <p class="lead mb-4">
+                在本地运行AI自动化测试，享受真实浏览器执行体验
+            </p>
+            <div class="connection-status status-checking" id="connectionStatus">
+                <i class="fas fa-spinner fa-spin me-2"></i>
+                正在检测本地代理服务器连接...
+            </div>
+        </div>
+    </section>
+
+    <!-- 主要内容 -->
+    <div class="container my-5">
+        <!-- 功能特性 -->
+        <div class="row mb-5">
+            <div class="col-md-4 mb-4">
+                <div class="card feature-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-rocket fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">真实浏览器执行</h5>
+                        <p class="card-text">使用Playwright + MidSceneJS，在真实Chrome浏览器中执行AI驱动的自动化测试</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card feature-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-eye fa-3x text-success mb-3"></i>
+                        <h5 class="card-title">实时可视化</h5>
+                        <p class="card-text">支持有头/无头模式，实时查看浏览器操作过程，WebSocket推送执行状态</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card feature-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-download fa-3x text-info mb-3"></i>
+                        <h5 class="card-title">一键安装</h5>
+                        <p class="card-text">下载预配置包，解压即用，自动安装依赖，简单配置即可启动</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 安装步骤 -->
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <h2 class="text-center mb-4">
+                    <i class="fas fa-list-ol me-2"></i>安装步骤
+                </h2>
+                
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="step-number me-3">1</div>
+                            <h5 class="mb-0">下载代理包</h5>
+                        </div>
+                        <p class="mb-3">点击下方按钮下载预配置的本地代理服务器包</p>
+                        <button class="btn btn-primary btn-lg" id="downloadBtn">
+                            <i class="fas fa-download me-2"></i>下载本地代理包 (约5MB)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="step-number me-3">2</div>
+                            <h5 class="mb-0">解压并启动</h5>
+                        </div>
+                        <p class="mb-2">解压下载的文件到任意目录，然后：</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Windows:</strong>
+                                <code class="d-block bg-light p-2 rounded">双击 start.bat</code>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Mac/Linux:</strong>
+                                <code class="d-block bg-light p-2 rounded">双击 start.sh</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="step-number me-3">3</div>
+                            <h5 class="mb-0">配置AI密钥</h5>
+                        </div>
+                        <p class="mb-2">首次运行会自动打开配置文件，请添加您的AI API密钥：</p>
+                        <pre class="bg-light p-3 rounded"><code># 阿里云DashScope (推荐)
+OPENAI_API_KEY=sk-your-dashscope-api-key
+OPENAI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+MIDSCENE_MODEL_NAME=qwen-vl-max-latest
+
+# 或者OpenAI
+OPENAI_API_KEY=sk-your-openai-api-key
+OPENAI_BASE_URL=https://api.openai.com/v1
+MIDSCENE_MODEL_NAME=gpt-4o</code></pre>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="step-number me-3">4</div>
+                            <h5 class="mb-0">开始使用</h5>
+                        </div>
+                        <p class="mb-2">配置完成后重新运行启动脚本，看到以下信息表示启动成功：</p>
+                        <pre class="bg-dark text-light p-3 rounded"><code>🚀 MidSceneJS本地代理服务器启动成功
+🌐 HTTP服务器: http://localhost:3001
+🔌 WebSocket服务器: ws://localhost:3001
+✨ 服务器就绪，等待测试执行请求...</code></pre>
+                        <p class="mt-3">然后返回<a href="/execution" class="text-decoration-none">执行控制台</a>，选择"本地代理模式"即可使用！</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 故障排除 -->
+        <div class="row mt-5">
+            <div class="col-lg-10 mx-auto">
+                <h3 class="text-center mb-4">
+                    <i class="fas fa-tools me-2"></i>故障排除
+                </h3>
+                
+                <div class="accordion" id="troubleshootingAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#trouble1">
+                                <i class="fas fa-exclamation-triangle me-2 text-warning"></i>
+                                Node.js未安装或版本过低
+                            </button>
+                        </h2>
+                        <div id="trouble1" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                            <div class="accordion-body">
+                                <p>请访问 <a href="https://nodejs.org/" target="_blank">https://nodejs.org/</a> 下载并安装Node.js (建议版本16+)</p>
+                                <p>安装完成后在命令行运行 <code>node --version</code> 验证安装成功</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#trouble2">
+                                <i class="fas fa-network-wired me-2 text-danger"></i>
+                                无法连接到本地服务器
+                            </button>
+                        </h2>
+                        <div id="trouble2" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                            <div class="accordion-body">
+                                <ol>
+                                    <li>确认本地代理服务器已启动</li>
+                                    <li>检查端口3001是否被其他程序占用</li>
+                                    <li>检查防火墙设置，确保允许本地连接</li>
+                                    <li>尝试在浏览器中访问 <code>http://localhost:3001/health</code></li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#trouble3">
+                                <i class="fas fa-key me-2 text-info"></i>
+                                AI API密钥配置问题
+                            </button>
+                        </h2>
+                        <div id="trouble3" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                            <div class="accordion-body">
+                                <ol>
+                                    <li>确认API密钥格式正确（以sk-开头）</li>
+                                    <li>检查API密钥是否有足够的余额</li>
+                                    <li>确认BASE_URL和MODEL_NAME配置匹配</li>
+                                    <li>保存配置文件后需要重启服务器</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-light py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">
+                <i class="fas fa-robot me-2"></i>
+                Intent Test Framework - AI驱动的Web自动化测试平台
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // 检测本地服务器连接状态
+        async function checkLocalServerConnection() {
+            const statusElement = document.getElementById('connectionStatus');
+            
+            try {
+                const response = await fetch('http://localhost:3001/health', {
+                    method: 'GET',
+                    timeout: 3000
+                });
+                
+                if (response.ok) {
+                    statusElement.className = 'connection-status status-connected';
+                    statusElement.innerHTML = `
+                        <i class="fas fa-check-circle me-2"></i>
+                        本地代理服务器已连接 (localhost:3001)
+                        <a href="/execution" class="btn btn-sm btn-outline-primary ms-3">
+                            <i class="fas fa-play me-1"></i>开始执行测试
+                        </a>
+                    `;
+                } else {
+                    throw new Error('服务器响应异常');
+                }
+            } catch (error) {
+                statusElement.className = 'connection-status status-disconnected';
+                statusElement.innerHTML = `
+                    <i class="fas fa-times-circle me-2"></i>
+                    本地代理服务器未连接 - 请按照下方步骤安装和启动
+                `;
+            }
+        }
+
+        // 下载代理包
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            // 这里应该触发下载
+            window.location.href = '/download/local-proxy';
+        });
+
+        // 页面加载时检测连接
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLocalServerConnection();
+            
+            // 每30秒检测一次连接状态
+            setInterval(checkLocalServerConnection, 30000);
+        });
+    </script>
+</body>
+</html>
