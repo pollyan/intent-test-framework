@@ -21,18 +21,28 @@ class DatabaseConfig:
         """获取数据库URL"""
         # 优先使用环境变量
         database_url = os.getenv('DATABASE_URL')
-        
+
         if database_url:
             # 处理Heroku/Railway等平台的postgres://前缀
             if database_url.startswith('postgres://'):
                 database_url = database_url.replace('postgres://', 'postgresql://', 1)
+
+            # 为Serverless环境添加连接参数
+            if os.getenv('VERCEL') == '1' and 'supabase.co' in database_url:
+                # 添加Supabase Serverless优化参数
+                if '?' not in database_url:
+                    database_url += '?'
+                else:
+                    database_url += '&'
+                database_url += 'sslmode=require&connect_timeout=10&application_name=vercel-intent-test'
+
             return database_url
-        
+
         # Supabase特定配置
         supabase_url = os.getenv('SUPABASE_DATABASE_URL')
         if supabase_url:
             return supabase_url
-        
+
         # 本地开发环境默认使用SQLite
         instance_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
         os.makedirs(instance_path, exist_ok=True)
@@ -56,14 +66,32 @@ class DatabaseConfig:
         
         if self.is_postgres:
             # PostgreSQL特定配置
-            config.update({
-                'SQLALCHEMY_ENGINE_OPTIONS': {
+            engine_options = {
+                'pool_pre_ping': True,
+                'pool_recycle': 3600,
+            }
+
+            # Serverless环境优化
+            if self.is_production:
+                engine_options.update({
+                    'pool_size': 1,  # Serverless环境使用小连接池
+                    'max_overflow': 0,  # 不允许溢出连接
+                    'pool_timeout': 10,  # 快速超时
+                    'connect_args': {
+                        'connect_timeout': 10,
+                        'sslmode': 'require',
+                        'application_name': 'vercel-intent-test'
+                    }
+                })
+            else:
+                engine_options.update({
                     'pool_size': 10,
                     'pool_timeout': 30,
-                    'pool_recycle': 3600,
                     'max_overflow': 20,
-                    'pool_pre_ping': True,
-                }
+                })
+
+            config.update({
+                'SQLALCHEMY_ENGINE_OPTIONS': engine_options
             })
         else:
             # SQLite特定配置
