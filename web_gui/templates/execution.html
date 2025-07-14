@@ -974,9 +974,24 @@
 
                 addLog('✅ MidSceneJS扩展连接成功', 'success');
 
-                // 3. 直接执行测试用例
-                addLog('🚀 开始执行测试用例...', 'info');
-                await executeThroughMidSceneExtension(testcase, mode);
+                // 3. 提供两种执行方式
+                addLog('🚀 准备执行测试用例...', 'info');
+
+                const executionChoice = confirm(
+                    '选择执行方式：\n\n' +
+                    '点击"确定"：尝试直接通过扩展执行（实验性功能）\n' +
+                    '点击"取消"：生成脚本供手动执行（推荐方式）'
+                );
+
+                if (executionChoice) {
+                    addLog('🔌 尝试直接通过扩展执行...', 'info');
+                    await executeThroughMidSceneExtension(testcase, mode);
+                } else {
+                    addLog('📝 生成MidSceneJS脚本...', 'info');
+                    const script = generateMidSceneScript(testcase, mode);
+                    downloadScript(script, `${testcase.name}-bridge.mjs`);
+                    showBridgeInstructions(testcase.name);
+                }
 
             } catch (error) {
                 console.error('桥接模式执行错误:', error);
@@ -1232,6 +1247,8 @@
         // 桥接模式不需要直接执行，只生成脚本
 
         async function executeThroughMidSceneExtension(testcase, mode) {
+            let agent = null;
+
             try {
                 // 解析测试步骤
                 let steps;
@@ -1254,39 +1271,40 @@
                 document.getElementById('startBtn').disabled = true;
                 document.getElementById('stopBtn').disabled = false;
 
-                // 初始化MidScene代理（通过扩展）
+                // 动态导入并创建MidScene代理
                 addLog('🔌 初始化MidScene代理...', 'info');
-                const agentReady = await initializeMidSceneAgent();
 
-                if (!agentReady) {
-                    addLog('❌ MidScene代理初始化失败', 'error');
+                try {
+                    const { AgentOverChromeBridge } = await import('@midscene/web/bridge-mode');
+                    agent = new AgentOverChromeBridge();
+                    addLog('✅ MidScene代理创建成功', 'success');
+                } catch (importError) {
+                    addLog(`❌ 无法导入MidSceneJS: ${importError.message}`, 'error');
+                    addLog('💡 请确保页面支持ES6模块导入', 'warning');
                     return;
                 }
 
-                addLog('✅ MidScene代理初始化成功', 'success');
-
-                // 连接到新标签页（如果第一步是导航）
+                // 连接到标签页
                 const firstStep = steps[0];
                 if (firstStep && firstStep.action === 'navigate' && firstStep.params?.url) {
                     addLog(`🔗 连接到新标签页: ${firstStep.params.url}`, 'info');
-                    const connected = await connectToNewTab(firstStep.params.url);
 
-                    if (connected) {
+                    try {
+                        await agent.connectNewTabWithUrl(firstStep.params.url);
                         addLog('✅ 已连接到新标签页', 'success');
                         steps.shift(); // 跳过第一个导航步骤
-                    } else {
-                        addLog('❌ 连接新标签页失败', 'error');
+                    } catch (connectError) {
+                        addLog(`❌ 连接新标签页失败: ${connectError.message}`, 'error');
                         return;
                     }
                 } else {
-                    // 连接到当前标签页
                     addLog('🔗 连接到当前标签页...', 'info');
-                    const connected = await connectToCurrentTab();
 
-                    if (connected) {
+                    try {
+                        await agent.connectCurrentTab();
                         addLog('✅ 已连接到当前标签页', 'success');
-                    } else {
-                        addLog('❌ 连接当前标签页失败', 'error');
+                    } catch (connectError) {
+                        addLog(`❌ 连接当前标签页失败: ${connectError.message}`, 'error');
                         return;
                     }
                 }
@@ -1299,212 +1317,110 @@
                     addLog(`🔄 执行步骤 ${stepNum}: ${step.description || step.action}`, 'info');
 
                     try {
-                        const result = await executeStepThroughExtension(step, stepNum);
-
-                        if (result.success) {
-                            addLog(`✅ 步骤 ${stepNum} 执行成功`, 'success');
-                        } else {
-                            addLog(`❌ 步骤 ${stepNum} 执行失败: ${result.error}`, 'error');
-                            break;
-                        }
+                        await executeStepWithAgent(agent, step);
+                        addLog(`✅ 步骤 ${stepNum} 执行成功`, 'success');
 
                         // 短暂延迟，让用户看到执行过程
-                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        await new Promise(resolve => setTimeout(resolve, 1500));
 
                     } catch (stepError) {
-                        addLog(`❌ 步骤 ${stepNum} 执行异常: ${stepError.message}`, 'error');
+                        addLog(`❌ 步骤 ${stepNum} 执行失败: ${stepError.message}`, 'error');
+                        console.error('步骤执行详细错误:', stepError);
                         break;
                     }
                 }
 
                 addLog('🎉 测试执行完成！', 'success');
 
-                // 销毁代理
-                await destroyMidSceneAgent();
-
             } catch (error) {
                 addLog(`❌ 执行过程异常: ${error.message}`, 'error');
+                console.error('执行过程详细错误:', error);
             } finally {
+                // 销毁代理
+                if (agent) {
+                    try {
+                        await agent.destroy();
+                        addLog('🧹 MidScene代理已清理', 'info');
+                    } catch (destroyError) {
+                        console.error('代理清理失败:', destroyError);
+                    }
+                }
+
                 // 恢复按钮状态
                 document.getElementById('startBtn').disabled = false;
                 document.getElementById('stopBtn').disabled = true;
             }
         }
 
-        async function initializeMidSceneAgent() {
-            return new Promise((resolve) => {
-                const messageId = 'midscene_init_' + Date.now();
+        async function executeStepWithAgent(agent, step) {
+            const { action, params = {}, description } = step;
 
-                const responseHandler = (event) => {
-                    if (event.data &&
-                        event.data.type === 'midscene_init_response' &&
-                        event.data.messageId === messageId) {
+            console.log('执行步骤:', { action, params, description });
 
-                        window.removeEventListener('message', responseHandler);
-                        resolve(event.data.success);
+            switch (action) {
+                case 'navigate':
+                    if (params.url) {
+                        // 导航步骤通常在连接时已处理，这里可以跳过或使用goto
+                        console.log(`导航到: ${params.url}`);
+                        // await agent.goto(params.url); // 如果需要的话
                     }
-                };
+                    break;
 
-                window.addEventListener('message', responseHandler);
-
-                window.postMessage({
-                    type: 'midscene_init',
-                    messageId: messageId
-                }, '*');
-
-                setTimeout(() => {
-                    window.removeEventListener('message', responseHandler);
-                    resolve(false);
-                }, 5000);
-            });
-        }
-
-        async function connectToNewTab(url) {
-            return new Promise((resolve) => {
-                const messageId = 'midscene_connect_new_' + Date.now();
-
-                const responseHandler = (event) => {
-                    if (event.data &&
-                        event.data.type === 'midscene_connect_response' &&
-                        event.data.messageId === messageId) {
-
-                        window.removeEventListener('message', responseHandler);
-                        resolve(event.data.success);
+                case 'click':
+                    if (params.locate) {
+                        await agent.aiTap(params.locate);
+                        console.log(`点击: ${params.locate}`);
                     }
-                };
+                    break;
 
-                window.addEventListener('message', responseHandler);
-
-                window.postMessage({
-                    type: 'midscene_connect_new_tab',
-                    messageId: messageId,
-                    url: url
-                }, '*');
-
-                setTimeout(() => {
-                    window.removeEventListener('message', responseHandler);
-                    resolve(false);
-                }, 10000);
-            });
-        }
-
-        async function connectToCurrentTab() {
-            return new Promise((resolve) => {
-                const messageId = 'midscene_connect_current_' + Date.now();
-
-                const responseHandler = (event) => {
-                    if (event.data &&
-                        event.data.type === 'midscene_connect_response' &&
-                        event.data.messageId === messageId) {
-
-                        window.removeEventListener('message', responseHandler);
-                        resolve(event.data.success);
+                case 'type':
+                    if (params.locate && params.text) {
+                        await agent.aiInput(params.text, params.locate);
+                        console.log(`输入文本: ${params.text} 到 ${params.locate}`);
                     }
-                };
+                    break;
 
-                window.addEventListener('message', responseHandler);
+                case 'wait':
+                    const waitTime = params.time || 1000;
+                    await new Promise(resolve => setTimeout(resolve, waitTime));
+                    console.log(`等待: ${waitTime}ms`);
+                    break;
 
-                window.postMessage({
-                    type: 'midscene_connect_current_tab',
-                    messageId: messageId
-                }, '*');
-
-                setTimeout(() => {
-                    window.removeEventListener('message', responseHandler);
-                    resolve(false);
-                }, 5000);
-            });
-        }
-
-        async function executeStepThroughExtension(step, stepIndex) {
-            return new Promise((resolve) => {
-                const messageId = 'midscene_execute_' + Date.now();
-
-                const responseHandler = (event) => {
-                    if (event.data &&
-                        event.data.type === 'midscene_execute_response' &&
-                        event.data.messageId === messageId) {
-
-                        window.removeEventListener('message', responseHandler);
-                        resolve({
-                            success: event.data.success,
-                            error: event.data.error,
-                            result: event.data.result
-                        });
+                case 'assert':
+                    if (params.condition) {
+                        await agent.aiAssert(params.condition);
+                        console.log(`断言: ${params.condition}`);
                     }
-                };
+                    break;
 
-                window.addEventListener('message', responseHandler);
+                case 'ai_input':
+                    // 处理自定义的ai_input动作
+                    if (params.locate && params.text) {
+                        await agent.aiInput(params.text, params.locate);
+                        console.log(`AI输入: ${params.text} 到 ${params.locate}`);
+                    }
+                    break;
 
-                // 转换步骤为MidScene格式
-                let midsceneAction;
-                const { action, params = {}, description } = step;
+                default:
+                    // 通用AI操作
+                    let aiInstruction = description || action;
+                    if (params.locate) {
+                        if (action.includes('click') || action.includes('点击')) {
+                            aiInstruction = `click ${params.locate}`;
+                        } else if (action.includes('input') || action.includes('输入')) {
+                            aiInstruction = `type "${params.text || ''}" in ${params.locate}`;
+                        } else {
+                            aiInstruction = `${action} ${params.locate}`;
+                            if (params.text) {
+                                aiInstruction += ` with text "${params.text}"`;
+                            }
+                        }
+                    }
 
-                switch (action) {
-                    case 'navigate':
-                        midsceneAction = {
-                            type: 'goto',
-                            url: params.url
-                        };
-                        break;
-
-                    case 'click':
-                        midsceneAction = {
-                            type: 'ai',
-                            instruction: `click "${params.locate}"`
-                        };
-                        break;
-
-                    case 'type':
-                        midsceneAction = {
-                            type: 'ai',
-                            instruction: `type "${params.text}" in "${params.locate}"`
-                        };
-                        break;
-
-                    case 'wait':
-                        midsceneAction = {
-                            type: 'sleep',
-                            duration: params.time || 1000
-                        };
-                        break;
-
-                    case 'assert':
-                        midsceneAction = {
-                            type: 'aiAssert',
-                            condition: params.condition
-                        };
-                        break;
-
-                    default:
-                        midsceneAction = {
-                            type: 'ai',
-                            instruction: description || action
-                        };
-                        break;
-                }
-
-                window.postMessage({
-                    type: 'midscene_execute_step',
-                    messageId: messageId,
-                    action: midsceneAction,
-                    stepIndex: stepIndex
-                }, '*');
-
-                setTimeout(() => {
-                    window.removeEventListener('message', responseHandler);
-                    resolve({
-                        success: false,
-                        error: '执行超时'
-                    });
-                }, 30000);
-            });
-        }
-
-        async function destroyMidSceneAgent() {
-            window.postMessage({
-                type: 'midscene_destroy'
-            }, '*');
+                    await agent.ai(aiInstruction);
+                    console.log(`AI操作: ${aiInstruction}`);
+                    break;
+            }
         }
 
         function updateStepStatus(stepIndex, status) {
@@ -1850,48 +1766,43 @@
 
         async function checkMidSceneExtension() {
             try {
-                // 方法1: 检查是否有MidSceneJS扩展注入的全局对象
-                if (window.midscene || window.MidScene) {
+                console.log('🔍 检测MidSceneJS扩展...');
+
+                // 检查是否可以导入AgentOverChromeBridge
+                try {
+                    // 尝试动态导入MidSceneJS桥接模块
+                    const { AgentOverChromeBridge } = await import('@midscene/web/bridge-mode');
+                    console.log('✅ 成功导入AgentOverChromeBridge');
+
+                    // 尝试创建代理实例
+                    const testAgent = new AgentOverChromeBridge();
+                    console.log('✅ 成功创建MidScene代理实例');
+
+                    return true;
+                } catch (importError) {
+                    console.log('❌ 无法导入MidSceneJS模块:', importError.message);
+                }
+
+                // 备用检测：检查全局对象
+                if (window.AgentOverChromeBridge || window.midscene || window.MidScene) {
                     console.log('✅ 检测到MidSceneJS全局对象');
                     return true;
                 }
 
-                // 方法2: 尝试通过postMessage与扩展通信
-                return new Promise((resolve) => {
-                    const messageId = 'midscene_ping_' + Date.now();
-                    let responded = false;
+                // 用户手动确认
+                console.log('⚠️ 无法自动检测MidSceneJS环境');
 
-                    // 监听扩展响应
-                    const responseHandler = (event) => {
-                        if (event.data &&
-                            event.data.type === 'midscene_pong' &&
-                            event.data.messageId === messageId) {
+                const userConfirm = confirm(
+                    '无法自动检测到MidSceneJS环境。\n\n' +
+                    '桥接模式需要：\n' +
+                    '1. 安装官方MidSceneJS Chrome扩展\n' +
+                    '2. 扩展已启用并配置AI API密钥\n' +
+                    '3. 在扩展中点击"Allow connection"\n' +
+                    '4. 页面需要支持ES6模块导入\n\n' +
+                    '点击"确定"尝试继续执行，点击"取消"停止执行。'
+                );
 
-                            window.removeEventListener('message', responseHandler);
-                            responded = true;
-                            console.log('✅ MidSceneJS扩展响应成功');
-                            resolve(true);
-                        }
-                    };
-
-                    window.addEventListener('message', responseHandler);
-
-                    // 发送ping消息
-                    window.postMessage({
-                        type: 'midscene_ping',
-                        messageId: messageId,
-                        source: 'intent-test-framework'
-                    }, '*');
-
-                    // 3秒超时
-                    setTimeout(() => {
-                        if (!responded) {
-                            window.removeEventListener('message', responseHandler);
-                            console.log('❌ MidSceneJS扩展未响应');
-                            resolve(false);
-                        }
-                    }, 3000);
-                });
+                return userConfirm;
 
             } catch (error) {
                 console.error('扩展检测失败:', error);
