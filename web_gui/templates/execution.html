@@ -961,6 +961,13 @@
                 const testcase = testcaseResponse.data.data;
                 addLog(`✅ 获取测试用例: ${testcase.name}`, 'success');
 
+                // 调试信息
+                console.log('测试用例完整数据:', testcase);
+                addLog('📋 测试用例数据类型检查...', 'info');
+                addLog(`  - 名称: ${testcase.name}`, 'info');
+                addLog(`  - 步骤类型: ${typeof testcase.steps}`, 'info');
+                addLog(`  - 步骤内容: ${JSON.stringify(testcase.steps).substring(0, 100)}...`, 'info');
+
                 // 2. 生成MidSceneJS桥接脚本
                 addLog('🔧 正在生成MidSceneJS桥接脚本...', 'info');
                 const script = generateMidSceneScript(testcase, mode);
@@ -973,13 +980,31 @@
                 showBridgeInstructions(testcase.name);
 
             } catch (error) {
+                console.error('桥接模式执行错误:', error);
                 addLog(`❌ Chrome桥接脚本生成失败: ${error.message}`, 'error');
+                addLog('💡 请检查浏览器控制台获取详细错误信息', 'warning');
             }
         }
 
         function generateMidSceneScript(testcase, mode) {
             try {
-                const steps = JSON.parse(testcase.steps || '[]');
+                // 检查steps是否已经是对象
+                let steps;
+                if (typeof testcase.steps === 'string') {
+                    steps = JSON.parse(testcase.steps || '[]');
+                } else if (Array.isArray(testcase.steps)) {
+                    steps = testcase.steps;
+                } else {
+                    steps = [];
+                }
+
+                console.log('测试用例步骤:', steps);
+
+                // 如果步骤为空，创建一个简单的示例脚本
+                if (!steps || steps.length === 0) {
+                    addLog('⚠️ 测试用例没有步骤，生成示例脚本', 'warning');
+                    return generateSimpleScript(testcase.name);
+                }
 
                 // 使用字符串拼接避免模板字符串嵌套问题
                 let script = '// MidSceneJS桥接模式脚本\n';
@@ -1087,8 +1112,50 @@
 
             } catch (error) {
                 console.error('脚本生成错误:', error);
+                console.error('测试用例数据:', testcase);
+                console.error('步骤数据类型:', typeof testcase.steps);
+                console.error('步骤数据内容:', testcase.steps);
                 throw new Error('脚本生成失败: ' + error.message);
             }
+        }
+
+        function generateSimpleScript(testcaseName) {
+            // 生成一个简单的示例脚本
+            let script = '// MidSceneJS桥接模式脚本\n';
+            script += '// 测试用例: ' + testcaseName + '\n';
+            script += '// 生成时间: ' + new Date().toLocaleString() + '\n\n';
+            script += 'import { AgentOverChromeBridge } from \'@midscene/web/bridge-mode\';\n\n';
+            script += 'const sleep = (ms) => new Promise((r) => setTimeout(r, ms));\n\n';
+            script += 'Promise.resolve(\n';
+            script += '  (async () => {\n';
+            script += '    const agent = new AgentOverChromeBridge();\n';
+            script += '    \n';
+            script += '    try {\n';
+            script += '      console.log(\'🌉 开始桥接模式执行: ' + testcaseName + '\');\n';
+            script += '      \n';
+            script += '      // 连接到新标签页并导航\n';
+            script += '      await agent.connectNewTabWithUrl(\'https://www.baidu.com\');\n';
+            script += '      console.log(\'✅ 已连接到新标签页: https://www.baidu.com\');\n';
+            script += '      \n';
+            script += '      // 示例步骤：搜索\n';
+            script += '      await agent.ai(\'type "Hello World" in search box\');\n';
+            script += '      console.log(\'⌨️ 输入文本: Hello World\');\n';
+            script += '      \n';
+            script += '      await sleep(2000);\n';
+            script += '      console.log(\'⏱️ 等待 2000ms\');\n';
+            script += '      \n';
+            script += '      console.log(\'🎉 测试执行完成！\');\n';
+            script += '      await agent.destroy();\n';
+            script += '      \n';
+            script += '    } catch (error) {\n';
+            script += '      console.error(\'❌ 测试执行失败:\', error.message);\n';
+            script += '      await agent.destroy();\n';
+            script += '      process.exit(1);\n';
+            script += '    }\n';
+            script += '  })()\n';
+            script += ');\n';
+
+            return script;
         }
 
         function downloadScript(content, filename) {
