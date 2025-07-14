@@ -12,8 +12,14 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
-# 创建Flask应用
-app = Flask(__name__)
+# 创建Flask应用，配置模板和静态文件路径
+template_dir = os.path.join(parent_dir, 'web_gui', 'templates')
+static_dir = os.path.join(parent_dir, 'web_gui', 'static')
+
+app = Flask(__name__,
+           template_folder=template_dir,
+           static_folder=static_dir,
+           static_url_path='/static')
 
 # 基本配置
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
@@ -89,17 +95,60 @@ HTML_TEMPLATE = """
 </html>
 """
 
-# 主页路由
+# 主页路由 - 使用原来的完整Web界面
 @app.route('/')
 def home():
-    database_url = os.getenv('DATABASE_URL', 'Not configured')
-    database_status = 'PostgreSQL (Supabase)' if database_url.startswith('postgresql://') else 'Not configured'
-
-    return render_template_string(HTML_TEMPLATE, database_status=database_status)
+    try:
+        # 尝试渲染原来的完整界面
+        from flask import render_template
+        return render_template('index_enhanced.html')
+    except Exception as e:
+        print(f"⚠️ 无法加载完整界面: {e}")
+        # 备用方案：简单状态页面
+        database_url = os.getenv('DATABASE_URL', 'Not configured')
+        database_status = 'PostgreSQL (Supabase)' if database_url.startswith('postgresql://') else 'Not configured'
+        return render_template_string(HTML_TEMPLATE, database_status=database_status)
 
 @app.route('/health')
 def health():
     return jsonify({'status': 'healthy', 'timestamp': os.getenv('VERCEL_DEPLOYMENT_ID', 'local')})
+
+# 添加原来系统的页面路由
+@app.route('/testcases')
+def testcases_page():
+    """测试用例管理页面"""
+    try:
+        from flask import render_template
+        return render_template('testcases.html')
+    except Exception as e:
+        return jsonify({'error': f'无法加载测试用例页面: {str(e)}'}), 500
+
+@app.route('/execution')
+def execution_page():
+    """执行控制台页面"""
+    try:
+        from flask import render_template
+        return render_template('execution.html')
+    except Exception as e:
+        return jsonify({'error': f'无法加载执行控制台页面: {str(e)}'}), 500
+
+@app.route('/reports')
+def reports_page():
+    """测试报告页面"""
+    try:
+        from flask import render_template
+        return render_template('reports.html')
+    except Exception as e:
+        return jsonify({'error': f'无法加载测试报告页面: {str(e)}'}), 500
+
+@app.route('/step_editor')
+def step_editor_page():
+    """步骤编辑器页面"""
+    try:
+        from flask import render_template
+        return render_template('step_editor.html')
+    except Exception as e:
+        return jsonify({'error': f'无法加载步骤编辑器页面: {str(e)}'}), 500
 
 # 设置环境变量
 os.environ['VERCEL'] = '1'
