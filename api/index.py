@@ -587,7 +587,7 @@ try:
             return False
 
     def execute_testcase_cloud(execution_id, testcase, mode):
-        """云端执行测试用例"""
+        """云端执行测试用例 - 使用智能回退机制"""
         import asyncio
         import sys
         import os
@@ -596,10 +596,8 @@ try:
         sys.path.append(os.path.dirname(__file__))
 
         try:
-            from cloud_execution_service import CloudExecutionService
-
-            # 创建云端执行服务
-            service = CloudExecutionService()
+            from intelligent_fallback_service import fallback_service
+            from lightweight_resource_manager import resource_manager
 
             # 准备测试用例数据
             testcase_data = {
@@ -612,8 +610,9 @@ try:
             asyncio.set_event_loop(loop)
 
             try:
+                # 使用智能回退服务执行
                 result = loop.run_until_complete(
-                    service.execute_testcase(testcase_data, mode)
+                    fallback_service.execute_with_fallback(testcase_data, mode)
                 )
 
                 # 更新执行记录
@@ -624,8 +623,8 @@ try:
                 loop.close()
 
         except Exception as e:
-            # 云端执行失败，回退到模拟执行
-            print(f"云端执行失败，回退到模拟执行: {e}")
+            # 最终回退到模拟执行
+            print(f"智能回退执行失败，使用模拟执行: {e}")
             execute_testcase_background(execution_id, testcase, mode)
 
     # 执行状态查询API
@@ -649,6 +648,106 @@ try:
             return jsonify({
                 'code': 500,
                 'message': f'获取执行状态失败: {str(e)}'
+            }), 500
+
+    # 资源监控API
+    @app.route('/api/resources/status')
+    def get_resource_status():
+        try:
+            import sys
+            import os
+            sys.path.append(os.path.dirname(__file__))
+            
+            from lightweight_resource_manager import resource_manager
+            from intelligent_fallback_service import fallback_service
+            
+            resource_report = resource_manager.get_resource_report()
+            service_stats = fallback_service.get_service_stats()
+            
+            return jsonify({
+                'code': 200,
+                'data': {
+                    'resource_report': resource_report,
+                    'service_stats': service_stats,
+                    'timestamp': datetime.utcnow().isoformat()
+                }
+            })
+        except Exception as e:
+            return jsonify({
+                'code': 500,
+                'message': f'获取资源状态失败: {str(e)}'
+            }), 500
+
+    # 执行队列状态API
+    @app.route('/api/executions/queue/status')
+    def get_queue_status():
+        try:
+            import sys
+            import os
+            sys.path.append(os.path.dirname(__file__))
+            
+            from lightweight_resource_manager import execution_queue
+            
+            queue_status = execution_queue.get_queue_status()
+            
+            return jsonify({
+                'code': 200,
+                'data': queue_status
+            })
+        except Exception as e:
+            return jsonify({
+                'code': 500,
+                'message': f'获取队列状态失败: {str(e)}'
+            }), 500
+
+    # 优化建议API
+    @app.route('/api/executions/optimization/suggestions')
+    def get_optimization_suggestions():
+        try:
+            import sys
+            import os
+            sys.path.append(os.path.dirname(__file__))
+            
+            from lightweight_resource_manager import resource_manager
+            
+            resource_report = resource_manager.get_resource_report()
+            
+            suggestions = []
+            memory_pressure = resource_report['current_resources'].get('memory_percent', 0)
+            
+            if memory_pressure > 80:
+                suggestions.append({
+                    'type': 'memory_optimization',
+                    'message': '内存压力过高，建议使用轻量级模式或模拟执行',
+                    'action': 'use_lightweight_mode'
+                })
+            
+            if resource_report['active_executions'] >= 2:
+                suggestions.append({
+                    'type': 'concurrency_limit',
+                    'message': '并发执行数量接近上限，建议排队执行',
+                    'action': 'queue_execution'
+                })
+            
+            if resource_report['fallback_strategy'] == 'immediate_fallback':
+                suggestions.append({
+                    'type': 'resource_critical',
+                    'message': '资源严重不足，建议稍后重试',
+                    'action': 'retry_later'
+                })
+            
+            return jsonify({
+                'code': 200,
+                'data': {
+                    'suggestions': suggestions,
+                    'fallback_strategy': resource_report['fallback_strategy'],
+                    'timestamp': datetime.utcnow().isoformat()
+                }
+            })
+        except Exception as e:
+            return jsonify({
+                'code': 500,
+                'message': f'获取优化建议失败: {str(e)}'
             }), 500
 
     # Chrome桥接状态检查API
