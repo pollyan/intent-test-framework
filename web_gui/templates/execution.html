@@ -961,27 +961,182 @@
                 const testcase = testcaseResponse.data.data;
                 addLog(`✅ 获取测试用例: ${testcase.name}`, 'success');
 
-                // 2. 检查Chrome扩展
-                addLog('正在检查Chrome扩展状态...', 'info');
-                if (!await checkChromeExtension()) {
-                    addLog('❌ Chrome扩展不可用，请确保已安装MidSceneJS扩展', 'error');
-                    addLog('请按照以下步骤安装扩展：', 'warning');
-                    addLog('1. 访问Chrome扩展商店', 'warning');
-                    addLog('2. 搜索并安装MidSceneJS扩展', 'warning');
-                    addLog('3. 在扩展中配置AI API密钥', 'warning');
-                    return;
-                }
+                // 2. 生成MidSceneJS桥接脚本
+                addLog('🔧 正在生成MidSceneJS桥接脚本...', 'info');
+                const script = generateMidSceneScript(testcase, mode);
 
-                addLog('✅ Chrome扩展检测通过', 'success');
+                // 3. 提供脚本下载
+                addLog('📥 脚本生成完成，准备下载...', 'success');
+                downloadScript(script, `${testcase.name}-bridge.mjs`);
 
-                // 3. 直接调用Chrome扩展执行
-                addLog('🚀 开始通过Chrome扩展执行测试...', 'info');
-                await executeThroughChromeExtension(testcase, mode);
+                // 4. 显示执行指导
+                showBridgeInstructions(testcase.name);
 
             } catch (error) {
-                addLog(`❌ Chrome桥接执行失败: ${error.message}`, 'error');
-                addLog('建议：尝试使用云端模式或检查扩展配置', 'warning');
+                addLog(`❌ Chrome桥接脚本生成失败: ${error.message}`, 'error');
             }
+        }
+
+        function generateMidSceneScript(testcase, mode) {
+            const steps = JSON.parse(testcase.steps || '[]');
+
+            let script = `// MidSceneJS桥接模式脚本
+// 测试用例: ${testcase.name}
+// 生成时间: ${new Date().toLocaleString()}
+
+import { AgentOverChromeBridge } from '@midscene/web/bridge-mode';
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+Promise.resolve(
+  (async () => {
+    const agent = new AgentOverChromeBridge();
+
+    try {
+      console.log('🌉 开始桥接模式执行: ${testcase.name}');
+
+`;
+
+            // 确定连接方式
+            const firstStep = steps[0] || {};
+            const startUrl = firstStep.params?.url || 'https://www.baidu.com';
+
+            if (firstStep.action === 'navigate' && startUrl) {
+                script += `      // 连接到新标签页并导航
+      await agent.connectNewTabWithUrl('${startUrl}');
+      console.log('✅ 已连接到新标签页: ${startUrl}');
+
+`;
+                // 跳过第一个导航步骤
+                steps.shift();
+            } else {
+                script += `      // 连接到当前标签页
+      await agent.connectCurrentTab();
+      console.log('✅ 已连接到当前标签页');
+
+`;
+            }
+
+            // 生成步骤执行代码
+            steps.forEach((step, index) => {
+                const { action, params = {}, description } = step;
+                const stepNum = index + 1;
+
+                script += `      // 步骤 ${stepNum}: ${description || action}
+`;
+
+                switch (action) {
+                    case 'navigate':
+                        if (params.url) {
+                            script += `      await agent.goto('${params.url}');
+      console.log('🔗 导航到: ${params.url}');
+`;
+                        }
+                        break;
+
+                    case 'click':
+                        if (params.locate) {
+                            script += `      await agent.ai('click "${params.locate}"');
+      console.log('👆 点击: ${params.locate}');
+`;
+                        }
+                        break;
+
+                    case 'type':
+                        if (params.locate && params.text) {
+                            script += `      await agent.ai('type "${params.text}" in "${params.locate}"');
+      console.log('⌨️ 输入文本: ${params.text} 到 ${params.locate}');
+`;
+                        }
+                        break;
+
+                    case 'wait':
+                        const waitTime = params.time || 1000;
+                        script += `      await sleep(${waitTime});
+      console.log('⏱️ 等待 ${waitTime}ms');
+`;
+                        break;
+
+                    case 'assert':
+                        if (params.condition) {
+                            script += `      await agent.aiAssert('${params.condition}');
+      console.log('✅ 断言: ${params.condition}');
+`;
+                        }
+                        break;
+
+                    default:
+                        // 通用AI操作
+                        let aiInstruction = description || action;
+                        if (params.locate) {
+                            aiInstruction = `${action} ${params.locate}`;
+                            if (params.text) {
+                                aiInstruction += ` with text "${params.text}"`;
+                            }
+                        }
+                        script += `      await agent.ai('${aiInstruction}');
+      console.log('🤖 AI操作: ${aiInstruction}');
+`;
+                        break;
+                }
+
+                script += `
+`;
+            });
+
+            script += `      console.log('🎉 测试执行完成！');
+      await agent.destroy();
+
+    } catch (error) {
+      console.error('❌ 测试执行失败:', error.message);
+      await agent.destroy();
+      process.exit(1);
+    }
+  })()
+);
+`;
+
+            return script;
+        }
+
+        function downloadScript(content, filename) {
+            const blob = new Blob([content], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            addLog(`📁 脚本已下载: ${filename}`, 'success');
+        }
+
+        function showBridgeInstructions(testcaseName) {
+            addLog('', 'info');
+            addLog('🚀 桥接模式执行指南：', 'info');
+            addLog('', 'info');
+            addLog('📋 步骤1：安装MidSceneJS扩展', 'info');
+            addLog('  访问：https://chromewebstore.google.com/detail/midscene/gbldofcpkknbggpkmbdaefngejllnief', 'info');
+            addLog('  安装官方MidSceneJS扩展', 'info');
+            addLog('', 'info');
+            addLog('🔧 步骤2：准备本地环境', 'info');
+            addLog('  mkdir midscene-bridge && cd midscene-bridge', 'info');
+            addLog('  npm init -y', 'info');
+            addLog('  npm install @midscene/web', 'info');
+            addLog('', 'info');
+            addLog('▶️ 步骤3：执行脚本', 'info');
+            addLog('  1. 将下载的脚本文件放到项目目录', 'info');
+            addLog('  2. 在Chrome扩展中点击"Allow connection"', 'info');
+            addLog(`  3. 运行: node ${testcaseName}-bridge.mjs`, 'info');
+            addLog('', 'info');
+            addLog('🎯 执行效果：', 'success');
+            addLog('  ✅ 在您的Chrome浏览器中看到真实的自动化过程', 'success');
+            addLog('  ✅ 可以观察每个步骤的执行效果', 'success');
+            addLog('  ✅ 真正的客户端执行，无需服务器', 'success');
+            addLog('', 'info');
+            addLog('💡 提示：确保在执行前配置好AI API密钥环境变量', 'warning');
         }
 
         async function startServerExecution(testcaseId, mode, execution_type) {

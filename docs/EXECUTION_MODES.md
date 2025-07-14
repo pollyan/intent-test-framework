@@ -3,20 +3,22 @@
 ## 🎯 三种执行模式对比
 
 ### 1. 🌉 Chrome桥接模式（客户端执行）
-**执行路径**：`WebUI → 直接调用Chrome扩展 → 本地浏览器执行`
+**执行路径**：`WebUI生成脚本 → 用户下载脚本 → 本地Node.js执行 → 连接Chrome扩展 → 浏览器自动化`
 
 **特点**：
-- ✅ **真正的本地执行**：在用户的Chrome浏览器中直接执行
-- ✅ **可视化过程**：用户可以看到真实的浏览器操作
-- ✅ **实时反馈**：无网络延迟，即时响应
-- ✅ **调试友好**：便于测试开发和调试
-- ❌ **依赖扩展**：需要安装MidSceneJS Chrome扩展
-- ❌ **环境限制**：只能在Chrome浏览器中使用
+- ✅ **真正的本地执行**：在用户的本地环境中执行，连接到Chrome扩展
+- ✅ **可视化过程**：用户可以看到真实的浏览器操作过程
+- ✅ **无网络延迟**：完全本地执行，响应迅速
+- ✅ **调试友好**：便于测试开发、调试和人机协作
+- ✅ **利用本地环境**：使用用户的cookies、插件、登录状态
+- ❌ **环境要求**：需要安装官方MidSceneJS Chrome扩展和Node.js
+- ❌ **设置复杂**：需要配置本地环境和AI API密钥
 
 **适用场景**：
 - 测试用例开发和调试
 - 演示和培训
 - 需要可视化执行过程的场景
+- 人机协作的自动化任务
 
 ### 2. ☁️ 云端模式（服务器执行）
 **执行路径**：`WebUI → Vercel API → Playwright云端执行`
@@ -53,24 +55,23 @@
 
 ### Chrome桥接模式实现
 ```javascript
-// 1. 检测Chrome扩展
-async function checkChromeExtension() {
-    // 检查全局对象、消息通信、DOM标识
-}
-
-// 2. 直接调用扩展
-async function executeThroughChromeExtension(testcase, mode) {
+// 1. 生成MidSceneJS脚本
+function generateMidSceneScript(testcase, mode) {
     // 解析测试步骤
-    // 逐步调用扩展API
-    // 实时更新UI状态
+    // 生成AgentOverChromeBridge脚本
+    // 返回可执行的Node.js脚本
 }
 
-// 3. 扩展通信
-async function executeStepThroughExtension(step, stepIndex) {
-    // 发送消息到Chrome扩展
-    // 等待执行结果
-    // 返回执行状态
+// 2. 提供脚本下载
+function downloadScript(content, filename) {
+    // 创建下载链接
+    // 自动下载脚本文件
 }
+
+// 3. 用户本地执行
+// 用户在本地运行：node script.mjs
+// 脚本通过AgentOverChromeBridge连接Chrome扩展
+// 在用户的Chrome浏览器中执行自动化
 ```
 
 ### 云端模式实现
