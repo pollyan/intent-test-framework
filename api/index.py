@@ -350,7 +350,7 @@ try:
                 'connection_info': connection_info if 'connection_info' in locals() else None
             }), 500
 
-    # 智能执行API - 支持云端和本地模式
+    # 智能执行API - 支持Chrome桥接、云端和本地模式
     @app.route('/api/executions/start', methods=['POST'])
     def start_execution():
         try:
@@ -362,7 +362,7 @@ try:
             data = request.get_json() or {}
             testcase_id = data.get('testcase_id')
             mode = data.get('mode', 'headless')  # headless 或 browser
-            execution_type = data.get('execution_type', 'auto')  # auto, cloud, local
+            execution_type = data.get('execution_type', 'auto')  # auto, bridge, cloud, local
 
             if not testcase_id:
                 return jsonify({
@@ -402,21 +402,26 @@ try:
                 app.executions = {}
             app.executions[execution_id] = execution_record
 
-            # 选择执行方式
-            if execution_type == 'cloud' or (execution_type == 'auto' and is_cloud_environment()):
-                # 云端执行
+            # 智能选择执行方式
+            selected_type, execution_message = select_execution_type(execution_type, testcase.name)
+            execution_record['execution_type'] = selected_type
+
+            # 启动对应的执行线程
+            if selected_type == 'bridge':
+                thread = threading.Thread(
+                    target=execute_testcase_bridge,
+                    args=(execution_id, testcase, mode)
+                )
+            elif selected_type == 'cloud':
                 thread = threading.Thread(
                     target=execute_testcase_cloud,
                     args=(execution_id, testcase, mode)
                 )
-                execution_message = f'正在云端执行测试用例: {testcase.name}'
             else:
-                # 本地执行（原有方式）
                 thread = threading.Thread(
                     target=execute_testcase_background,
                     args=(execution_id, testcase, mode)
                 )
-                execution_message = f'正在本地执行测试用例: {testcase.name}'
 
             thread.daemon = True
             thread.start()
@@ -429,7 +434,7 @@ try:
                     'testcase_id': testcase_id,
                     'testcase_name': testcase.name,
                     'mode': mode,
-                    'execution_type': execution_record['execution_type'],
+                    'execution_type': selected_type,
                     'status': 'running',
                     'message': execution_message
                 }
@@ -439,6 +444,99 @@ try:
                 'code': 500,
                 'message': f'启动执行失败: {str(e)}'
             }), 500
+
+    def select_execution_type(requested_type: str, testcase_name: str) -> tuple:
+        """智能选择执行类型"""
+        if requested_type == 'bridge':
+            return 'bridge', f'正在通过Chrome桥接执行测试用例: {testcase_name}'
+        elif requested_type == 'cloud':
+            return 'cloud', f'正在云端执行测试用例: {testcase_name}'
+        elif requested_type == 'local':
+            return 'local', f'正在本地执行测试用例: {testcase_name}'
+        else:  # auto
+            # 智能选择逻辑
+            if is_bridge_available():
+                return 'bridge', f'自动选择Chrome桥接执行: {testcase_name}'
+            elif is_cloud_environment():
+                return 'cloud', f'自动选择云端执行: {testcase_name}'
+            else:
+                return 'local', f'自动选择本地执行: {testcase_name}'
+
+    def is_bridge_available():
+        """检测Chrome桥接是否可用"""
+        try:
+            from chrome_bridge_service import ChromeBridgeService
+            service = ChromeBridgeService()
+            status = service.check_chrome_extension_status()
+            return status.get('bridge_available', False)
+        except:
+            return False
+
+    def execute_testcase_bridge(execution_id, testcase, mode):
+        """Chrome桥接执行测试用例"""
+        import asyncio
+        import sys
+        import os
+
+        # 添加当前目录到路径
+        sys.path.append(os.path.dirname(__file__))
+
+        try:
+            from chrome_bridge_service import ChromeBridgeService
+
+            # 创建桥接服务
+            service = ChromeBridgeService()
+
+            # 检查桥接状态
+            status = service.check_chrome_extension_status()
+            execution = app.executions[execution_id]
+
+            if not status['bridge_available']:
+                execution['status'] = 'failed'
+                execution['error'] = f"Chrome桥接不可用: {status['message']}"
+                execution['end_time'] = datetime.utcnow().isoformat()
+                return
+
+            # 准备测试用例数据
+            testcase_data = {
+                'name': testcase.name,
+                'steps': testcase.steps
+            }
+
+            # 创建桥接脚本
+            bridge_mode = "newTab" if mode == "browser" else "newTab"  # 桥接模式总是新标签页
+            script_path = service.create_bridge_script(testcase_data, bridge_mode)
+
+            execution['message'] = f'Chrome桥接脚本已创建: {script_path}'
+
+            # 在新的事件循环中执行
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+            try:
+                result = loop.run_until_complete(
+                    service.execute_bridge_script(script_path, execution_id)
+                )
+
+                # 更新执行记录
+                execution['bridge_result'] = result
+
+                if result['success']:
+                    execution['status'] = 'completed'
+                    execution['message'] = 'Chrome桥接执行成功'
+                else:
+                    execution['status'] = 'failed'
+                    execution['error'] = result.get('stderr', '执行失败')
+
+                execution['end_time'] = datetime.utcnow().isoformat()
+
+            finally:
+                loop.close()
+
+        except Exception as e:
+            # 桥接执行失败，回退到云端执行
+            print(f"Chrome桥接执行失败，回退到云端执行: {e}")
+            execute_testcase_cloud(execution_id, testcase, mode)
 
     def is_cloud_environment():
         """检测是否在云端环境"""
@@ -512,6 +610,46 @@ try:
             return jsonify({
                 'code': 500,
                 'message': f'获取执行状态失败: {str(e)}'
+            }), 500
+
+    # Chrome桥接状态检查API
+    @app.route('/api/bridge/status')
+    def get_bridge_status():
+        try:
+            from chrome_bridge_service import ChromeBridgeService
+            service = ChromeBridgeService()
+            status = service.check_chrome_extension_status()
+
+            return jsonify({
+                'code': 200,
+                'data': status
+            })
+        except Exception as e:
+            return jsonify({
+                'code': 500,
+                'message': f'检查桥接状态失败: {str(e)}',
+                'data': {
+                    'bridge_available': False,
+                    'error': str(e)
+                }
+            }), 500
+
+    # Chrome桥接安装指南API
+    @app.route('/api/bridge/installation-guide')
+    def get_bridge_installation_guide():
+        try:
+            from chrome_bridge_service import ChromeBridgeService
+            service = ChromeBridgeService()
+            guide = service.get_installation_guide()
+
+            return jsonify({
+                'code': 200,
+                'data': guide
+            })
+        except Exception as e:
+            return jsonify({
+                'code': 500,
+                'message': f'获取安装指南失败: {str(e)}'
             }), 500
 
     # 后台执行函数

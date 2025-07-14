@@ -115,6 +115,74 @@
             margin-right: 4px;
         }
 
+        .execution-type-selector {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .execution-type-selector label {
+            font-weight: 500;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .execution-type-selector label:hover {
+            background-color: #f0f0f0;
+        }
+
+        .execution-type-selector input[type="radio"] {
+            margin-right: 4px;
+        }
+
+        .bridge-status {
+            margin: 15px 0;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #e1e4e8;
+            background-color: #f8f9fa;
+        }
+
+        .bridge-status h4 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: #24292e;
+        }
+
+        .status-content {
+            font-size: 13px;
+            color: #586069;
+        }
+
+        .status-available {
+            color: #28a745;
+            font-weight: 500;
+        }
+
+        .status-unavailable {
+            color: #d73a49;
+            font-weight: 500;
+        }
+
+        .install-guide-btn {
+            margin-top: 8px;
+            padding: 6px 12px;
+            background-color: #0366d6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .install-guide-btn:hover {
+            background-color: #0256cc;
+        }
+
         .mode-description {
             margin-bottom: 20px;
             padding: 8px 12px;
@@ -505,6 +573,15 @@
                     </select>
                 </div>
 
+                <!-- 执行类型 -->
+                <div class="execution-type-selector">
+                    <label>执行类型:</label>
+                    <label><input type="radio" name="execution_type" value="auto" checked> 🤖 智能选择</label>
+                    <label><input type="radio" name="execution_type" value="bridge"> 🌉 Chrome桥接</label>
+                    <label><input type="radio" name="execution_type" value="cloud"> ☁️ 云端执行</label>
+                    <label><input type="radio" name="execution_type" value="local"> 🏠 本地执行</label>
+                </div>
+
                 <!-- 执行模式 -->
                 <div class="mode-selector">
                     <label>执行模式:</label>
@@ -512,10 +589,17 @@
                     <label><input type="radio" name="mode" value="browser"> 🖥️ 浏览器模式</label>
                 </div>
 
+                <!-- 桥接状态显示 -->
+                <div id="bridgeStatus" class="bridge-status" style="display: none;">
+                    <h4>🌉 Chrome桥接状态:</h4>
+                    <div id="bridgeStatusContent" class="status-content"></div>
+                    <button id="installGuideBtn" class="install-guide-btn" style="display: none;">查看安装指南</button>
+                </div>
+
                 <!-- 模式说明 -->
                 <div class="mode-description">
                     <small id="modeDescription">
-                        🚀 <strong>无头模式</strong>: 后台执行，速度快，失败时停止执行
+                        🤖 <strong>智能选择</strong>: 自动选择最佳执行方式
                     </small>
                 </div>
 
@@ -594,6 +678,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadTestcases();
             setupEventListeners();
+            setupExecutionTypeListeners();
+            checkBridgeStatus();
             addLog('执行控制台已就绪', 'success');
         });
 
@@ -766,6 +852,7 @@
             }
 
             const mode = document.querySelector('input[name="mode"]:checked').value;
+            const execution_type = document.querySelector('input[name="execution_type"]:checked').value;
 
             // 重置步骤状态
             const stepIcons = document.querySelectorAll('.step-icon');
@@ -785,7 +872,8 @@
                 // 发送HTTP执行请求
                 const response = await axios.post(`${API_BASE}/executions/start`, {
                     testcase_id: parseInt(testcaseId),
-                    mode: mode
+                    mode: mode,
+                    execution_type: execution_type
                 });
 
                 if (response.data.code === 200) {
@@ -984,6 +1072,171 @@
                 });
             });
         });
+        // 执行类型相关函数
+        function setupExecutionTypeListeners() {
+            // 执行类型选择变化
+            document.querySelectorAll('input[name="execution_type"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    updateExecutionTypeDescription(this.value);
+                    if (this.value === 'bridge') {
+                        showBridgeStatus();
+                        checkBridgeStatus();
+                    } else {
+                        hideBridgeStatus();
+                    }
+                });
+            });
+
+            // 安装指南按钮
+            const installBtn = document.getElementById('installGuideBtn');
+            if (installBtn) {
+                installBtn.addEventListener('click', function() {
+                    showInstallationGuide();
+                });
+            }
+        }
+
+        function updateExecutionTypeDescription(type) {
+            const descriptions = {
+                'auto': '🤖 <strong>智能选择</strong>: 自动选择最佳执行方式',
+                'bridge': '🌉 <strong>Chrome桥接</strong>: 使用本地Chrome浏览器执行（需要扩展）',
+                'cloud': '☁️ <strong>云端执行</strong>: 零配置云端浏览器执行',
+                'local': '🏠 <strong>本地执行</strong>: 需要本地MidSceneJS服务器'
+            };
+
+            const descElement = document.getElementById('modeDescription');
+            if (descElement) {
+                descElement.innerHTML = descriptions[type] || descriptions['auto'];
+            }
+        }
+
+        function showBridgeStatus() {
+            const bridgeStatus = document.getElementById('bridgeStatus');
+            if (bridgeStatus) {
+                bridgeStatus.style.display = 'block';
+            }
+        }
+
+        function hideBridgeStatus() {
+            const bridgeStatus = document.getElementById('bridgeStatus');
+            if (bridgeStatus) {
+                bridgeStatus.style.display = 'none';
+            }
+        }
+
+        async function checkBridgeStatus() {
+            try {
+                addLog('正在检查Chrome桥接状态...', 'info');
+                const response = await axios.get(`${API_BASE}/bridge/status`);
+                if (response.data.code === 200) {
+                    updateBridgeStatusDisplay(response.data.data);
+                } else {
+                    updateBridgeStatusDisplay({
+                        bridge_available: false,
+                        message: '桥接状态检查失败'
+                    });
+                }
+            } catch (error) {
+                console.error('检查桥接状态失败:', error);
+                updateBridgeStatusDisplay({
+                    bridge_available: false,
+                    message: '无法连接到桥接服务'
+                });
+            }
+        }
+
+        function updateBridgeStatusDisplay(status) {
+            const contentEl = document.getElementById('bridgeStatusContent');
+            const installBtn = document.getElementById('installGuideBtn');
+
+            if (!contentEl) return;
+
+            if (status.bridge_available) {
+                contentEl.innerHTML = `
+                    <div class="status-available">✅ Chrome桥接已就绪</div>
+                    <div>Chrome运行: ${status.chrome_running ? '✅' : '❌'}</div>
+                    <div>扩展安装: ${status.extension_installed ? '✅' : '❌'}</div>
+                    <div>AI配置: ${status.ai_configured ? '✅' : '❌'}</div>
+                `;
+                if (installBtn) installBtn.style.display = 'none';
+                addLog('Chrome桥接状态检查完成：已就绪', 'success');
+            } else {
+                contentEl.innerHTML = `
+                    <div class="status-unavailable">❌ ${status.message}</div>
+                    <div>Chrome运行: ${status.chrome_running ? '✅' : '❌'}</div>
+                    <div>扩展安装: ${status.extension_installed ? '✅' : '❌'}</div>
+                    <div>AI配置: ${status.ai_configured ? '✅' : '❌'}</div>
+                `;
+                if (installBtn) installBtn.style.display = 'inline-block';
+                addLog(`Chrome桥接状态检查完成：${status.message}`, 'warning');
+            }
+        }
+
+        async function showInstallationGuide() {
+            try {
+                addLog('正在获取安装指南...', 'info');
+                const response = await axios.get(`${API_BASE}/bridge/installation-guide`);
+                if (response.data.code === 200) {
+                    displayInstallationGuide(response.data.data);
+                }
+            } catch (error) {
+                addLog('获取安装指南失败', 'error');
+            }
+        }
+
+        function displayInstallationGuide(guide) {
+            // 创建模态框显示安装指南
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.5); z-index: 1000; display: flex;
+                align-items: center; justify-content: center; padding: 20px;
+            `;
+
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: white; padding: 20px; border-radius: 8px;
+                max-width: 800px; max-height: 80vh; overflow-y: auto;
+                position: relative;
+            `;
+
+            let stepsHtml = guide.steps.map(step => `
+                <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #e1e4e8; border-radius: 6px;">
+                    <h4>步骤 ${step.step}: ${step.title}</h4>
+                    <p>${step.description}</p>
+                    ${step.command ? `<code style="background: #f6f8fa; padding: 4px 8px; border-radius: 3px; display: block; margin: 8px 0;">${step.command}</code>` : ''}
+                    ${step.commands ? step.commands.map(cmd => `<code style="background: #f6f8fa; padding: 4px 8px; border-radius: 3px; display: block; margin: 4px 0;">${cmd}</code>`).join('') : ''}
+                    ${step.instructions ? `<ul>${step.instructions.map(inst => `<li>${inst}</li>`).join('')}</ul>` : ''}
+                    ${step.config ? `<pre style="background: #f6f8fa; padding: 10px; border-radius: 3px; overflow-x: auto; font-size: 12px;">${JSON.stringify(step.config, null, 2)}</pre>` : ''}
+                </div>
+            `).join('');
+
+            content.innerHTML = `
+                <button onclick="this.parentElement.parentElement.remove()" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 20px; cursor: pointer; color: #666;">×</button>
+                <h2 style="margin-top: 0;">${guide.title}</h2>
+                ${stepsHtml}
+                <h3>故障排除</h3>
+                ${guide.troubleshooting.map(item => `
+                    <div style="margin-bottom: 10px; padding: 10px; background: #fff3cd; border-radius: 4px;">
+                        <strong>问题:</strong> ${item.problem}<br>
+                        <strong>解决:</strong> ${item.solution}
+                    </div>
+                `).join('')}
+            `;
+
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+
+            // 点击背景关闭
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+
+            addLog('安装指南已显示', 'success');
+        }
+
     </script>
 </body>
 </html>
