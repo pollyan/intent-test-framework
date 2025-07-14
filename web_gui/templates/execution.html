@@ -707,26 +707,50 @@
 
         async function loadTestcases() {
             try {
+                console.log('开始加载测试用例...');
+                addLog('正在加载测试用例...', 'info');
+
                 const response = await axios.get(`${API_BASE}/testcases?size=100`);
+                console.log('测试用例API响应:', response.data);
+
                 if (response.data.code === 200) {
                     testcases = response.data.data.items;
+                    console.log('加载的测试用例:', testcases);
+                    addLog(`成功加载 ${testcases.length} 个测试用例`, 'success');
                     renderTestcaseOptions();
+                } else {
+                    console.error('API返回错误:', response.data);
+                    addLog(`加载失败: ${response.data.message}`, 'error');
                 }
             } catch (error) {
-                addLog('加载测试用例失败', 'error');
+                console.error('加载测试用例失败:', error);
+                addLog(`加载测试用例失败: ${error.message}`, 'error');
             }
         }
 
         function renderTestcaseOptions() {
+            console.log('开始渲染测试用例选项...');
             const select = document.getElementById('testcaseSelect');
+
+            if (!select) {
+                console.error('找不到testcaseSelect元素');
+                addLog('页面元素加载错误', 'error');
+                return;
+            }
+
             select.innerHTML = '<option value="">请选择测试用例</option>';
-            
-            testcases.forEach(testcase => {
+
+            console.log('要渲染的测试用例数量:', testcases.length);
+
+            testcases.forEach((testcase, index) => {
+                console.log(`渲染测试用例 ${index + 1}:`, testcase);
                 const option = document.createElement('option');
                 option.value = testcase.id;
                 option.textContent = `${testcase.name} (${testcase.category || '未分类'})`;
                 select.appendChild(option);
             });
+
+            addLog(`已加载 ${testcases.length} 个测试用例到下拉菜单`, 'success');
         }
 
         async function loadTestcaseSteps(testcaseId) {
