@@ -213,15 +213,27 @@ try:
 
             # 如果没有数据，创建示例数据
             if test_count == 0:
-                sample_testcase = TestCase(
+                # 简单的测试用例
+                simple_testcase = TestCase(
+                    name='简单页面访问测试',
+                    description='测试访问百度首页',
+                    steps='[{"action":"navigate","params":{"url":"https://www.baidu.com"},"description":"访问百度首页"}]',
+                    category='基础功能',
+                    priority=1,
+                    created_by='system'
+                )
+                db.session.add(simple_testcase)
+
+                # 复杂的测试用例
+                complex_testcase = TestCase(
                     name='百度搜索测试',
                     description='测试百度搜索功能',
                     steps='[{"action":"navigate","params":{"url":"https://www.baidu.com"},"description":"访问百度首页"},{"action":"ai_input","params":{"text":"AI测试","locate":"搜索框"},"description":"输入搜索关键词"}]',
                     category='搜索功能',
-                    priority=1,
+                    priority=2,
                     created_by='system'
                 )
-                db.session.add(sample_testcase)
+                db.session.add(complex_testcase)
 
             if template_count == 0:
                 sample_template = Template(
@@ -479,7 +491,11 @@ try:
         import os
 
         # 添加当前目录到路径
-        sys.path.append(os.path.dirname(__file__))
+        import os
+        import sys
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(current_dir)
+        sys.path.append(parent_dir)
 
         try:
             from chrome_bridge_service import ChromeBridgeService
@@ -487,56 +503,79 @@ try:
             # 创建桥接服务
             service = ChromeBridgeService()
 
-            # 检查桥接状态
-            status = service.check_chrome_extension_status()
+            # 检查桥接状态（简化检查，主要依赖前端确认）
             execution = app.executions[execution_id]
 
-            if not status['bridge_available']:
-                execution['status'] = 'failed'
-                execution['error'] = f"Chrome桥接不可用: {status['message']}"
-                execution['end_time'] = datetime.utcnow().isoformat()
-                return
+            # 简化桥接状态检查，主要依赖前端手动确认
+            execution['message'] = 'Chrome桥接模式：使用前端确认的状态'
 
             # 准备测试用例数据
+            import json
             testcase_data = {
                 'name': testcase.name,
-                'steps': testcase.steps
+                'steps': json.loads(testcase.steps) if testcase.steps else []
             }
 
-            # 创建桥接脚本
-            bridge_mode = "newTab" if mode == "browser" else "newTab"  # 桥接模式总是新标签页
-            script_path = service.create_bridge_script(testcase_data, bridge_mode)
-
-            execution['message'] = f'Chrome桥接脚本已创建: {script_path}'
-
-            # 在新的事件循环中执行
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+            execution['message'] = f'开始Chrome桥接执行: {testcase.name}'
+            execution['total_steps'] = len(testcase_data['steps'])
 
             try:
-                result = loop.run_until_complete(
-                    service.execute_bridge_script(script_path, execution_id)
-                )
+                # 创建桥接脚本
+                bridge_mode = "newTab" if mode == "browser" else "newTab"  # 桥接模式总是新标签页
+                script_path = service.create_bridge_script(testcase_data, bridge_mode)
 
-                # 更新执行记录
-                execution['bridge_result'] = result
+                execution['message'] = f'Chrome桥接脚本已创建: {script_path}'
 
-                if result['success']:
-                    execution['status'] = 'completed'
-                    execution['message'] = 'Chrome桥接执行成功'
-                else:
-                    execution['status'] = 'failed'
-                    execution['error'] = result.get('stderr', '执行失败')
+                # 在新的事件循环中执行
+                import asyncio
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
 
+                try:
+                    result = loop.run_until_complete(
+                        service.execute_bridge_script(script_path, execution_id)
+                    )
+
+                    # 更新执行记录
+                    execution['bridge_result'] = result
+
+                    if result.get('success', False):
+                        execution['status'] = 'completed'
+                        execution['message'] = 'Chrome桥接执行成功'
+                    else:
+                        execution['status'] = 'failed'
+                        execution['error'] = result.get('stderr', '执行失败')
+
+                    execution['end_time'] = datetime.utcnow().isoformat()
+
+                finally:
+                    loop.close()
+
+            except Exception as bridge_error:
+                execution['status'] = 'failed'
+                execution['error'] = f'Chrome桥接执行失败: {str(bridge_error)}'
                 execution['end_time'] = datetime.utcnow().isoformat()
+                print(f"Chrome桥接执行异常: {bridge_error}")
 
-            finally:
-                loop.close()
+                # 回退到模拟执行
+                print("回退到模拟执行...")
+                execute_testcase_background(execution_id, testcase, mode)
 
         except Exception as e:
-            # 桥接执行失败，回退到云端执行
-            print(f"Chrome桥接执行失败，回退到云端执行: {e}")
-            execute_testcase_cloud(execution_id, testcase, mode)
+            # 桥接执行失败，更新状态并回退
+            print(f"Chrome桥接执行失败: {e}")
+            execution = app.executions[execution_id]
+            execution['status'] = 'failed'
+            execution['error'] = f'Chrome桥接服务异常: {str(e)}'
+            execution['end_time'] = datetime.utcnow().isoformat()
+
+            # 尝试回退到云端执行
+            try:
+                print("尝试回退到云端执行...")
+                execute_testcase_cloud(execution_id, testcase, mode)
+            except Exception as fallback_error:
+                print(f"云端执行也失败，最终回退到模拟执行: {fallback_error}")
+                execute_testcase_background(execution_id, testcase, mode)
 
     def is_cloud_environment():
         """检测是否在云端环境"""

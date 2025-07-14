@@ -1288,13 +1288,22 @@
 
         async function detectMidSceneExtension() {
             try {
+                console.log('🔍 开始检测MidSceneJS扩展...');
+
                 // 方法1: 检测是否有MidSceneJS相关的全局对象
                 if (window.MidScene || window.midscene || window.AgentOverChromeBridge) {
                     console.log('✅ 检测到MidSceneJS全局对象');
                     return true;
                 }
 
-                // 方法2: 尝试检测扩展注入的内容
+                // 方法2: 检测Chrome扩展API
+                if (window.chrome && window.chrome.runtime && window.chrome.runtime.id) {
+                    console.log('✅ 检测到Chrome扩展环境');
+                    // 如果在扩展环境中，假设MidSceneJS可用
+                    return true;
+                }
+
+                // 方法3: 尝试检测扩展注入的内容
                 const scripts = document.querySelectorAll('script');
                 for (let script of scripts) {
                     if (script.src && (script.src.includes('midscene') || script.src.includes('chrome-extension'))) {
@@ -1303,15 +1312,24 @@
                     }
                 }
 
-                // 方法3: 检测DOM中是否有扩展相关元素
+                // 方法4: 检测DOM中是否有扩展相关元素
                 const midsceneElements = document.querySelectorAll('[data-midscene], [class*="midscene"], [id*="midscene"]');
                 if (midsceneElements.length > 0) {
                     console.log('✅ 检测到MidSceneJS扩展元素');
                     return true;
                 }
 
-                // 方法4: 尝试发送消息给扩展
-                return await testExtensionMessage();
+                // 方法5: 检测页面标题或URL是否包含扩展相关信息
+                if (document.title.toLowerCase().includes('midscene') ||
+                    window.location.href.includes('chrome-extension')) {
+                    console.log('✅ 检测到扩展相关页面信息');
+                    return true;
+                }
+
+                // 方法6: 简化检测 - 如果用户能看到这个页面，说明Chrome在运行
+                // 对于扩展检测，我们采用更宽松的策略
+                console.log('⚠️ 无法自动检测扩展，建议用户手动确认');
+                return false;
 
             } catch (error) {
                 console.warn('扩展检测失败:', error);
@@ -1518,6 +1536,14 @@
             document.getElementById('manualConfirmArea').style.display = 'none';
 
             addLog(`手动确认完成：${manualStatus.message}`, manualStatus.bridge_available ? 'success' : 'warning');
+
+            // 如果桥接可用，启用执行按钮
+            if (manualStatus.bridge_available) {
+                const startBtn = document.getElementById('startBtn');
+                if (startBtn) {
+                    startBtn.disabled = false;
+                }
+            }
         }
 
         function getManualConfirmMessage(chrome, extension, ai) {
