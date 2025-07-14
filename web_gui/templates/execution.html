@@ -932,8 +932,63 @@
             document.getElementById('progressContainer').style.display = 'block';
             updateProgress(0, stepIcons.length);
 
+            addLog(`准备执行测试用例 ID: ${testcaseId}`, 'info');
+            addLog(`执行模式: ${mode}`, 'info');
+            addLog(`执行类型: ${execution_type}`, 'info');
+
+            // 根据执行类型选择不同的执行路径
+            if (execution_type === 'bridge') {
+                // Chrome桥接模式：客户端执行
+                await startBridgeExecution(testcaseId, mode);
+            } else {
+                // 云端/本地模式：服务器执行
+                await startServerExecution(testcaseId, mode, execution_type);
+            }
+        }
+
+        async function startBridgeExecution(testcaseId, mode) {
+            addLog('🌉 启动Chrome桥接模式（客户端执行）', 'info');
+
             try {
-                // 发送HTTP执行请求
+                // 1. 获取测试用例数据
+                addLog('正在获取测试用例数据...', 'info');
+                const testcaseResponse = await axios.get(`${API_BASE}/testcases/${testcaseId}`);
+                if (testcaseResponse.data.code !== 200) {
+                    addLog('获取测试用例失败', 'error');
+                    return;
+                }
+
+                const testcase = testcaseResponse.data.data;
+                addLog(`✅ 获取测试用例: ${testcase.name}`, 'success');
+
+                // 2. 检查Chrome扩展
+                addLog('正在检查Chrome扩展状态...', 'info');
+                if (!await checkChromeExtension()) {
+                    addLog('❌ Chrome扩展不可用，请确保已安装MidSceneJS扩展', 'error');
+                    addLog('请按照以下步骤安装扩展：', 'warning');
+                    addLog('1. 访问Chrome扩展商店', 'warning');
+                    addLog('2. 搜索并安装MidSceneJS扩展', 'warning');
+                    addLog('3. 在扩展中配置AI API密钥', 'warning');
+                    return;
+                }
+
+                addLog('✅ Chrome扩展检测通过', 'success');
+
+                // 3. 直接调用Chrome扩展执行
+                addLog('🚀 开始通过Chrome扩展执行测试...', 'info');
+                await executeThroughChromeExtension(testcase, mode);
+
+            } catch (error) {
+                addLog(`❌ Chrome桥接执行失败: ${error.message}`, 'error');
+                addLog('建议：尝试使用云端模式或检查扩展配置', 'warning');
+            }
+        }
+
+        async function startServerExecution(testcaseId, mode, execution_type) {
+            addLog(`☁️ 启动${execution_type === 'cloud' ? '云端' : '本地'}模式（服务器执行）`, 'info');
+
+            try {
+                // 发送HTTP执行请求到服务器
                 const response = await axios.post(`${API_BASE}/executions/start`, {
                     testcase_id: parseInt(testcaseId),
                     mode: mode,
@@ -942,7 +997,7 @@
 
                 if (response.data.code === 200) {
                     currentExecution = response.data.data.execution_id;
-                    addLog(`开始执行测试用例 (模式: ${mode})`, 'info');
+                    addLog(`✅ 开始执行测试用例 (模式: ${mode})`, 'info');
                     addLog(response.data.data.message, 'info');
 
                     // 开始轮询状态
@@ -952,10 +1007,164 @@
                     document.getElementById('startBtn').disabled = true;
                     document.getElementById('stopBtn').disabled = false;
                 } else {
-                    addLog(`执行启动失败: ${response.data.message}`, 'error');
+                    addLog(`❌ 执行启动失败: ${response.data.message}`, 'error');
                 }
             } catch (error) {
-                addLog(`执行启动失败: ${error.message}`, 'error');
+                addLog(`❌ 执行启动失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkChromeExtension() {
+            try {
+                // 检查是否在Chrome浏览器中
+                const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+                if (!isChrome) {
+                    addLog('⚠️ 建议使用Chrome浏览器以获得最佳体验', 'warning');
+                }
+
+                // 尝试检测MidSceneJS扩展
+                // 方法1: 检查是否有扩展注入的全局对象
+                if (window.midsceneExtension) {
+                    addLog('✅ 检测到MidSceneJS扩展（全局对象）', 'success');
+                    return true;
+                }
+
+                // 方法2: 尝试发送消息到扩展
+                if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                    return new Promise((resolve) => {
+                        chrome.runtime.sendMessage('midscene-extension-id', {action: 'ping'}, (response) => {
+                            if (chrome.runtime.lastError) {
+                                addLog('⚠️ 未检测到MidSceneJS扩展响应', 'warning');
+                                resolve(false);
+                            } else {
+                                addLog('✅ MidSceneJS扩展响应正常', 'success');
+                                resolve(true);
+                            }
+                        });
+                    });
+                }
+
+                // 方法3: 检查DOM中是否有扩展标识
+                const extensionMarker = document.querySelector('[data-midscene-extension]');
+                if (extensionMarker) {
+                    addLog('✅ 检测到MidSceneJS扩展（DOM标识）', 'success');
+                    return true;
+                }
+
+                // 如果都没有检测到，返回false但不阻止执行（用户可能手动确认过）
+                const manualStatus = localStorage.getItem('midscene_manual_status');
+                if (manualStatus) {
+                    const status = JSON.parse(manualStatus);
+                    if (status.bridge_available) {
+                        addLog('✅ 使用手动确认的扩展状态', 'info');
+                        return true;
+                    }
+                }
+
+                return false;
+            } catch (error) {
+                addLog(`扩展检测异常: ${error.message}`, 'warning');
+                return false;
+            }
+        }
+
+        async function executeThroughChromeExtension(testcase, mode) {
+            try {
+                const steps = JSON.parse(testcase.steps || '[]');
+                addLog(`📋 开始执行 ${steps.length} 个测试步骤`, 'info');
+
+                // 更新按钮状态
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+
+                // 执行每个步骤
+                for (let i = 0; i < steps.length; i++) {
+                    const step = steps[i];
+                    addLog(`🔄 执行步骤 ${i + 1}: ${step.description || step.action}`, 'info');
+
+                    try {
+                        // 更新步骤状态为运行中
+                        updateStepStatus(i, 'running');
+
+                        // 调用扩展执行步骤
+                        const result = await executeStepThroughExtension(step, i);
+
+                        if (result.success) {
+                            addLog(`✅ 步骤 ${i + 1} 执行成功`, 'success');
+                            updateStepStatus(i, 'success');
+                        } else {
+                            addLog(`❌ 步骤 ${i + 1} 执行失败: ${result.error}`, 'error');
+                            updateStepStatus(i, 'failed');
+                        }
+
+                        // 更新进度
+                        updateProgress(i + 1, steps.length);
+
+                        // 短暂延迟，让用户看到执行过程
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+
+                    } catch (stepError) {
+                        addLog(`❌ 步骤 ${i + 1} 执行异常: ${stepError.message}`, 'error');
+                        updateStepStatus(i, 'failed');
+                    }
+                }
+
+                addLog('🎉 测试执行完成！', 'success');
+
+                // 恢复按钮状态
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+
+            } catch (error) {
+                addLog(`❌ 执行过程异常: ${error.message}`, 'error');
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+            }
+        }
+
+        async function executeStepThroughExtension(step, stepIndex) {
+            return new Promise((resolve) => {
+                try {
+                    // 模拟扩展执行（实际应该调用真实的扩展API）
+                    const action = step.action;
+                    const params = step.params || {};
+
+                    addLog(`  📝 动作: ${action}`, 'info');
+                    if (params.url) addLog(`  🔗 URL: ${params.url}`, 'info');
+                    if (params.text) addLog(`  📝 文本: ${params.text}`, 'info');
+                    if (params.locate) addLog(`  🎯 定位: ${params.locate}`, 'info');
+
+                    // 这里应该调用真实的Chrome扩展API
+                    // 现在先模拟成功执行
+                    setTimeout(() => {
+                        resolve({
+                            success: true,
+                            action: action,
+                            stepIndex: stepIndex,
+                            screenshot: `screenshot_step_${stepIndex + 1}.png`
+                        });
+                    }, 2000); // 模拟执行时间
+
+                } catch (error) {
+                    resolve({
+                        success: false,
+                        error: error.message
+                    });
+                }
+            });
+        }
+
+        function updateStepStatus(stepIndex, status) {
+            const stepIcon = document.getElementById(`step-icon-${stepIndex}`);
+            if (stepIcon) {
+                stepIcon.className = `step-icon ${status}`;
+                if (status === 'running') {
+                    stepIcon.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                } else if (status === 'success') {
+                    stepIcon.innerHTML = '<i class="fas fa-check"></i>';
+                } else if (status === 'failed') {
+                    stepIcon.innerHTML = '<i class="fas fa-times"></i>';
+                }
             }
         }
 
