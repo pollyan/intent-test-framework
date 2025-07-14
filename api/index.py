@@ -832,6 +832,14 @@ try:
         print("✅ CORS配置成功")
     except ImportError:
         print("⚠️ CORS模块未找到，跳过")
+    
+    # 在应用启动时创建数据库表
+    try:
+        with app.app_context():
+            db.create_all()
+            print("✅ 数据库表创建成功")
+    except Exception as e:
+        print(f"⚠️ 数据库表创建失败: {e}")
 
     # API状态检查
     @app.route('/api/status')
