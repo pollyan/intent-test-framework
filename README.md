@@ -1,214 +1,189 @@
-# MidSceneJS Demo - 完全AI驱动的Web UI自动化测试
+# Intent Test Framework
 
-这是一个展示Python + MidSceneJS集成的演示项目，**完全依赖AI功能**，不使用任何传统的元素定位方法。
+一个基于AI的意图驱动Web自动化测试框架，提供完整的WebUI界面用于测试用例管理、执行监控和结果分析。
 
-## 🚀 项目特色
+## 🎯 项目特色
 
-### 🤖 纯AI驱动架构
-- **完全依赖AI**: 所有测试操作通过自然语言指令完成
-- **零传统方法**: 不使用CSS选择器、XPath或其他传统定位方式  
-- **智能交互**: AI理解页面内容并自主执行操作
-- **自然语言**: 测试脚本使用人类语言描述测试步骤
+### 🤖 AI驱动的测试自动化
+- **智能元素识别**: 使用AI视觉模型自动识别页面元素
+- **自然语言测试**: 支持用自然语言描述测试步骤
+- **智能断言**: AI自动验证页面状态和内容
+- **自适应执行**: 根据页面变化自动调整测试策略
 
-### 🔧 技术架构
-- **Python + Node.js**: Python测试框架 + Node.js MidSceneJS服务器
-- **HTTP API**: 通过RESTful API实现跨语言AI调用
-- **通义千问VL**: 使用阿里云大模型进行视觉理解
-- **实时报告**: 生成详细的AI操作报告和截图
+### 🖥️ 完整的WebUI管理界面
+- **测试用例管理**: 可视化创建、编辑、组织测试用例
+- **实时执行监控**: WebSocket实时显示执行状态和日志
+- **截图历史**: 每个步骤自动截图，支持缩略图查看
+- **测试报告**: 详细的执行报告和历史记录
 
-## 📋 系统要求
+### 🔧 强大的技术架构
+- **分层架构**: 清晰的表现层、业务逻辑层、数据访问层分离
+- **实时通信**: Flask + Socket.IO 实现实时状态更新
+- **AI引擎集成**: 支持多种AI模型（Qwen VL、GPT-4V等）
+- **浏览器支持**: 支持可视化和无头模式执行
 
+## 🚀 快速开始
+
+### 环境要求
 - Python 3.8+
 - Node.js 16+
-- 有效的通义千问API密钥
+- 现代浏览器
 
-## ⚡ 快速开始
+### 安装步骤
 
-### 1. 环境配置
+1. **克隆项目**
 ```bash
-# 克隆项目
-git clone <项目地址>
-cd midscenejs-demo
-
-# 一键安装环境
-python setup.py
+git clone https://github.com/pollyan/intent-test-framework.git
+cd intent-test-framework
 ```
 
-### 2. 配置API密钥
+2. **自动设置开发环境**
 ```bash
-# 复制环境变量模板
-cp env.example .env
-
-# 编辑.env文件，设置你的API密钥
-OPENAI_API_KEY=your_qwen_api_key_here
-OPENAI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-MIDSCENE_MODEL_NAME=qwen-vl-max-latest
-MIDSCENE_USE_QWEN_VL=1
+python scripts/setup_dev_env.py
 ```
 
-### 3. 运行纯AI测试
+3. **配置环境变量**
 ```bash
-# 设置环境变量并运行测试
-export OPENAI_API_KEY=your_api_key
-export OPENAI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-export MIDSCENE_MODEL_NAME=qwen-vl-max-latest
-export MIDSCENE_USE_QWEN_VL=1
-
-# 运行所有AI测试
-pytest tests/test_ai_only.py -v -s
+cp .env.example .env
+# 编辑.env文件，填入您的AI API配置
 ```
 
-## 🤖 AI功能演示
+4. **启动服务**
+```bash
+# 启动MidScene服务
+node midscene_server.js
 
-### 完全AI驱动的测试示例
+# 启动Web应用
+python web_gui/run_enhanced.py
+```
+
+5. **访问应用**
+```
+http://localhost:5001
+```
+
+## 📋 核心功能
+
+### 🎯 意图驱动测试
 ```python
-def test_ai_baidu_search_workflow(self):
-    """完整的AI驱动百度搜索工作流"""
-    
-    # AI导航
-    self.ai.goto("https://www.baidu.com")
-    
-    # AI输入 - 自然语言描述输入框
-    self.ai.ai_input("MidSceneJS AI自动化", "搜索框")
-    
-    # AI点击 - 自然语言描述按钮
-    self.ai.ai_tap("百度一下按钮")
-    
-    # AI等待 - 智能判断页面状态
-    self.ai.ai_wait_for("搜索结果页面已加载完成")
-    
-    # AI断言 - 智能验证页面内容
-    self.ai.ai_assert("页面显示了关于MidSceneJS的搜索结果")
+# 示例：自然语言测试用例
+steps = [
+    {
+        "action": "navigate",
+        "params": {"url": "https://example.com"}
+    },
+    {
+        "action": "ai_input",
+        "params": {
+            "element": "搜索框",
+            "text": "AI测试"
+        }
+    },
+    {
+        "action": "ai_tap", 
+        "params": {"element": "搜索按钮"}
+    },
+    {
+        "action": "ai_assert",
+        "params": {"assertion": "页面显示搜索结果"}
+    }
+]
 ```
 
-### AI数据提取
-```python
-# AI提取结构化数据
-search_results = self.ai.ai_query(
-    "提取前5个搜索结果的标题和摘要，返回JSON格式的数组"
-)
+### 📊 实时监控
+- **执行状态**: 实时显示测试执行进度
+- **步骤日志**: 详细的步骤执行日志
+- **错误捕获**: 自动捕获和显示执行错误
+- **性能监控**: 步骤执行时间统计
 
-# AI分析页面统计
-page_stats = self.ai.ai_query(
-    "分析当前搜索结果页面，提取搜索关键词、结果数量等统计信息"
-)
-```
+### 📸 可视化调试
+- **步骤截图**: 每个步骤自动截图保存
+- **缩略图历史**: 网格显示所有步骤截图
+- **全屏查看**: 点击缩略图查看完整截图
+- **失败分析**: 快速定位失败步骤
 
-## 📊 测试结果
-
-最新测试结果（完全AI驱动）：
-- ✅ **AI搜索工作流测试**: 通过
-- ✅ **AI数据提取测试**: 通过  
-- ✅ **AI页面交互测试**: 通过
-- ✅ **AI滚动探索测试**: 通过
-- ⚠️ **AI多步骤工作流**: 部分通过（超时限制）
-
-**成功率: 80% (4/5)**
-
-## 🏗️ 项目结构
+## 🏗️ 项目架构
 
 ```
-midscenejs-demo/
-├── midscene_python.py          # Python AI封装类
-├── midscene_server.js          # Node.js AI服务器
-├── tests/
-│   ├── conftest.py            # pytest配置
-│   └── test_ai_only.py        # 纯AI测试用例
-├── screenshots/               # AI测试截图
-├── midscene_run/             # MidSceneJS报告
-├── requirements.txt          # Python依赖
-├── package.json             # Node.js依赖
-└── setup.py                # 环境安装脚本
+intent-test-framework/
+├── web_gui/                   # Web界面核心模块
+│   ├── templates/             # HTML模板
+│   ├── static/               # 静态资源
+│   ├── app_enhanced.py       # 主应用
+│   ├── api_routes.py         # API路由
+│   ├── models.py             # 数据模型
+│   └── run_enhanced.py       # 启动脚本
+├── scripts/                  # 工具脚本
+│   ├── quality_check.py      # 代码质量检查
+│   ├── setup_dev_env.py      # 开发环境设置
+│   └── setup_git_hooks.sh    # Git钩子设置
+├── tests/                    # 测试文件
+├── PRD/                      # 产品需求文档
+├── PROJECT_RULES.md          # 项目规则
+├── DEVELOPMENT_GUIDE.md      # 开发指南
+└── midscene_python.py        # AI引擎接口
 ```
 
-## 🎯 AI功能列表
+## 🔧 开发指南
 
-### 核心AI操作
-- `ai_input(text, locate_prompt)` - AI智能输入
-- `ai_tap(prompt)` - AI智能点击
-- `ai_query(prompt)` - AI数据提取
-- `ai_assert(prompt)` - AI智能断言
-- `ai_action(prompt)` - AI通用操作
-- `ai_wait_for(prompt)` - AI智能等待
-- `ai_scroll(direction, type)` - AI智能滚动
-
-### 特色功能
-- 🧠 **自然语言理解**: 完全使用人类语言描述操作
-- 👁️ **视觉理解**: AI通过截图理解页面内容
-- 🎯 **智能定位**: 无需CSS选择器，AI自动识别元素
-- 📊 **数据提取**: AI提取并结构化页面数据
-- ✅ **智能断言**: AI理解页面状态并进行验证
-
-## 🔧 技术细节
-
-### AI服务器架构
-- **Express.js服务器**: 提供RESTful API接口
-- **PlaywrightAgent**: MidSceneJS核心AI代理
-- **环境隔离**: 每个测试独立的浏览器环境
-- **错误处理**: 详细的AI操作错误反馈
-
-### Python客户端
-- **HTTP通信**: 通过requests与AI服务器通信
-- **同步接口**: 简化的同步API调用
-- **结果处理**: 智能处理AI返回结果
-
-## 📈 AI模型支持
-
-- ✅ **通义千问VL** (推荐)
-- ✅ **GPT-4o**
-- ✅ **Gemini Vision**
-- ✅ **其他兼容OpenAI API的视觉模型**
-
-## 🎯 使用场景
-
-### 适合的测试场景
-- 🎨 **复杂UI交互**: AI理解视觉元素
-- 📊 **数据验证**: AI提取和验证数据
-- 🔄 **工作流测试**: AI执行复杂业务流程
-- 🌐 **跨浏览器测试**: AI适应不同页面结构
-
-### 优势
-- 🚀 **快速开发**: 无需编写复杂选择器
-- 🛡️ **稳定性强**: AI适应页面变化
-- 📝 **易于维护**: 自然语言描述易读易改
-- 🎯 **高准确性**: 视觉理解提供准确定位
-
-## 🔍 报告和日志
-
-### 测试输出
-- 📸 **自动截图**: 每个测试步骤自动截图记录
-- 📊 **AI报告**: MidSceneJS生成详细HTML报告
-- 📝 **详细日志**: AI操作的完整日志记录
-
-### 查看报告
+### 代码质量
 ```bash
-# 查看截图
-ls screenshots/
+# 运行质量检查
+python scripts/quality_check.py
 
-# 查看AI报告
-open midscene_run/report/*.html
+# 自动修复格式问题
+python scripts/quality_check.py --fix
+```
+
+### 提交规范
+```bash
+# 提交信息格式
+<type>(<scope>): <subject>
+
+# 示例
+feat(webui): 添加截图历史功能
+fix(api): 修复测试用例删除接口错误
+docs(readme): 更新安装说明
+```
+
+### 测试
+```bash
+# 运行测试
+python -m pytest tests/
+
+# 运行特定测试
+python -m pytest tests/test_models.py
 ```
 
 ## 🤝 贡献指南
 
-1. Fork 项目
-2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 打开 Pull Request
+1. Fork项目
+2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
+3. 遵循代码规范
+4. 编写测试
+5. 提交更改 (`git commit -m 'feat: add amazing feature'`)
+6. 推送分支 (`git push origin feature/amazing-feature`)
+7. 创建Pull Request
 
 ## 📄 许可证
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
 
 ## 🙏 致谢
 
-- [MidSceneJS](https://github.com/web-infra-dev/midscene) - 强大的AI自动化框架
-- [Playwright](https://playwright.dev/) - 现代化的浏览器自动化工具
-- [通义千问](https://dashscope.aliyuncs.com/) - 优秀的视觉理解大模型
+- [MidScene](https://midscenejs.com/) - AI视觉测试引擎
+- [Flask](https://flask.palletsprojects.com/) - Web框架
+- [Socket.IO](https://socket.io/) - 实时通信
+- [Playwright](https://playwright.dev/) - 浏览器自动化
+
+## 📞 支持
+
+如有问题或建议，请：
+1. 查看[开发指南](DEVELOPMENT_GUIDE.md)
+2. 查看[项目规则](PROJECT_RULES.md)
+3. 创建[Issue](https://github.com/pollyan/intent-test-framework/issues)
+4. 联系维护者
 
 ---
 
-⭐ 如果这个项目对你有帮助，请给它一个星标！
-
-🤖 **纯AI驱动，零传统方法，开启智能化测试新时代！** 
+**Intent Test Framework** - 让AI驱动的Web测试变得简单而强大！ 🚀
