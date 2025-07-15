@@ -45,17 +45,17 @@ function generateExecutionId() {
 // Web系统API集成函数
 async function notifyExecutionStart(executionId, testcase, mode) {
     try {
-        const response = await axios.post(`${API_BASE_URL}/midscene/execution-start`, {
-            execution_id: executionId,
-            testcase_id: testcase.id,
+        // 通过WebSocket通知前端执行开始
+        io.emit('execution-start', {
+            executionId: executionId,
+            testcase: testcase.name,
             mode: mode,
-            browser: 'chrome',
-            executed_by: 'midscene-server',
-            steps_total: Array.isArray(testcase.steps) ? testcase.steps.length : 
-                        (typeof testcase.steps === 'string' ? JSON.parse(testcase.steps).length : 0)
+            totalSteps: Array.isArray(testcase.steps) ? testcase.steps.length : 
+                       (typeof testcase.steps === 'string' ? JSON.parse(testcase.steps).length : 0)
         });
+        
         console.log(`✅ 通知执行开始: ${executionId}`);
-        return response.data;
+        return { success: true };
     } catch (error) {
         console.error(`❌ 通知执行开始失败: ${error.message}`);
         return null;
@@ -70,22 +70,20 @@ async function notifyExecutionResult(executionId, testcase, mode, status, steps,
             return;
         }
 
-        const resultData = {
-            execution_id: executionId,
-            testcase_id: testcase.id,
+        // 通过WebSocket通知前端执行结果
+        io.emit('execution-completed', {
+            executionId: executionId,
+            testcase: testcase.name,
             status: status,
             mode: mode,
-            browser: 'chrome',
-            executed_by: 'midscene-server',
-            start_time: executionState.startTime.toISOString(),
-            end_time: new Date().toISOString(),
+            startTime: executionState.startTime.toISOString(),
+            endTime: new Date().toISOString(),
             steps: steps,
-            error_message: errorMessage
-        };
+            errorMessage: errorMessage
+        });
 
-        const response = await axios.post(`${API_BASE_URL}/midscene/execution-result`, resultData);
         console.log(`✅ 通知执行结果: ${executionId} -> ${status}`);
-        return response.data;
+        return { success: true };
     } catch (error) {
         console.error(`❌ 通知执行结果失败: ${error.message}`);
         return null;
@@ -146,7 +144,7 @@ io.on('connection', (socket) => {
 });
 
 // 执行单个步骤
-async function executeStep(step, page, agent, executionId, stepIndex) {
+async function executeStep(step, page, agent, executionId, stepIndex, totalSteps) {
     const { action, params = {}, description } = step;
 
     // 发送步骤开始事件
@@ -154,7 +152,8 @@ async function executeStep(step, page, agent, executionId, stepIndex) {
         executionId,
         stepIndex,
         action,
-        description: description || action
+        description: description || action,
+        totalSteps: totalSteps
     });
 
     const stepStartTime = Date.now();
@@ -231,6 +230,14 @@ async function executeStep(step, page, agent, executionId, stepIndex) {
         return { success: true };
 
     } catch (error) {
+        // 发送步骤失败事件
+        io.emit('step-failed', {
+            executionId,
+            stepIndex,
+            totalSteps: totalSteps,
+            error: error.message
+        });
+        
         io.emit('log-message', {
             executionId,
             level: 'error',
@@ -313,7 +320,7 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
             });
 
             // 执行步骤
-            await executeStep(step, page, agent, executionId, i);
+            await executeStep(step, page, agent, executionId, i, steps.length);
 
             // 截图
             try {
@@ -333,9 +340,10 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
             }
 
             // 发送步骤完成事件
-            io.emit('step-complete', {
+            io.emit('step-completed', {
                 executionId,
                 stepIndex: i,
+                totalSteps: steps.length,
                 success: true
             });
 
@@ -363,9 +371,9 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
         executionState.duration = executionState.endTime - executionState.startTime;
 
         // 发送执行完成事件
-        io.emit('execution-complete', {
+        io.emit('execution-completed', {
             executionId,
-            success: true,
+            status: 'success',
             message: '🎉 测试执行完成！',
             duration: executionState.duration,
             timestamp: new Date().toISOString()
@@ -392,8 +400,9 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
         }
 
         // 发送执行错误事件
-        io.emit('execution-error', {
+        io.emit('execution-completed', {
             executionId,
+            status: 'failed',
             error: error.message,
             timestamp: new Date().toISOString()
         });
