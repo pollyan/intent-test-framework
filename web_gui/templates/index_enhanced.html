@@ -236,7 +236,10 @@
 <script>
     // API基础配置
     const API_BASE = '/api';
-    const socket = io();
+    
+    // 智能WebSocket连接 - 仪表板页面不需要连接WebSocket
+    // WebSocket只在执行控制台页面使用，连接到本地代理服务器
+    let socket = null;
 
     // 页面初始化
     document.addEventListener('DOMContentLoaded', function() {
@@ -250,18 +253,9 @@
     }
 
     function setupWebSocket() {
-        socket.on('connected', function(data) {
-            console.log('WebSocket连接成功:', data);
-        });
-
-        socket.on('execution_completed', function(data) {
-            showMessage('测试执行完成: ' + data.status, 'success');
-            loadDashboardData(); // 刷新数据
-        });
-
-        socket.on('execution_error', function(data) {
-            showMessage('执行错误: ' + data.message, 'error');
-        });
+        // 仪表板页面不需要WebSocket连接
+        // WebSocket连接只在执行控制台页面使用，用于实时监控测试执行
+        console.log('仪表板页面已加载，无需WebSocket连接');
     }
 
     function setupQuickActions() {
