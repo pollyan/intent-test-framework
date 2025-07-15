@@ -918,6 +918,12 @@
 
             // 清空日志
             document.getElementById('logContainer').innerHTML = '';
+            
+            // 清空截图历史
+            clearScreenshotHistory();
+            
+            // 隐藏当前截图
+            document.getElementById('screenshotContainer').style.display = 'none';
 
             // 显示进度条
             document.getElementById('progressContainer').style.display = 'block';
@@ -1314,6 +1320,9 @@
                         path: `data:image/png;base64,${data.screenshot}`
                     };
                     addScreenshotToHistory(screenshot);
+                    
+                    // 立即更新当前截图显示
+                    showScreenshot(screenshot.path);
                 });
 
                 localProxySocket.on('execution-complete', (data) => {
