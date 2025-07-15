@@ -97,6 +97,7 @@ HTML_TEMPLATE = """
 
 # 主页路由 - 使用原来的完整Web界面
 @app.route('/')
+@app.route('/dashboard')
 def home():
     try:
         # 尝试渲染原来的完整界面
@@ -119,7 +120,7 @@ def testcases_page():
     """测试用例管理页面"""
     try:
         from flask import render_template
-        return render_template('testcases.html')
+        return render_template('testcases_unified.html')
     except Exception as e:
         return jsonify({'error': f'无法加载测试用例页面: {str(e)}'}), 500
 
@@ -128,7 +129,7 @@ def execution_page():
     """执行控制台页面"""
     try:
         from flask import render_template
-        return render_template('execution.html')
+        return render_template('execution_unified.html')
     except Exception as e:
         return jsonify({'error': f'无法加载执行控制台页面: {str(e)}'}), 500
 
@@ -137,7 +138,7 @@ def reports_page():
     """测试报告页面"""
     try:
         from flask import render_template
-        return render_template('reports.html')
+        return render_template('reports_unified.html')
     except Exception as e:
         return jsonify({'error': f'无法加载测试报告页面: {str(e)}'}), 500
 
@@ -155,7 +156,8 @@ def local_proxy_page():
     """本地代理下载页面"""
     try:
         from flask import render_template
-        return render_template('local_proxy.html')
+        from datetime import datetime
+        return render_template('local_proxy_unified.html', current_date=datetime.utcnow().strftime('%Y-%m-%d'))
     except Exception as e:
         return jsonify({'error': f'无法加载本地代理页面: {str(e)}'}), 500
 

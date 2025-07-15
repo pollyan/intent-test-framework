@@ -1,0 +1,716 @@
+{% extends "base_layout.html" %}
+
+{% block title %}测试报告 - AI测试系统{% endblock %}
+
+{% block page_title %}测试报告{% endblock %}
+
+{% block extra_css %}
+<style>
+    .reports-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .stats-overview {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .stat-number {
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+
+    .stat-number.success {
+        color: #52c41a;
+    }
+
+    .stat-number.failed {
+        color: #ff4d4f;
+    }
+
+    .stat-number.total {
+        color: #1890ff;
+    }
+
+    .stat-number.rate {
+        color: #722ed1;
+    }
+
+    .stat-label {
+        color: #666;
+        font-size: 14px;
+    }
+
+    .reports-section {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+
+    .section-header {
+        padding: 16px 24px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .section-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .btn {
+        padding: 6px 12px;
+        border: 1px solid #d9d9d9;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .btn-primary {
+        background: #1890ff;
+        color: white;
+        border-color: #1890ff;
+    }
+
+    .btn-primary:hover {
+        background: #40a9ff;
+        border-color: #40a9ff;
+    }
+
+    .btn-default {
+        background: white;
+        color: #262626;
+    }
+
+    .btn-default:hover {
+        background: #f5f5f5;
+        border-color: #40a9ff;
+    }
+
+    .filter-bar {
+        padding: 16px 24px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        gap: 16px;
+        align-items: center;
+    }
+
+    .filter-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .filter-item label {
+        font-size: 14px;
+        font-weight: 500;
+        color: #262626;
+    }
+
+    .filter-input {
+        padding: 6px 12px;
+        border: 1px solid #d9d9d9;
+        border-radius: 4px;
+        font-size: 14px;
+        min-width: 120px;
+    }
+
+    .filter-select {
+        padding: 6px 12px;
+        border: 1px solid #d9d9d9;
+        border-radius: 4px;
+        font-size: 14px;
+        min-width: 100px;
+    }
+
+    .reports-list {
+        padding: 24px;
+    }
+
+    .report-item {
+        border: 1px solid #f0f0f0;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .report-item:hover {
+        border-color: #1890ff;
+        box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+    }
+
+    .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
+    }
+
+    .report-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #262626;
+        margin: 0;
+    }
+
+    .report-status {
+        font-size: 12px;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-weight: 500;
+    }
+
+    .report-status.success {
+        background: #f6ffed;
+        color: #52c41a;
+        border: 1px solid #b7eb8f;
+    }
+
+    .report-status.failed {
+        background: #fff2f0;
+        color: #ff4d4f;
+        border: 1px solid #ffccc7;
+    }
+
+    .report-status.running {
+        background: #e6f7ff;
+        color: #1890ff;
+        border: 1px solid #91d5ff;
+    }
+
+    .report-meta {
+        display: flex;
+        gap: 16px;
+        font-size: 12px;
+        color: #999;
+        margin-bottom: 8px;
+    }
+
+    .report-summary {
+        display: flex;
+        gap: 16px;
+        font-size: 12px;
+        color: #666;
+    }
+
+    .report-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+    }
+
+    .action-btn {
+        padding: 4px 8px;
+        border: 1px solid #d9d9d9;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.3s;
+        text-decoration: none;
+        color: #666;
+    }
+
+    .action-btn:hover {
+        border-color: #1890ff;
+        color: #1890ff;
+    }
+
+    .action-btn.delete:hover {
+        border-color: #ff4d4f;
+        color: #ff4d4f;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 24px;
+        color: #999;
+    }
+
+    .empty-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+    }
+
+    .empty-text {
+        font-size: 16px;
+        margin-bottom: 16px;
+    }
+
+    .empty-desc {
+        font-size: 14px;
+        color: #ccc;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #1890ff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 8px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        margin-top: 24px;
+    }
+
+    .pagination-btn {
+        padding: 6px 12px;
+        border: 1px solid #d9d9d9;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+
+    .pagination-btn:hover {
+        border-color: #1890ff;
+        color: #1890ff;
+    }
+
+    .pagination-btn.active {
+        background: #1890ff;
+        color: white;
+        border-color: #1890ff;
+    }
+
+    .pagination-btn.disabled {
+        cursor: not-allowed;
+        color: #ccc;
+        border-color: #f0f0f0;
+    }
+
+    .pagination-info {
+        font-size: 14px;
+        color: #666;
+        margin: 0 16px;
+    }
+
+    @media (max-width: 768px) {
+        .stats-overview {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .stats-overview {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reports-container">
+    <!-- 统计概览 -->
+    <div class="stats-overview">
+        <div class="stat-card">
+            <div class="stat-number total" id="total-executions">0</div>
+            <div class="stat-label">总执行次数</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number success" id="success-executions">0</div>
+            <div class="stat-label">成功次数</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number failed" id="failed-executions">0</div>
+            <div class="stat-label">失败次数</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number rate" id="success-rate">0%</div>
+            <div class="stat-label">成功率</div>
+        </div>
+    </div>
+
+    <!-- 执行报告列表 -->
+    <div class="reports-section">
+        <div class="section-header">
+            <h3 class="section-title">执行报告</h3>
+            <div class="section-actions">
+                <button class="btn btn-default" onclick="refreshReports()">
+                    <span>🔄</span>
+                    刷新
+                </button>
+                <button class="btn btn-primary" onclick="exportReports()">
+                    <span>📊</span>
+                    导出报告
+                </button>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <div class="filter-item">
+                <label for="search">搜索:</label>
+                <input type="text" id="search" class="filter-input" placeholder="输入测试用例名称...">
+            </div>
+            <div class="filter-item">
+                <label for="status">状态:</label>
+                <select id="status" class="filter-select">
+                    <option value="">全部状态</option>
+                    <option value="success">成功</option>
+                    <option value="failed">失败</option>
+                    <option value="running">运行中</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label for="date-range">日期范围:</label>
+                <select id="date-range" class="filter-select">
+                    <option value="">全部时间</option>
+                    <option value="today">今天</option>
+                    <option value="week">本周</option>
+                    <option value="month">本月</option>
+                </select>
+            </div>
+            <button class="btn btn-default" onclick="applyFilters()">
+                <span>🔍</span>
+                筛选
+            </button>
+        </div>
+
+        <div class="reports-list">
+            <div id="loading" class="loading" style="display: none;">
+                <div class="loading-spinner"></div>
+                正在加载执行报告...
+            </div>
+            
+            <div id="reports-items">
+                <!-- 报告项目会在这里动态加载 -->
+            </div>
+
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <div class="empty-icon">📊</div>
+                <div class="empty-text">暂无执行报告</div>
+                <div class="empty-desc">执行测试用例后，报告将会显示在这里</div>
+            </div>
+
+            <div id="pagination" class="pagination" style="display: none;">
+                <!-- 分页控件会在这里动态生成 -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentPage = 1;
+    let pageSize = 10;
+    let totalItems = 0;
+    let totalPages = 0;
+    
+    // 页面初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        loadDashboardStats();
+        loadReports();
+        
+        // 搜索框回车搜索
+        document.getElementById('search').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                applyFilters();
+            }
+        });
+    });
+    
+    // 加载仪表板统计数据
+    async function loadDashboardStats() {
+        try {
+            const response = await axios.get('/api/stats/dashboard');
+            if (response.data.code === 200) {
+                const stats = response.data.data;
+                document.getElementById('total-executions').textContent = stats.total_executions || 0;
+                document.getElementById('success-executions').textContent = stats.success_executions || 0;
+                document.getElementById('failed-executions').textContent = stats.failed_executions || 0;
+                document.getElementById('success-rate').textContent = (stats.success_rate || 0) + '%';
+            }
+        } catch (error) {
+            console.error('加载统计数据失败:', error);
+        }
+    }
+    
+    // 加载执行报告列表
+    async function loadReports(page = 1) {
+        try {
+            showLoading(true);
+            
+            const search = document.getElementById('search').value;
+            const status = document.getElementById('status').value;
+            const dateRange = document.getElementById('date-range').value;
+            
+            const params = new URLSearchParams({
+                page: page,
+                size: pageSize
+            });
+            
+            if (search) params.append('search', search);
+            if (status) params.append('status', status);
+            if (dateRange) params.append('date_range', dateRange);
+            
+            const response = await axios.get(`/api/executions?${params}`);
+            
+            if (response.data.code === 200) {
+                const data = response.data.data;
+                totalItems = data.total;
+                totalPages = data.pages;
+                currentPage = data.page;
+                
+                renderReports(data.items);
+                renderPagination();
+                
+                if (data.items.length === 0) {
+                    showEmptyState();
+                }
+            } else {
+                showMessage(response.data.message || '加载失败', 'error');
+            }
+        } catch (error) {
+            console.error('加载执行报告失败:', error);
+            showMessage('加载执行报告失败', 'error');
+        } finally {
+            showLoading(false);
+        }
+    }
+    
+    // 渲染报告列表
+    function renderReports(reports) {
+        const container = document.getElementById('reports-items');
+        container.innerHTML = '';
+        
+        reports.forEach(report => {
+            const item = createReportItem(report);
+            container.appendChild(item);
+        });
+    }
+    
+    // 创建报告项目
+    function createReportItem(report) {
+        const item = document.createElement('div');
+        item.className = 'report-item';
+        item.onclick = () => viewReport(report.execution_id);
+        
+        const statusClass = getStatusClass(report.status);
+        const statusText = getStatusText(report.status);
+        
+        item.innerHTML = `
+            <div class="report-header">
+                <h4 class="report-title">${report.test_case_name || '未知测试用例'}</h4>
+                <span class="report-status ${statusClass}">${statusText}</span>
+            </div>
+            <div class="report-meta">
+                <span>🕒 ${new Date(report.start_time).toLocaleString()}</span>
+                <span>⏱️ ${report.duration ? report.duration + '秒' : '未知'}</span>
+                <span>👤 ${report.executed_by || '未知'}</span>
+                <span>🖥️ ${report.mode || '未知'}</span>
+            </div>
+            <div class="report-summary">
+                <span>📋 总步骤: ${report.steps_total || 0}</span>
+                <span>✅ 成功: ${report.steps_passed || 0}</span>
+                <span>❌ 失败: ${report.steps_failed || 0}</span>
+            </div>
+            <div class="report-actions">
+                <button class="action-btn" onclick="event.stopPropagation(); viewReport('${report.execution_id}')">👁️ 查看</button>
+                <button class="action-btn" onclick="event.stopPropagation(); downloadReport('${report.execution_id}')">📥 下载</button>
+                <button class="action-btn delete" onclick="event.stopPropagation(); deleteReport('${report.execution_id}')">🗑️ 删除</button>
+            </div>
+        `;
+        
+        return item;
+    }
+    
+    // 获取状态样式类
+    function getStatusClass(status) {
+        switch(status) {
+            case 'success': return 'success';
+            case 'failed': return 'failed';
+            case 'running': return 'running';
+            default: return 'failed';
+        }
+    }
+    
+    // 获取状态文本
+    function getStatusText(status) {
+        switch(status) {
+            case 'success': return '成功';
+            case 'failed': return '失败';
+            case 'running': return '运行中';
+            case 'pending': return '等待中';
+            default: return status;
+        }
+    }
+    
+    // 渲染分页控件
+    function renderPagination() {
+        const container = document.getElementById('pagination');
+        
+        if (totalPages <= 1) {
+            container.style.display = 'none';
+            return;
+        }
+        
+        container.style.display = 'flex';
+        container.innerHTML = `
+            <button class="pagination-btn ${currentPage === 1 ? 'disabled' : ''}" 
+                    onclick="loadReports(${currentPage - 1})" 
+                    ${currentPage === 1 ? 'disabled' : ''}>
+                上一页
+            </button>
+            <span class="pagination-info">
+                第 ${currentPage} 页 / 共 ${totalPages} 页 (${totalItems} 条记录)
+            </span>
+            <button class="pagination-btn ${currentPage === totalPages ? 'disabled' : ''}" 
+                    onclick="loadReports(${currentPage + 1})" 
+                    ${currentPage === totalPages ? 'disabled' : ''}>
+                下一页
+            </button>
+        `;
+    }
+    
+    // 显示加载状态
+    function showLoading(show) {
+        document.getElementById('loading').style.display = show ? 'block' : 'none';
+        document.getElementById('reports-items').style.display = show ? 'none' : 'block';
+        document.getElementById('empty-state').style.display = 'none';
+        document.getElementById('pagination').style.display = show ? 'none' : 'flex';
+    }
+    
+    // 显示空状态
+    function showEmptyState() {
+        document.getElementById('empty-state').style.display = 'block';
+        document.getElementById('reports-items').style.display = 'none';
+        document.getElementById('pagination').style.display = 'none';
+    }
+    
+    // 应用筛选
+    function applyFilters() {
+        currentPage = 1;
+        loadReports(1);
+    }
+    
+    // 刷新报告
+    function refreshReports() {
+        loadDashboardStats();
+        loadReports(currentPage);
+    }
+    
+    // 查看报告
+    function viewReport(executionId) {
+        window.location.href = `/execution?execution_id=${executionId}`;
+    }
+    
+    // 下载报告
+    async function downloadReport(executionId) {
+        try {
+            const response = await axios.get(`/api/executions/${executionId}/export`, {
+                responseType: 'blob'
+            });
+            
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `execution_report_${executionId}.json`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showMessage('报告下载成功', 'success');
+        } catch (error) {
+            console.error('下载报告失败:', error);
+            showMessage('下载报告失败', 'error');
+        }
+    }
+    
+    // 删除报告
+    async function deleteReport(executionId) {
+        if (!confirm('确定要删除这个执行报告吗？此操作不可恢复。')) {
+            return;
+        }
+        
+        try {
+            const response = await axios.delete(`/api/executions/${executionId}`);
+            
+            if (response.data.code === 200) {
+                showMessage('报告删除成功', 'success');
+                loadReports(currentPage);
+                loadDashboardStats();
+            } else {
+                showMessage(response.data.message || '删除失败', 'error');
+            }
+        } catch (error) {
+            console.error('删除报告失败:', error);
+            showMessage('删除报告失败', 'error');
+        }
+    }
+    
+    // 导出所有报告
+    async function exportReports() {
+        try {
+            const response = await axios.get('/api/executions/export-all', {
+                responseType: 'blob'
+            });
+            
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `all_execution_reports_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showMessage('所有报告导出成功', 'success');
+        } catch (error) {
+            console.error('导出报告失败:', error);
+            showMessage('导出报告失败', 'error');
+        }
+    }
+</script>
+{% endblock %}

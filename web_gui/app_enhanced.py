@@ -174,7 +174,7 @@ def execution_page():
 @app.route('/reports')
 def reports_page():
     """测试报告页面"""
-    return render_template('reports.html')
+    return render_template('reports_unified.html')
 
 @app.route('/local-proxy')
 def local_proxy_page():
