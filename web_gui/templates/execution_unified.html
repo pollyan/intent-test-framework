@@ -264,8 +264,11 @@
                             <div class="list-item-title">本地代理服务器</div>
                             <div class="list-item-subtitle">localhost:3001</div>
                         </div>
-                        <div id="proxy-status" class="status status-error">
-                            <span class="proxy-status-tooltip">未连接</span>
+                        <div class="flex items-center gap-2">
+                            <button class="btn btn-small btn-ghost" onclick="reconnectLocalProxy()" style="font-size: 12px; padding: 4px 8px;">重连</button>
+                            <div id="proxy-status" class="status status-error">
+                                <span class="proxy-status-tooltip">未连接</span>
+                            </div>
                         </div>
                     </div>
                     <div class="list-item" style="background: transparent; border: none;">
@@ -435,10 +438,18 @@
     // 连接到本地代理服务器
     function connectToLocalProxy() {
         try {
+            // 如果已有连接，先断开
+            if (localProxySocket) {
+                localProxySocket.disconnect();
+                localProxySocket = null;
+            }
+            
             localProxySocket = io('http://localhost:3001', {
-                timeout: 3000,
+                timeout: 5000,
                 forceNew: true,
-                reconnection: false
+                reconnection: true,
+                reconnectionAttempts: 3,
+                reconnectionDelay: 1000
             });
             
             localProxySocket.on('connect', function() {
@@ -448,14 +459,32 @@
             
             localProxySocket.on('connect_error', function(error) {
                 updateProxyStatus('disconnected');
-                addLog('本地代理服务器未运行，请检查是否已启动本地代理服务器', 'error');
-                addLog('如果未安装本地代理服务器，请点击左侧菜单的“本地代理”页面进行下载', 'info');
-                localProxySocket = null;
+                addLog('本地代理服务器连接失败，正在重试...', 'warning');
+                console.error('本地代理连接错误:', error);
             });
             
-            localProxySocket.on('disconnect', function() {
+            localProxySocket.on('disconnect', function(reason) {
                 updateProxyStatus('disconnected');
-                addLog('本地代理连接断开', 'warning');
+                addLog(`本地代理连接断开: ${reason}`, 'warning');
+                console.log('断开原因:', reason);
+            });
+            
+            localProxySocket.on('reconnect', function(attemptNumber) {
+                updateProxyStatus('connected');
+                addLog(`本地代理重连成功 (尝试 ${attemptNumber} 次)`, 'success');
+            });
+            
+            localProxySocket.on('reconnect_error', function(error) {
+                updateProxyStatus('disconnected');
+                addLog('本地代理重连失败', 'error');
+                console.error('重连错误:', error);
+            });
+            
+            localProxySocket.on('reconnect_failed', function() {
+                updateProxyStatus('disconnected');
+                addLog('本地代理重连失败，请检查服务器状态', 'error');
+                addLog('如果未安装本地代理服务器，请点击左侧菜单的"本地代理"页面进行下载', 'info');
+                localProxySocket = null;
             });
             
             // 监听本地代理服务器事件
@@ -466,6 +495,13 @@
             
             localProxySocket.on('execution-completed', function(data) {
                 addLog(`执行完成: ${data.status}`, data.status === 'success' ? 'success' : 'error');
+                
+                // 确保进度条显示完成状态
+                if (currentExecution && currentExecution.totalSteps) {
+                    updateExecutionProgress(currentExecution.totalSteps, currentExecution.totalSteps, 
+                        data.status === 'success' ? '执行完成' : '执行失败');
+                }
+                
                 onExecutionCompleted(data);
             });
             
@@ -485,7 +521,16 @@
                 addLog(`步骤 ${data.stepIndex + 1} 完成`, 'success');
                 // 使用实际的步骤数或者从testcase获取
                 const totalSteps = data.totalSteps || currentExecution?.totalSteps || 0;
-                updateExecutionProgress(data.stepIndex + 1, totalSteps, `步骤 ${data.stepIndex + 1} 已完成`);
+                const currentStep = data.stepIndex + 1;
+                updateExecutionProgress(currentStep, totalSteps, `步骤 ${currentStep} 已完成`);
+                
+                // 检查是否是最后一个步骤
+                if (currentStep === totalSteps && totalSteps > 0) {
+                    // 延迟一点时间确保所有步骤都完成
+                    setTimeout(() => {
+                        updateExecutionProgress(totalSteps, totalSteps, '所有步骤已完成');
+                    }, 100);
+                }
             });
             
             localProxySocket.on('step-failed', function(data) {
@@ -513,6 +558,14 @@
                 } else {
                     addLog(data.message, 'info');
                 }
+                
+                // 检查是否是执行完成的消息
+                if (data.message && data.message.includes('🎉 测试执行完成')) {
+                    // 确保进度条显示完成状态
+                    if (currentExecution && currentExecution.totalSteps) {
+                        updateExecutionProgress(currentExecution.totalSteps, currentExecution.totalSteps, '执行完成');
+                    }
+                }
             });
             
             localProxySocket.on('server-status', function(data) {
@@ -520,13 +573,22 @@
             });
             
             localProxySocket.on('error', function(error) {
-                addLog(`本地代理错误: ${error.message}`, 'error');
+                addLog(`本地代理错误: ${error.message || error}`, 'error');
+                console.error('WebSocket错误:', error);
             });
             
             // 添加通用事件监听器来捕获所有事件
             localProxySocket.onAny(function(eventName, data) {
                 console.log(`收到事件: ${eventName}`, data);
             });
+            
+            // 连接状态检查
+            setTimeout(() => {
+                if (!localProxySocket || !localProxySocket.connected) {
+                    addLog('本地代理服务器连接超时，请检查服务器是否正常运行', 'error');
+                    updateProxyStatus('disconnected');
+                }
+            }, 6000);
             
         } catch (error) {
             updateProxyStatus('disconnected');
@@ -558,6 +620,13 @@
     // 更新执行类型
     function updateExecutionType() {
         // 始终连接到本地代理
+        connectToLocalProxy();
+    }
+    
+    // 手动重连本地代理
+    function reconnectLocalProxy() {
+        addLog('正在尝试重连本地代理服务器...', 'info');
+        updateProxyStatus('connecting');
         connectToLocalProxy();
     }
 
@@ -735,20 +804,22 @@
         
         addLog(`执行完成: ${data.status}`, data.status === 'success' ? 'success' : 'error');
         
-        // 更新进度条为完成状态
+        // 确保进度条显示完成状态
+        if (currentExecution && currentExecution.totalSteps) {
+            const totalSteps = currentExecution.totalSteps;
+            const progressText = data.status === 'success' ? '执行完成' : '执行失败';
+            updateExecutionProgress(totalSteps, totalSteps, progressText);
+        }
+        
+        // 更新进度条颜色
         const progressBar = document.getElementById('execution-progress-bar');
-        const stepInfoElement = document.getElementById('current-step-info');
-        if (data.status === 'success') {
-            if (progressBar) {
-                progressBar.style.width = '100%';
+        if (progressBar) {
+            progressBar.style.width = '100%';
+            if (data.status === 'success') {
                 progressBar.style.background = '#28a745'; // 成功时显示绿色
-            }
-            if (stepInfoElement) stepInfoElement.textContent = '执行完成';
-        } else {
-            if (progressBar) {
+            } else {
                 progressBar.style.background = '#dc3545'; // 失败时显示红色
             }
-            if (stepInfoElement) stepInfoElement.textContent = '执行失败';
         }
         
         currentExecution = null;
