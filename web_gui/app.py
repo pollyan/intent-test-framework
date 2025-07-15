@@ -209,56 +209,9 @@ def local_proxy():
 
 @app.route('/download/local-proxy')
 def download_local_proxy():
-    """下载本地代理包"""
-    try:
-        # 代理包路径
-        proxy_dir = Path(__file__).parent.parent / 'dist' / 'intent-test-proxy'
-
-        if not proxy_dir.exists():
-            # 自动构建代理包
-            import subprocess
-            build_script = Path(__file__).parent.parent / 'scripts' / 'build-proxy-package.js'
-            try:
-                result = subprocess.run(['node', str(build_script)], 
-                                      capture_output=True, text=True, cwd=Path(__file__).parent.parent)
-                if result.returncode != 0:
-                    return jsonify({
-                        'success': False,
-                        'error': f'构建代理包失败: {result.stderr}'
-                    }), 500
-            except Exception as build_error:
-                return jsonify({
-                    'success': False,
-                    'error': f'构建代理包失败: {str(build_error)}'
-                }), 500
-            
-            # 再次检查是否存在
-            if not proxy_dir.exists():
-                return jsonify({
-                    'success': False,
-                    'error': '代理包构建失败，请检查Node.js环境'
-                }), 500
-
-        # 创建临时ZIP文件
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as tmp_file:
-            with zipfile.ZipFile(tmp_file.name, 'w', zipfile.ZIP_DEFLATED) as zipf:
-                for file_path in proxy_dir.rglob('*'):
-                    if file_path.is_file():
-                        arcname = file_path.relative_to(proxy_dir)
-                        zipf.write(file_path, arcname)
-
-            return send_from_directory(
-                directory=Path(tmp_file.name).parent,
-                path=Path(tmp_file.name).name,
-                as_attachment=True,
-                download_name='intent-test-proxy.zip'
-            )
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': f'下载失败: {str(e)}'
-        }), 500
+    """下载本地代理包 - 重定向到云端版本"""
+    from flask import redirect
+    return redirect('https://intent-test-framework.vercel.app/download/local-proxy')
 
 @app.route('/api/test-cases', methods=['GET'])
 def get_test_cases():

@@ -505,10 +505,15 @@ def get_package_json_content():
   },
   "dependencies": {
     "@midscene/web": "^0.20.1",
+    "@playwright/test": "^1.45.0",
+    "axios": "^1.10.0",
     "cors": "^2.8.5",
-    "express": "^5.1.0",
+    "express": "^4.18.2",
     "playwright": "^1.45.0",
     "socket.io": "^4.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
   },
   "keywords": ["midscene", "automation", "testing", "ai"],
   "author": "Intent Test Framework",
@@ -658,17 +663,62 @@ fi
 NODE_VERSION=$(node --version)
 echo -e "${GREEN}✅ Node.js版本: $NODE_VERSION${NC}"
 
-# 首次运行安装依赖
+# 检查npm
+if ! command -v npm &> /dev/null; then
+    echo -e "${RED}❌ 错误: npm未找到${NC}"
+    exit 1
+fi
+
+# 检查和安装依赖
 echo ""
 echo -e "${BLUE}[2/4]${NC} 检查依赖包..."
-if [ ! -d "node_modules" ]; then
-    echo -e "${YELLOW}📦 首次运行，正在安装依赖包...${NC}"
+
+# 检查关键依赖是否存在
+PLAYWRIGHT_TEST_MISSING=false
+AXIOS_MISSING=false
+
+if [ ! -d "node_modules/@playwright/test" ]; then
+    PLAYWRIGHT_TEST_MISSING=true
+fi
+
+if [ ! -d "node_modules/axios" ]; then
+    AXIOS_MISSING=true
+fi
+
+# 如果关键依赖缺失或node_modules不存在，则重新安装
+if [ ! -d "node_modules" ] || [ "$PLAYWRIGHT_TEST_MISSING" = true ] || [ "$AXIOS_MISSING" = true ]; then
+    echo -e "${YELLOW}📦 安装/更新依赖包...${NC}"
     echo "这可能需要几分钟时间，请耐心等待..."
+    
+    # 清理旧的依赖
+    if [ -d "node_modules" ]; then
+        echo -e "${YELLOW}🧹 清理旧依赖...${NC}"
+        rm -rf node_modules package-lock.json
+    fi
+    
+    # 安装依赖
     npm install
     if [ $? -ne 0 ]; then
         echo -e "${RED}❌ 依赖安装失败${NC}"
+        echo ""
+        echo "可能的解决方案:"
+        echo "1. 检查网络连接"
+        echo "2. 清理npm缓存: npm cache clean --force"
+        echo "3. 使用国内镜像: npm config set registry https://registry.npmmirror.com"
         exit 1
     fi
+    
+    # 验证关键依赖
+    if [ ! -d "node_modules/@playwright/test" ]; then
+        echo -e "${RED}❌ @playwright/test 依赖安装失败${NC}"
+        exit 1
+    fi
+    
+    if [ ! -d "node_modules/axios" ]; then
+        echo -e "${RED}❌ axios 依赖安装失败${NC}"
+        exit 1
+    fi
+    
     echo -e "${GREEN}✅ 依赖安装完成${NC}"
 else
     echo -e "${GREEN}✅ 依赖包已存在${NC}"
