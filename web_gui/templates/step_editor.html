@@ -351,8 +351,8 @@
     <div class="header">
         <h1 id="pageTitle">步骤编辑器</h1>
         <div class="header-actions">
-            <button class="btn btn-success" onclick="saveTestcase()">💾 保存</button>
-            <button class="btn btn-primary" onclick="previewExecution()">👁️ 预览</button>
+            <button class="btn btn-success" onclick="saveTestcase()">保存</button>
+            <button class="btn btn-primary" onclick="previewExecution()">预览</button>
             <a href="/testcases" class="btn btn-default">返回列表</a>
         </div>
     </div>
@@ -374,7 +374,6 @@
                 <!-- 步骤列表 -->
                 <div id="stepList" class="step-list">
                     <div class="empty-state">
-                        <div class="icon">📝</div>
                         <div>还没有添加测试步骤</div>
                         <div style="margin-top: 8px; font-size: 14px;">从右侧操作面板选择操作类型开始创建</div>
                     </div>
@@ -542,7 +541,6 @@
             if (steps.length === 0) {
                 stepList.innerHTML = `
                     <div class="empty-state">
-                        <div class="icon">📝</div>
                         <div>还没有添加测试步骤</div>
                         <div style="margin-top: 8px; font-size: 14px;">从右侧操作面板选择操作类型开始创建</div>
                     </div>

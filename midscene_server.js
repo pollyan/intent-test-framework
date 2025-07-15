@@ -54,10 +54,10 @@ async function notifyExecutionStart(executionId, testcase, mode) {
                        (typeof testcase.steps === 'string' ? JSON.parse(testcase.steps).length : 0)
         });
         
-        console.log(`✅ 通知执行开始: ${executionId}`);
+        console.log(`通知执行开始: ${executionId}`);
         return { success: true };
     } catch (error) {
-        console.error(`❌ 通知执行开始失败: ${error.message}`);
+        console.error(`通知执行开始失败: ${error.message}`);
         return null;
     }
 }
@@ -66,7 +66,7 @@ async function notifyExecutionResult(executionId, testcase, mode, status, steps,
     try {
         const executionState = executionStates.get(executionId);
         if (!executionState) {
-            console.log(`⚠️  未找到执行状态: ${executionId}`);
+            console.log(`未找到执行状态: ${executionId}`);
             return;
         }
 
@@ -82,10 +82,10 @@ async function notifyExecutionResult(executionId, testcase, mode, status, steps,
             errorMessage: errorMessage
         });
 
-        console.log(`✅ 通知执行结果: ${executionId} -> ${status}`);
+        console.log(`通知执行结果: ${executionId} -> ${status}`);
         return { success: true };
     } catch (error) {
-        console.error(`❌ 通知执行结果失败: ${error.message}`);
+        console.error(`通知执行结果失败: ${error.message}`);
         return null;
     }
 }
@@ -93,7 +93,7 @@ async function notifyExecutionResult(executionId, testcase, mode, status, steps,
 // 启动浏览器和页面
 async function initBrowser(headless = true) {
     if (!browser) {
-        console.log(`🚀 启动浏览器 - 模式: ${headless ? '无头模式' : '浏览器模式'}`);
+        console.log(`启动浏览器 - 模式: ${headless ? '无头模式' : '浏览器模式'}`);
         browser = await chromium.launch({
             headless: headless,
             args: ['--no-sandbox', '--disable-setuid-sandbox']
@@ -166,7 +166,7 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                     io.emit('log-message', {
                         executionId,
                         level: 'info',
-                        message: `🔗 导航到: ${params.url}`
+                        message: `导航到: ${params.url}`
                     });
                 }
                 break;
@@ -177,7 +177,7 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                     io.emit('log-message', {
                         executionId,
                         level: 'info',
-                        message: `👆 点击: ${params.locate}`
+                        message: `点击: ${params.locate}`
                     });
                 }
                 break;
@@ -189,7 +189,7 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                     io.emit('log-message', {
                         executionId,
                         level: 'info',
-                        message: `⌨️ 输入: "${params.text}" 到 ${params.locate}`
+                        message: `输入: "${params.text}" 到 ${params.locate}`
                     });
                 }
                 break;
@@ -200,7 +200,7 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                 io.emit('log-message', {
                     executionId,
                     level: 'info',
-                    message: `⏱️ 等待: ${waitTime}ms`
+                    message: `等待: ${waitTime}ms`
                 });
                 break;
 
@@ -210,7 +210,7 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                     io.emit('log-message', {
                         executionId,
                         level: 'info',
-                        message: `✅ 断言: ${params.condition}`
+                        message: `断言: ${params.condition}`
                     });
                 }
                 break;
@@ -222,7 +222,7 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                 io.emit('log-message', {
                     executionId,
                     level: 'info',
-                    message: `🤖 AI操作: ${instruction}`
+                    message: `AI操作: ${instruction}`
                 });
                 break;
         }
@@ -241,7 +241,7 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
         io.emit('log-message', {
             executionId,
             level: 'error',
-            message: `❌ 步骤执行失败: ${error.message}`
+            message: `步骤执行失败: ${error.message}`
         });
         throw error;
     }
@@ -273,7 +273,7 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
         io.emit('log-message', {
             executionId,
             level: 'info',
-            message: `🚀 开始执行测试用例: ${testcase.name}`
+            message: `开始执行测试用例: ${testcase.name}`
         });
 
         // 解析测试步骤
@@ -293,7 +293,7 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
         io.emit('log-message', {
             executionId,
             level: 'info',
-            message: `📋 共 ${steps.length} 个步骤`
+            message: `共 ${steps.length} 个步骤`
         });
 
         // 初始化浏览器
@@ -301,7 +301,7 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
         io.emit('log-message', {
             executionId,
             level: 'info',
-            message: `🌐 初始化浏览器 (${headless ? '无头模式' : '可视模式'})`
+            message: `初始化浏览器 (${headless ? '无头模式' : '可视模式'})`
         });
 
         const { page, agent } = await initBrowser(headless);
@@ -374,7 +374,7 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
         io.emit('execution-completed', {
             executionId,
             status: 'success',
-            message: '🎉 测试执行完成！',
+            message: '测试执行完成！',
             duration: executionState.duration,
             timestamp: new Date().toISOString()
         });
@@ -382,7 +382,7 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
         io.emit('log-message', {
             executionId,
             level: 'success',
-            message: `🎉 测试执行完成！耗时: ${Math.round(executionState.duration / 1000)}秒`
+            message: `测试执行完成！耗时: ${Math.round(executionState.duration / 1000)}秒`
         });
 
         // 通知Web系统执行完成
@@ -410,7 +410,7 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
         io.emit('log-message', {
             executionId,
             level: 'error',
-            message: `❌ 测试执行失败: ${error.message}`
+            message: `测试执行失败: ${error.message}`
         });
 
         // 通知Web系统执行失败
@@ -506,7 +506,7 @@ app.post('/api/stop-execution/:executionId', async (req, res) => {
         io.emit('log-message', {
             executionId,
             level: 'warning',
-            message: '⏹️ 执行已被用户停止'
+            message: '执行已被用户停止'
         });
 
         res.json({
@@ -823,13 +823,13 @@ app.use((error, req, res, next) => {
 
 // 启动服务器
 server.listen(port, () => {
-    console.log(`🚀 MidSceneJS本地代理服务器启动成功`);
-    console.log(`🌐 HTTP服务器: http://localhost:${port}`);
-    console.log(`🔌 WebSocket服务器: ws://localhost:${port}`);
-    console.log(`💡 AI模型: ${process.env.MIDSCENE_MODEL_NAME || 'qwen-vl-max-latest'}`);
-    console.log(`🔗 API地址: ${process.env.OPENAI_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}`);
-    console.log(`✨ 服务器就绪，等待测试执行请求...`);
-    console.log(`📋 支持的API端点:`);
+    console.log(`MidSceneJS本地代理服务器启动成功`);
+    console.log(`HTTP服务器: http://localhost:${port}`);
+    console.log(`WebSocket服务器: ws://localhost:${port}`);
+    console.log(`AI模型: ${process.env.MIDSCENE_MODEL_NAME || 'qwen-vl-max-latest'}`);
+    console.log(`API地址: ${process.env.OPENAI_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}`);
+    console.log(`服务器就绪，等待测试执行请求...`);
+    console.log(`支持的API端点:`);
     console.log(`   POST /api/execute-testcase - 执行测试用例`);
     console.log(`   GET  /api/status - 获取服务器状态`);
     console.log(`   GET  /health - 健康检查`);

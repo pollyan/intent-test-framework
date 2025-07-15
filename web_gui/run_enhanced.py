@@ -10,7 +10,7 @@ from pathlib import Path
 
 def check_dependencies():
     """检查依赖是否满足"""
-    print("🔍 检查依赖...")
+    print("检查依赖...")
     
     try:
         # 检查Python模块
@@ -18,16 +18,16 @@ def check_dependencies():
         import flask_sqlalchemy
         import flask_cors
         import flask_socketio
-        print("✅ Python依赖检查通过")
+        print("Python依赖检查通过")
         
         # 检查现有AI框架
         sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         from midscene_python import MidSceneAI
-        print("✅ AI框架检查通过")
+        print("AI框架检查通过")
         
         return True
     except ImportError as e:
-        print(f"❌ 缺少依赖: {e}")
+        print(f"缺少依赖: {e}")
         print("请运行: pip install flask flask-sqlalchemy flask-cors flask-socketio")
         return False
 
@@ -37,22 +37,22 @@ def check_node_server():
         import requests
         response = requests.get("http://localhost:3001/health", timeout=3)
         if response.status_code == 200:
-            print("✅ MidSceneJS服务器已运行")
+            print("MidSceneJS服务器已运行")
             return True
     except:
         pass
     
-    print("⚠️  MidSceneJS服务器未运行")
+    print("MidSceneJS服务器未运行")
     return False
 
 def start_node_server():
     """启动Node.js服务器"""
-    print("🚀 启动MidSceneJS服务器...")
+    print("启动MidSceneJS服务器...")
     
     # 检查服务器文件
     server_file = Path("../midscene_server.js")
     if not server_file.exists():
-        print("❌ 未找到midscene_server.js文件")
+        print("未找到midscene_server.js文件")
         return None
     
     try:
@@ -66,20 +66,20 @@ def start_node_server():
         
         # 检查服务器是否启动成功
         if check_node_server():
-            print("✅ MidSceneJS服务器启动成功")
+            print("MidSceneJS服务器启动成功")
             return process
         else:
-            print("❌ MidSceneJS服务器启动失败")
+            print("MidSceneJS服务器启动失败")
             process.terminate()
             return None
             
     except Exception as e:
-        print(f"❌ 启动MidSceneJS服务器失败: {e}")
+        print(f"启动MidSceneJS服务器失败: {e}")
         return None
 
 def init_database():
     """初始化数据库"""
-    print("🗄️  初始化数据库...")
+    print("初始化数据库...")
 
     try:
         # 导入应用和数据库
@@ -98,12 +98,12 @@ def init_database():
             return True
 
     except Exception as e:
-        print(f"❌ 数据库初始化失败: {e}")
+        print(f"数据库初始化失败: {e}")
         return False
 
 def create_sample_data(db):
     """创建示例数据"""
-    print("📝 创建示例数据...")
+    print("创建示例数据...")
     
     try:
         from models import TestCase, Template
@@ -192,20 +192,20 @@ def create_sample_data(db):
         db.session.add(login_template)
         db.session.commit()
         
-        print("✅ 示例数据创建成功")
+        print("示例数据创建成功")
         
     except Exception as e:
-        print(f"❌ 创建示例数据失败: {e}")
+        print(f"创建示例数据失败: {e}")
 
 def main():
     """主函数"""
     print("=" * 60)
-    print("🚀 AI测试GUI系统增强版启动器")
+    print("AI测试GUI系统增强版启动器")
     print("=" * 60)
     
     # 检查依赖
     if not check_dependencies():
-        print("\n❌ 依赖检查失败，请安装必要的依赖")
+        print("\n依赖检查失败，请安装必要的依赖")
         return 1
     
     # 检查并启动Node.js服务器
@@ -213,24 +213,24 @@ def main():
     if not check_node_server():
         node_process = start_node_server()
         if not node_process:
-            print("\n⚠️  MidSceneJS服务器启动失败，AI功能可能无法正常工作")
+            print("\nMidSceneJS服务器启动失败，AI功能可能无法正常工作")
             print("您可以手动启动服务器: cd .. && node midscene_server.js")
     
     # 初始化数据库
     if not init_database():
-        print("\n❌ 数据库初始化失败")
+        print("\n数据库初始化失败")
         if node_process:
             node_process.terminate()
         return 1
     
     print("\n" + "=" * 60)
-    print("✅ 系统启动准备完成")
+    print("系统启动准备完成")
     print("=" * 60)
     print("📍 Web界面: http://localhost:5001")
     print("📍 API接口: http://localhost:5001/api/v1/")
     print("📍 MidSceneJS: http://localhost:3001")
     print("=" * 60)
-    print("💡 提示:")
+    print("提示:")
     print("   - 首次使用请配置AI模型API密钥")
     print("   - 可以从示例测试用例开始体验")
     print("   - 按Ctrl+C停止服务")
@@ -252,10 +252,10 @@ def main():
             print("停止MidSceneJS服务器...")
             node_process.terminate()
             node_process.wait()
-        print("✅ 服务已停止")
+        print("服务已停止")
         return 0
     except Exception as e:
-        print(f"\n❌ 启动失败: {e}")
+        print(f"\n启动失败: {e}")
         if node_process:
             node_process.terminate()
         return 1

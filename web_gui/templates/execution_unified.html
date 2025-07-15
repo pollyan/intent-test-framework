@@ -80,11 +80,6 @@
         color: #999999;
     }
     
-    .empty-state-icon {
-        font-size: 48px;
-        margin-bottom: 16px;
-        opacity: 0.5;
-    }
     
     .empty-state-text {
         font-size: 16px;
@@ -332,7 +327,6 @@
             <p class="card-subtitle">当前执行步骤的截图</p>
             <div class="card-content">
                 <div id="screenshot-placeholder" class="empty-state" style="padding: 40px 20px;">
-                    <div class="empty-state-icon">🖼️</div>
                     <div class="empty-state-text">执行开始后将显示截图</div>
                 </div>
                 <img id="current-screenshot" class="screenshot-image" style="display: none;">
@@ -346,7 +340,6 @@
             <div class="card-content">
                 <div id="screenshot-history-container" class="screenshot-history-container">
                     <div class="empty-state" style="padding: 30px 20px;">
-                        <div class="empty-state-icon">📸</div>
                         <div class="empty-state-text">暂无截图历史</div>
                         <div class="empty-state-subtext">执行测试后将显示截图</div>
                     </div>
@@ -560,7 +553,7 @@
                 }
                 
                 // 检查是否是执行完成的消息
-                if (data.message && data.message.includes('🎉 测试执行完成')) {
+                if (data.message && data.message.includes('测试执行完成')) {
                     // 确保进度条显示完成状态
                     if (currentExecution && currentExecution.totalSteps) {
                         updateExecutionProgress(currentExecution.totalSteps, currentExecution.totalSteps, '执行完成');
@@ -887,7 +880,6 @@
         const historyContainer = document.getElementById('screenshot-history-container');
         historyContainer.innerHTML = `
             <div class="empty-state" style="padding: 30px 20px;">
-                <div class="empty-state-icon">📸</div>
                 <div class="empty-state-text">暂无截图历史</div>
                 <div class="empty-state-subtext">执行测试后将显示截图</div>
             </div>

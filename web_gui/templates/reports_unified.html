@@ -220,11 +220,6 @@
         color: #999999;
     }
 
-    .empty-icon {
-        font-size: 48px;
-        margin-bottom: 16px;
-        opacity: 0.5;
-    }
 
     .empty-text {
         font-size: 16px;
@@ -305,11 +300,9 @@
         <h3 class="card-title mb-0">执行报告</h3>
         <div class="flex gap-2">
             <button class="btn btn-ghost" onclick="refreshReports()">
-                <span>🔄</span>
                 刷新
             </button>
             <button class="btn btn-primary" onclick="exportReports()">
-                <span>📊</span>
                 导出报告
             </button>
         </div>
@@ -342,7 +335,6 @@
             </select>
         </div>
         <button class="btn btn-primary" onclick="applyFilters()">
-            <span>🔍</span>
             筛选
         </button>
     </div>
@@ -360,7 +352,6 @@
     </div>
 
     <div id="empty-state" class="empty-state" style="display: none;">
-        <div class="empty-icon">📊</div>
         <div class="empty-text">暂无执行报告</div>
         <div class="empty-desc">执行测试用例后，报告将会显示在这里</div>
     </div>
@@ -476,20 +467,20 @@
                 <span class="report-status ${statusClass}">${statusText}</span>
             </div>
             <div class="report-meta">
-                <span>🕒 ${new Date(report.start_time).toLocaleString()}</span>
-                <span>⏱️ ${report.duration ? report.duration + '秒' : '未知'}</span>
-                <span>👤 ${report.executed_by || '未知'}</span>
-                <span>🖥️ ${report.mode || '未知'}</span>
+                <span>${new Date(report.start_time).toLocaleString()}</span>
+                <span>${report.duration ? report.duration + '秒' : '未知'}</span>
+                <span>${report.executed_by || '未知'}</span>
+                <span>${report.mode || '未知'}</span>
             </div>
             <div class="report-summary">
-                <span>📋 总步骤: ${report.steps_total || 0}</span>
-                <span>✅ 成功: ${report.steps_passed || 0}</span>
-                <span>❌ 失败: ${report.steps_failed || 0}</span>
+                <span>总步骤: ${report.steps_total || 0}</span>
+                <span>成功: ${report.steps_passed || 0}</span>
+                <span>失败: ${report.steps_failed || 0}</span>
             </div>
             <div class="report-actions">
-                <button class="action-btn" onclick="event.stopPropagation(); viewReport('${report.execution_id}')">👁️ 查看</button>
-                <button class="action-btn" onclick="event.stopPropagation(); downloadReport('${report.execution_id}')">📥 下载</button>
-                <button class="action-btn delete" onclick="event.stopPropagation(); deleteReport('${report.execution_id}')">🗑️ 删除</button>
+                <button class="action-btn" onclick="event.stopPropagation(); viewReport('${report.execution_id}')">查看</button>
+                <button class="action-btn" onclick="event.stopPropagation(); downloadReport('${report.execution_id}')">下载</button>
+                <button class="action-btn delete" onclick="event.stopPropagation(); deleteReport('${report.execution_id}')">删除</button>
             </div>
         `;
         

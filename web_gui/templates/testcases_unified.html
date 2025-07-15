@@ -191,11 +191,6 @@
         color: #999999;
     }
 
-    .empty-icon {
-        font-size: 48px;
-        margin-bottom: 16px;
-        opacity: 0.5;
-    }
 
     .empty-text {
         font-size: 16px;
@@ -276,7 +271,6 @@
             </select>
         </div>
         <button class="btn btn-primary" onclick="applyFilters()">
-            <span>🔍</span>
             筛选
         </button>
     </div>
@@ -294,7 +288,6 @@
     </div>
 
     <div id="empty-state" class="empty-state" style="display: none;">
-        <div class="empty-icon">📝</div>
         <div class="empty-text">暂无测试用例</div>
         <div class="empty-desc">点击"创建用例"按钮开始创建您的第一个测试用例</div>
     </div>
@@ -398,17 +391,17 @@
             </div>
             <div class="testcase-description">${testcase.description || '暂无描述'}</div>
             <div class="testcase-meta">
-                <span>📋 ${stepCount} 个步骤</span>
-                <span>📁 ${testcase.category || '未分类'}</span>
-                <span>⭐ 优先级: ${getPriorityText(testcase.priority)}</span>
-                <span>👤 ${testcase.created_by || '未知'}</span>
-                <span>🕒 ${new Date(testcase.created_at).toLocaleString()}</span>
+                <span>${stepCount} 个步骤</span>
+                <span>${testcase.category || '未分类'}</span>
+                <span>优先级: ${getPriorityText(testcase.priority)}</span>
+                <span>${testcase.created_by || '未知'}</span>
+                <span>${new Date(testcase.created_at).toLocaleString()}</span>
             </div>
             ${tags ? `<div class="testcase-tags">${tags}</div>` : ''}
             <div class="testcase-actions-item">
-                <a href="/testcases/${testcase.id}/edit" class="action-btn" onclick="event.stopPropagation()">✏️ 编辑</a>
-                <a href="/execution?testcase_id=${testcase.id}" class="action-btn" onclick="event.stopPropagation()">▶️ 执行</a>
-                <button class="action-btn delete" onclick="event.stopPropagation(); deleteTestCase(${testcase.id})">🗑️ 删除</button>
+                <a href="/testcases/${testcase.id}/edit" class="action-btn" onclick="event.stopPropagation()">编辑</a>
+                <a href="/execution?testcase_id=${testcase.id}" class="action-btn" onclick="event.stopPropagation()">执行</a>
+                <button class="action-btn delete" onclick="event.stopPropagation(); deleteTestCase(${testcase.id})">删除</button>
             </div>
         `;
         
