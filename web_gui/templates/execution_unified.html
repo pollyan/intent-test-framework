@@ -541,6 +541,35 @@
                 addLog('本地代理连接断开', 'warning');
             });
             
+            // 监听本地代理服务器事件
+            localProxySocket.on('execution-start', function(data) {
+                addLog(`本地代理开始执行: ${data.testcase}`, 'success');
+                document.getElementById('execution-status').textContent = '执行中';
+            });
+            
+            localProxySocket.on('execution-completed', function(data) {
+                addLog(`执行完成: ${data.status}`, data.status === 'success' ? 'success' : 'error');
+                onExecutionCompleted(data);
+            });
+            
+            localProxySocket.on('execution-stopped', function(data) {
+                addLog('执行已停止', 'warning');
+                onExecutionCompleted({ status: 'stopped' });
+            });
+            
+            localProxySocket.on('step-start', function(data) {
+                addLog(`步骤 ${data.stepIndex + 1} 开始: ${data.description}`, 'info');
+            });
+            
+            localProxySocket.on('step-completed', function(data) {
+                addLog(`步骤 ${data.stepIndex + 1} 完成`, 'success');
+                updateExecutionProgress(data.stepIndex + 1, data.totalSteps);
+            });
+            
+            localProxySocket.on('step-failed', function(data) {
+                addLog(`步骤 ${data.stepIndex + 1} 失败: ${data.error}`, 'error');
+            });
+            
             localProxySocket.on('screenshot-taken', function(data) {
                 const screenshot = {
                     step_index: data.stepIndex,
@@ -548,20 +577,30 @@
                     path: `data:image/png;base64,${data.screenshot}`
                 };
                 addScreenshotToHistory(screenshot);
-                // 立即更新当前截图显示
                 showScreenshot(screenshot.path);
             });
             
-            localProxySocket.on('step-completed', function(data) {
-                updateExecutionProgress(data.stepIndex + 1, data.totalSteps);
+            localProxySocket.on('log-message', function(data) {
+                if (data.level === 'error') {
+                    addLog(data.message, 'error');
+                } else if (data.level === 'warning') {
+                    addLog(data.message, 'warning');
+                } else {
+                    addLog(data.message, 'info');
+                }
             });
             
-            localProxySocket.on('execution-completed', function(data) {
-                onExecutionCompleted(data);
+            localProxySocket.on('server-status', function(data) {
+                addLog(`本地代理服务器状态: ${data.status}`, 'info');
             });
             
             localProxySocket.on('error', function(error) {
                 addLog(`本地代理错误: ${error.message}`, 'error');
+            });
+            
+            // 添加通用事件监听器来捕获所有事件
+            localProxySocket.onAny(function(eventName, data) {
+                console.log(`收到事件: ${eventName}`, data);
             });
             
         } catch (error) {
@@ -611,8 +650,17 @@
             return;
         }
         
-        if (!localProxySocket || !localProxySocket.connected) {
-            showMessage('本地代理服务器未连接，请先下载并启动本地代理服务器后再进行执行', 'error');
+        // 注意：不需要检查WebSocket连接，因为我们使用HTTP API执行
+        // 但是可以检查本地代理服务器是否在运行
+        try {
+            const healthResponse = await axios.get('http://localhost:3001/health', { timeout: 3000 });
+            if (!healthResponse.data.success) {
+                showMessage('本地代理服务器不可用，请检查服务器状态', 'error');
+                return;
+            }
+            addLog('本地代理服务器状态正常', 'success');
+        } catch (healthError) {
+            showMessage('本地代理服务器未运行，请先启动本地代理服务器后再进行执行', 'error');
             return;
         }
         
@@ -638,14 +686,45 @@
                 addLog('开始执行测试用例...', 'info');
                 
                 // 发送到本地代理执行
+                addLog(`正在获取测试用例数据 (ID: ${testcaseId})...`, 'info');
                 const testcaseResponse = await axios.get(`/api/testcases/${testcaseId}`);
                 if (testcaseResponse.data.code === 200) {
                     const testcase = testcaseResponse.data.data;
-                    localProxySocket.emit('execute-testcase', {
-                        execution_id: currentExecution.execution_id,
+                    addLog(`测试用例数据获取成功: ${testcase.name}`, 'success');
+                    addLog(`正在发送执行请求到本地代理服务器...`, 'info');
+                    
+                    // 检查WebSocket连接状态
+                    if (!localProxySocket || !localProxySocket.connected) {
+                        addLog('错误：本地代理连接已断开', 'error');
+                        return;
+                    }
+                    
+                    const executeData = {
                         testcase: testcase,
                         mode: executionMode
-                    });
+                    };
+                    
+                    addLog(`发送数据到本地代理服务器: ${JSON.stringify(executeData, null, 2)}`, 'info');
+                    
+                    // 使用HTTP API发送执行请求
+                    try {
+                        const proxyResponse = await axios.post('http://localhost:3001/api/execute-testcase', executeData, {
+                            timeout: 10000
+                        });
+                        
+                        if (proxyResponse.data.success) {
+                            addLog('执行请求已发送到本地代理服务器', 'success');
+                            addLog(`执行ID: ${proxyResponse.data.executionId}`, 'info');
+                            
+                            // 保存本地执行ID
+                            currentExecution.local_execution_id = proxyResponse.data.executionId;
+                        } else {
+                            addLog('本地代理服务器返回错误: ' + proxyResponse.data.error, 'error');
+                        }
+                    } catch (proxyError) {
+                        addLog('发送请求到本地代理服务器失败: ' + proxyError.message, 'error');
+                        addLog('请检查本地代理服务器是否正常运行在端口3001', 'warning');
+                    }
                 } else {
                     addLog('获取测试用例失败：' + (testcaseResponse.data.message || '未知错误'), 'error');
                 }
@@ -660,22 +739,27 @@
     }
 
     // 停止执行
-    function stopExecution() {
-        if (currentExecution) {
-            if (localProxySocket) {
-                localProxySocket.emit('stop-execution', {
-                    execution_id: currentExecution.execution_id
-                });
+    async function stopExecution() {
+        if (currentExecution && currentExecution.local_execution_id) {
+            try {
+                const response = await axios.post(`http://localhost:3001/api/stop-execution/${currentExecution.local_execution_id}`);
+                if (response.data.success) {
+                    addLog('执行停止成功', 'success');
+                } else {
+                    addLog('停止执行失败: ' + response.data.error, 'error');
+                }
+            } catch (error) {
+                addLog('停止执行请求失败: ' + error.message, 'error');
             }
-            
-            // 更新UI状态
-            document.getElementById('start-execution').disabled = false;
-            document.getElementById('stop-execution').disabled = true;
-            document.getElementById('execution-status').textContent = '已停止';
-            
-            addLog('执行已停止', 'warning');
-            currentExecution = null;
         }
+        
+        // 更新UI状态
+        document.getElementById('start-execution').disabled = false;
+        document.getElementById('stop-execution').disabled = true;
+        document.getElementById('execution-status').textContent = '已停止';
+        
+        addLog('执行已停止', 'warning');
+        currentExecution = null;
     }
 
     // 更新执行进度
