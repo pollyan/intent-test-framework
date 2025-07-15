@@ -21,9 +21,9 @@ echo "[2/5] 重新安装基础依赖..."
 npm install
 echo "✅ 基础依赖安装完成"
 
-echo "[3/5] 安装 Playwright 相关依赖..."
-npm install @playwright/test playwright
-echo "✅ Playwright 依赖安装完成"
+echo "[3/5] 安装 Playwright 和其他依赖..."
+npm install @playwright/test playwright axios
+echo "✅ Playwright 和其他依赖安装完成"
 
 echo "[4/5] 安装 Playwright 浏览器..."
 npx playwright install chromium
@@ -35,6 +35,7 @@ try {
     require('@playwright/test');
     require('playwright');
     require('@midscene/web');
+    require('axios');
     console.log('✅ 所有依赖验证通过');
 } catch (error) {
     console.log('❌ 依赖验证失败:', error.message);
