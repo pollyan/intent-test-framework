@@ -9,6 +9,7 @@ const { PlaywrightAgent } = require('@midscene/web');
 const { chromium } = require('playwright');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
+const axios = require('axios');
 
 const app = express();
 const server = createServer(app);
@@ -20,6 +21,9 @@ const io = new Server(server, {
 });
 
 const port = 3001;
+
+// 数据库配置
+const API_BASE_URL = 'http://localhost:5001/api';
 
 // 中间件
 app.use(cors());
@@ -36,6 +40,56 @@ const executionStates = new Map();
 // 生成执行ID
 function generateExecutionId() {
     return 'exec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+// Web系统API集成函数
+async function notifyExecutionStart(executionId, testcase, mode) {
+    try {
+        const response = await axios.post(`${API_BASE_URL}/midscene/execution-start`, {
+            execution_id: executionId,
+            testcase_id: testcase.id,
+            mode: mode,
+            browser: 'chrome',
+            executed_by: 'midscene-server',
+            steps_total: Array.isArray(testcase.steps) ? testcase.steps.length : 
+                        (typeof testcase.steps === 'string' ? JSON.parse(testcase.steps).length : 0)
+        });
+        console.log(`✅ 通知执行开始: ${executionId}`);
+        return response.data;
+    } catch (error) {
+        console.error(`❌ 通知执行开始失败: ${error.message}`);
+        return null;
+    }
+}
+
+async function notifyExecutionResult(executionId, testcase, mode, status, steps, errorMessage = null) {
+    try {
+        const executionState = executionStates.get(executionId);
+        if (!executionState) {
+            console.log(`⚠️  未找到执行状态: ${executionId}`);
+            return;
+        }
+
+        const resultData = {
+            execution_id: executionId,
+            testcase_id: testcase.id,
+            status: status,
+            mode: mode,
+            browser: 'chrome',
+            executed_by: 'midscene-server',
+            start_time: executionState.startTime.toISOString(),
+            end_time: new Date().toISOString(),
+            steps: steps,
+            error_message: errorMessage
+        };
+
+        const response = await axios.post(`${API_BASE_URL}/midscene/execution-result`, resultData);
+        console.log(`✅ 通知执行结果: ${executionId} -> ${status}`);
+        return response.data;
+    } catch (error) {
+        console.error(`❌ 通知执行结果失败: ${error.message}`);
+        return null;
+    }
 }
 
 // 启动浏览器和页面
@@ -102,6 +156,8 @@ async function executeStep(step, page, agent, executionId, stepIndex) {
         action,
         description: description || action
     });
+
+    const stepStartTime = Date.now();
 
     try {
         switch (action) {
@@ -192,8 +248,12 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
             status: 'running',
             startTime: new Date(),
             testcase: testcase.name,
-            mode
+            mode,
+            steps: []  // 收集步骤执行数据
         });
+
+        // 通知Web系统执行开始
+        await notifyExecutionStart(executionId, testcase, mode);
 
         // 发送执行开始事件
         io.emit('execution-start', {
@@ -279,6 +339,19 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
                 success: true
             });
 
+            // 记录步骤执行数据
+            const executionState = executionStates.get(executionId);
+            if (executionState) {
+                executionState.steps.push({
+                    index: i,
+                    description: step.description || step.action,
+                    status: 'success',
+                    start_time: new Date(Date.now() - 500).toISOString(), // 估算开始时间
+                    end_time: new Date().toISOString(),
+                    duration: 500 // 估算持续时间
+                });
+            }
+
             // 短暂延迟，让用户看到执行过程
             await page.waitForTimeout(500);
         }
@@ -304,6 +377,9 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
             message: `🎉 测试执行完成！耗时: ${Math.round(executionState.duration / 1000)}秒`
         });
 
+        // 通知Web系统执行完成
+        await notifyExecutionResult(executionId, testcase, mode, 'success', executionState.steps);
+
     } catch (error) {
         console.error('测试执行失败:', error);
 
@@ -327,6 +403,9 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
             level: 'error',
             message: `❌ 测试执行失败: ${error.message}`
         });
+
+        // 通知Web系统执行失败
+        await notifyExecutionResult(executionId, testcase, mode, 'failed', executionState?.steps || [], error.message);
     }
 }
 

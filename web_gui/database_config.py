@@ -21,16 +21,17 @@ class DatabaseConfig:
     """数据库配置管理器"""
     
     def __init__(self):
-        # 确保PostgreSQL驱动可用
-        if not is_postgres_available():
-            raise ImportError(
-                "❌ PostgreSQL驱动未安装！\n"
-                "请安装PostgreSQL驱动：pip install psycopg2-binary\n"
-                "或者：pip install psycopg2"
-            )
-        
         self.database_url = self._get_database_url()
         self.is_production = self._is_production()
+        
+        # 如果是PostgreSQL，确保驱动可用
+        if self.database_url.startswith(('postgresql://', 'postgres://')):
+            if not is_postgres_available():
+                raise ImportError(
+                    "❌ PostgreSQL驱动未安装！\n"
+                    "请安装PostgreSQL驱动：pip install psycopg2-binary\n"
+                    "或者：pip install psycopg2"
+                )
     
     def _get_database_url(self) -> str:
         """获取PostgreSQL数据库URL"""
@@ -58,51 +59,62 @@ class DatabaseConfig:
         if supabase_url:
             return supabase_url
 
-        # 如果没有配置PostgreSQL，抛出错误
-        raise ValueError(
-            "❌ 未找到PostgreSQL数据库配置！\n"
-            "请设置以下环境变量之一：\n"
-            "  - DATABASE_URL=postgresql://user:password@host:port/dbname\n"
-            "  - SUPABASE_DATABASE_URL=postgresql://user:password@host:port/dbname\n"
-            "本系统仅支持PostgreSQL数据库。"
-        )
+        # 如果没有配置PostgreSQL，使用默认的云端数据库
+        return "postgresql://postgres.jzmqsuxphksbulrbhebp:Shunlian04@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres"
     
     def _is_production(self) -> bool:
         """判断是否为生产环境"""
         return os.getenv('VERCEL') == '1' or os.getenv('RAILWAY_ENVIRONMENT') == 'production'
     
     def get_sqlalchemy_config(self) -> dict:
-        """获取SQLAlchemy配置（仅支持PostgreSQL）"""
-        # PostgreSQL特定配置
-        engine_options = {
-            'pool_pre_ping': True,
-            'pool_recycle': 3600,
-        }
-
-        # Serverless环境优化
-        if self.is_production:
-            engine_options.update({
-                'pool_size': 1,  # Serverless环境使用小连接池
-                'max_overflow': 0,  # 不允许溢出连接
-                'pool_timeout': 10,  # 快速超时
-                'connect_args': {
-                    'connect_timeout': 10,
-                    'sslmode': 'require',
-                    'application_name': 'vercel-intent-test'
-                }
-            })
-        else:
-            engine_options.update({
-                'pool_size': 10,
-                'pool_timeout': 30,
-                'max_overflow': 20,
-            })
-
-        return {
+        """获取SQLAlchemy配置"""
+        config = {
             'SQLALCHEMY_DATABASE_URI': self.database_url,
             'SQLALCHEMY_TRACK_MODIFICATIONS': False,
-            'SQLALCHEMY_ENGINE_OPTIONS': engine_options
         }
+        
+        if self.database_url.startswith(('postgresql://', 'postgres://')):
+            # PostgreSQL特定配置
+            engine_options = {
+                'pool_pre_ping': True,
+                'pool_recycle': 3600,
+            }
+
+            # Serverless环境优化
+            if self.is_production:
+                engine_options.update({
+                    'pool_size': 1,  # Serverless环境使用小连接池
+                    'max_overflow': 0,  # 不允许溢出连接
+                    'pool_timeout': 10,  # 快速超时
+                    'connect_args': {
+                        'connect_timeout': 10,
+                        'sslmode': 'require',
+                        'application_name': 'vercel-intent-test'
+                    }
+                })
+            else:
+                engine_options.update({
+                    'pool_size': 10,
+                    'pool_timeout': 30,
+                    'max_overflow': 20,
+                })
+
+            config.update({
+                'SQLALCHEMY_ENGINE_OPTIONS': engine_options
+            })
+        else:
+            # 默认PostgreSQL配置
+            config.update({
+                'SQLALCHEMY_ENGINE_OPTIONS': {
+                    'pool_pre_ping': True,
+                    'pool_recycle': 3600,
+                    'pool_size': 10,
+                    'pool_timeout': 30,
+                    'max_overflow': 20,
+                }
+            })
+        
+        return config
     
     def get_migration_config(self) -> dict:
         """获取数据库迁移配置（仅支持PostgreSQL）"""
@@ -132,7 +144,7 @@ class DatabaseConfig:
             'host': parsed.hostname or 'unknown',
             'port': parsed.port,
             'database': parsed.path.lstrip('/') if parsed.path else 'unknown',
-            'is_postgres': True,  # 系统仅支持PostgreSQL
+            'is_postgres': self.database_url.startswith(('postgresql://', 'postgres://')),
             'is_production': self.is_production,
         }
 
@@ -146,7 +158,7 @@ def print_database_info():
     info = db_config.get_connection_info()
     
     print("🗄️  数据库配置信息:")
-    print(f"   类型: PostgreSQL")
+    print(f"   类型: {'PostgreSQL' if info['is_postgres'] else 'SQLite'}")
     print(f"   环境: {'生产环境' if info['is_production'] else '开发环境'}")
     print(f"   主机: {info['host']}")
     if info['port']:
