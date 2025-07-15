@@ -8,9 +8,20 @@
 <style>
     .execution-container {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 400px 1fr;
         gap: 24px;
         height: calc(100vh - 160px);
+    }
+    
+    .left-panel {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .right-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
     }
 
     .panel {
@@ -19,6 +30,23 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         display: flex;
         flex-direction: column;
+    }
+    
+    .left-panel .panel {
+        flex: 1;
+    }
+    
+    .log-panel {
+        flex: 1;
+        min-height: 250px;
+    }
+    
+    .screenshot-panel {
+        flex: 0 0 300px;
+    }
+    
+    .history-panel {
+        flex: 0 0 200px;
     }
 
     .panel-header {
@@ -247,9 +275,6 @@
         color: #666;
     }
 
-    .current-screenshot {
-        margin-top: 20px;
-    }
 
     .screenshot-container {
         border: 1px solid #f0f0f0;
@@ -280,9 +305,8 @@
         font-family: 'Consolas', 'Monaco', monospace;
         font-size: 12px;
         line-height: 1.4;
-        height: 300px;
-        min-height: 300px;
-        max-height: 300px;
+        height: 100%;
+        min-height: 200px;
         overflow-y: auto;
         overflow-x: hidden;
     }
@@ -308,9 +332,6 @@
         color: #fadb14;
     }
 
-    .screenshot-history {
-        margin-top: 20px;
-    }
 
     .screenshot-history-container {
         display: flex;
@@ -353,10 +374,20 @@
             gap: 16px;
         }
         
-        .log-container {
-            height: 200px;
-            min-height: 200px;
-            max-height: 200px;
+        .right-panel {
+            flex-direction: column;
+        }
+        
+        .log-panel {
+            flex: 0 0 200px;
+        }
+        
+        .screenshot-panel {
+            flex: 0 0 250px;
+        }
+        
+        .history-panel {
+            flex: 0 0 150px;
         }
     }
 </style>
@@ -365,74 +396,93 @@
 {% block content %}
 <div class="execution-container">
     <!-- 左侧控制面板 -->
-    <div class="panel">
-        <div class="panel-header">执行控制</div>
-        <div class="panel-content">
-            <!-- 测试用例选择 -->
-            <div class="testcase-selector">
-                <label for="testcase-select">选择测试用例:</label>
-                <select id="testcase-select" class="testcase-select">
-                    <option value="">请选择测试用例</option>
-                </select>
-            </div>
-
-            <!-- 执行设置 -->
-            <div class="execution-controls">
-                <div class="control-group">
-                    <label for="execution-mode">执行模式:</label>
-                    <select id="execution-mode" class="control-select">
-                        <option value="headless">无头模式</option>
-                        <option value="normal">正常模式</option>
-                        <option value="debug">调试模式</option>
+    <div class="left-panel">
+        <div class="panel">
+            <div class="panel-header">执行控制</div>
+            <div class="panel-content">
+                <!-- 测试用例选择 -->
+                <div class="testcase-selector">
+                    <label for="testcase-select">选择测试用例:</label>
+                    <select id="testcase-select" class="testcase-select">
+                        <option value="">请选择测试用例</option>
                     </select>
                 </div>
 
-                <div class="control-group">
-                    <label for="execution-type">执行类型:</label>
-                    <select id="execution-type" class="control-select" disabled>
-                        <option value="local">本地代理执行 (仅支持此模式)</option>
-                    </select>
-                </div>
-            </div>
+                <!-- 执行设置 -->
+                <div class="execution-controls">
+                    <div class="control-group">
+                        <label for="execution-mode">执行模式:</label>
+                        <select id="execution-mode" class="control-select">
+                            <option value="headless">无头模式</option>
+                            <option value="normal">正常模式</option>
+                            <option value="debug">调试模式</option>
+                        </select>
+                    </div>
 
-            <!-- 执行按钮 -->
-            <div class="execution-actions">
-                <button id="start-execution" class="btn btn-primary">
-                    <span>▶️</span>
-                    开始执行
-                </button>
-                <button id="stop-execution" class="btn btn-danger" disabled>
-                    <span>⏹️</span>
-                    停止执行
-                </button>
-            </div>
-
-            <!-- 状态信息 -->
-            <div class="status-section">
-                <div class="status-item">
-                    <div class="status-label">本地代理服务器:</div>
-                    <div class="status-value">
-                        <span id="proxy-status" class="proxy-status disconnected">
-                            <span class="proxy-status-tooltip">未连接</span>
-                        </span>
-                        <span id="proxy-status-text">未连接</span>
+                    <div class="control-group">
+                        <label for="execution-type">执行类型:</label>
+                        <select id="execution-type" class="control-select" disabled>
+                            <option value="local">本地代理执行 (仅支持此模式)</option>
+                        </select>
                     </div>
                 </div>
-                <div class="status-item">
-                    <div class="status-label">执行状态:</div>
-                    <div class="status-value" id="execution-status">等待中</div>
+
+                <!-- 执行按钮 -->
+                <div class="execution-actions">
+                    <button id="start-execution" class="btn btn-primary">
+                        <span>▶️</span>
+                        开始执行
+                    </button>
+                    <button id="stop-execution" class="btn btn-danger" disabled>
+                        <span>⏹️</span>
+                        停止执行
+                    </button>
                 </div>
-                <div class="progress-container">
-                    <div class="progress-item">
-                        <div class="progress-label">执行进度:</div>
-                        <div class="progress-value" id="execution-progress">0/0</div>
+
+                <!-- 状态信息 -->
+                <div class="status-section">
+                    <div class="status-item">
+                        <div class="status-label">本地代理服务器:</div>
+                        <div class="status-value">
+                            <span id="proxy-status" class="proxy-status disconnected">
+                                <span class="proxy-status-tooltip">未连接</span>
+                            </span>
+                            <span id="proxy-status-text">未连接</span>
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">执行状态:</div>
+                        <div class="status-value" id="execution-status">等待中</div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-item">
+                            <div class="progress-label">执行进度:</div>
+                            <div class="progress-value" id="execution-progress">0/0</div>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- 当前截图 -->
-            <div class="current-screenshot">
-                <h4>当前截图</h4>
+    <!-- 右侧信息面板 -->
+    <div class="right-panel">
+        <!-- 执行日志 -->
+        <div class="panel log-panel">
+            <div class="panel-header">执行日志</div>
+            <div class="panel-content">
+                <div id="log-container" class="log-container">
+                    <div class="log-entry info">本地代理执行控制台已就绪</div>
+                    <div class="log-entry warning">注意：此控制台仅支持本地代理执行模式</div>
+                    <div class="log-entry info">请先在您的电脑上下载并启动本地代理服务器(端口3001)，然后选择测试用例开始执行</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 当前截图 -->
+        <div class="panel screenshot-panel">
+            <div class="panel-header">当前截图</div>
+            <div class="panel-content">
                 <div class="screenshot-container">
                     <div id="screenshot-placeholder" class="screenshot-placeholder">
                         执行开始后将显示截图
@@ -440,25 +490,15 @@
                     <img id="current-screenshot" class="screenshot-image" style="display: none;">
                 </div>
             </div>
+        </div>
 
-            <!-- 步骤截图历史 -->
-            <div class="screenshot-history">
-                <h4>步骤截图历史</h4>
+        <!-- 步骤截图历史 -->
+        <div class="panel history-panel">
+            <div class="panel-header">步骤截图历史</div>
+            <div class="panel-content">
                 <div id="screenshot-history-container" class="screenshot-history-container">
                     <!-- 截图历史将在这里动态加载 -->
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 右侧日志面板 -->
-    <div class="panel">
-        <div class="panel-header">执行日志</div>
-        <div class="panel-content">
-            <div id="log-container" class="log-container">
-                <div class="log-entry info">本地代理执行控制台已就绪</div>
-                <div class="log-entry warning">注意：此控制台仅支持本地代理执行模式</div>
-                <div class="log-entry info">请先在您的电脑上下载并启动本地代理服务器(端口3001)，然后选择测试用例开始执行</div>
             </div>
         </div>
     </div>
