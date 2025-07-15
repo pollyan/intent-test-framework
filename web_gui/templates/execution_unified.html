@@ -389,9 +389,8 @@
 
                 <div class="control-group">
                     <label for="execution-type">执行类型:</label>
-                    <select id="execution-type" class="control-select">
-                        <option value="local">本地执行</option>
-                        <option value="cloud">云端执行</option>
+                    <select id="execution-type" class="control-select" disabled>
+                        <option value="local">本地代理执行 (仅支持此模式)</option>
                     </select>
                 </div>
             </div>
@@ -411,7 +410,7 @@
             <!-- 状态信息 -->
             <div class="status-section">
                 <div class="status-item">
-                    <div class="status-label">本地代理:</div>
+                    <div class="status-label">本地代理服务器:</div>
                     <div class="status-value">
                         <span id="proxy-status" class="proxy-status disconnected">
                             <span class="proxy-status-tooltip">未连接</span>
@@ -457,7 +456,9 @@
         <div class="panel-header">执行日志</div>
         <div class="panel-content">
             <div id="log-container" class="log-container">
-                <div class="log-entry info">系统已就绪，请选择测试用例开始执行...</div>
+                <div class="log-entry info">本地代理执行控制台已就绪</div>
+                <div class="log-entry warning">注意：此控制台仅支持本地代理执行模式</div>
+                <div class="log-entry info">请先下载并启动本地代理服务器，然后选择测试用例开始执行</div>
             </div>
         </div>
     </div>
@@ -509,65 +510,94 @@
     // 初始化WebSocket连接
     function initializeWebSocket() {
         if (typeof io !== 'undefined') {
-            executionSocket = io();
-            
-            executionSocket.on('connect', function() {
-                addLog('WebSocket连接成功', 'success');
-            });
-            
-            executionSocket.on('execution_update', function(data) {
-                updateExecutionStatus(data);
-            });
-            
-            executionSocket.on('execution_log', function(data) {
-                addLog(data.message, data.type || 'info');
-            });
-            
-            executionSocket.on('execution_completed', function(data) {
-                onExecutionCompleted(data);
-            });
+            try {
+                executionSocket = io({
+                    timeout: 5000,
+                    forceNew: true,
+                    reconnection: false
+                });
+                
+                executionSocket.on('connect', function() {
+                    addLog('WebSocket连接成功', 'success');
+                });
+                
+                executionSocket.on('connect_error', function(error) {
+                    addLog('WebSocket连接失败，将使用轮询模式', 'warning');
+                    executionSocket = null;
+                });
+                
+                executionSocket.on('execution_update', function(data) {
+                    updateExecutionStatus(data);
+                });
+                
+                executionSocket.on('execution_log', function(data) {
+                    addLog(data.message, data.type || 'info');
+                });
+                
+                executionSocket.on('execution_completed', function(data) {
+                    onExecutionCompleted(data);
+                });
+            } catch (error) {
+                addLog('WebSocket初始化失败，将使用轮询模式', 'warning');
+                executionSocket = null;
+            }
+        } else {
+            addLog('Socket.io库未加载，将使用轮询模式', 'warning');
         }
     }
 
     // 连接到本地代理服务器
     function connectToLocalProxy() {
-        if (document.getElementById('execution-type').value === 'local') {
-            try {
-                localProxySocket = io('http://localhost:3001');
-                
-                localProxySocket.on('connect', function() {
-                    updateProxyStatus('connected');
-                    addLog('本地代理连接成功', 'success');
-                });
-                
-                localProxySocket.on('disconnect', function() {
-                    updateProxyStatus('disconnected');
-                    addLog('本地代理连接断开', 'warning');
-                });
-                
-                localProxySocket.on('screenshot-taken', function(data) {
-                    const screenshot = {
-                        step_index: data.stepIndex,
-                        step_name: `步骤 ${data.stepIndex + 1}`,
-                        path: `data:image/png;base64,${data.screenshot}`
-                    };
-                    addScreenshotToHistory(screenshot);
-                    // 立即更新当前截图显示
-                    showScreenshot(screenshot.path);
-                });
-                
-                localProxySocket.on('step-completed', function(data) {
-                    updateExecutionProgress(data.stepIndex + 1, data.totalSteps);
-                });
-                
-                localProxySocket.on('error', function(error) {
-                    addLog(`本地代理错误: ${error.message}`, 'error');
-                });
-                
-            } catch (error) {
+        try {
+            localProxySocket = io('http://localhost:3001', {
+                timeout: 3000,
+                forceNew: true,
+                reconnection: false
+            });
+            
+            localProxySocket.on('connect', function() {
+                updateProxyStatus('connected');
+                addLog('本地代理连接成功', 'success');
+            });
+            
+            localProxySocket.on('connect_error', function(error) {
                 updateProxyStatus('disconnected');
-                addLog('无法连接到本地代理服务器', 'error');
-            }
+                addLog('本地代理服务器未运行，请检查是否已启动本地代理服务器', 'error');
+                addLog('如果未安装本地代理服务器，请点击左侧菜单的“本地代理”页面进行下载', 'info');
+                localProxySocket = null;
+            });
+            
+            localProxySocket.on('disconnect', function() {
+                updateProxyStatus('disconnected');
+                addLog('本地代理连接断开', 'warning');
+            });
+            
+            localProxySocket.on('screenshot-taken', function(data) {
+                const screenshot = {
+                    step_index: data.stepIndex,
+                    step_name: `步骤 ${data.stepIndex + 1}`,
+                    path: `data:image/png;base64,${data.screenshot}`
+                };
+                addScreenshotToHistory(screenshot);
+                // 立即更新当前截图显示
+                showScreenshot(screenshot.path);
+            });
+            
+            localProxySocket.on('step-completed', function(data) {
+                updateExecutionProgress(data.stepIndex + 1, data.totalSteps);
+            });
+            
+            localProxySocket.on('execution-completed', function(data) {
+                onExecutionCompleted(data);
+            });
+            
+            localProxySocket.on('error', function(error) {
+                addLog(`本地代理错误: ${error.message}`, 'error');
+            });
+            
+        } catch (error) {
+            updateProxyStatus('disconnected');
+            addLog('本地代理服务器连接失败，请检查是否已正确安装并启动', 'error');
         }
     }
 
@@ -597,17 +627,8 @@
 
     // 更新执行类型
     function updateExecutionType() {
-        const executionType = document.getElementById('execution-type').value;
-        
-        if (executionType === 'local') {
-            connectToLocalProxy();
-        } else {
-            if (localProxySocket) {
-                localProxySocket.disconnect();
-                localProxySocket = null;
-            }
-            updateProxyStatus('disconnected');
-        }
+        // 始终连接到本地代理
+        connectToLocalProxy();
     }
 
     // 开始执行
@@ -621,8 +642,8 @@
             return;
         }
         
-        if (executionType === 'local' && (!localProxySocket || !localProxySocket.connected)) {
-            showMessage('本地代理未连接，请检查代理服务器状态', 'error');
+        if (!localProxySocket || !localProxySocket.connected) {
+            showMessage('本地代理服务器未连接，请先下载并启动本地代理服务器后再进行执行', 'error');
             return;
         }
         
@@ -647,17 +668,17 @@
                 
                 addLog('开始执行测试用例...', 'info');
                 
-                // 如果是本地执行，发送到本地代理
-                if (executionType === 'local' && localProxySocket) {
-                    const testcaseResponse = await axios.get(`/api/testcases/${testcaseId}`);
-                    if (testcaseResponse.data.code === 200) {
-                        const testcase = testcaseResponse.data.data;
-                        localProxySocket.emit('execute-testcase', {
-                            execution_id: currentExecution.execution_id,
-                            testcase: testcase,
-                            mode: executionMode
-                        });
-                    }
+                // 发送到本地代理执行
+                const testcaseResponse = await axios.get(`/api/testcases/${testcaseId}`);
+                if (testcaseResponse.data.code === 200) {
+                    const testcase = testcaseResponse.data.data;
+                    localProxySocket.emit('execute-testcase', {
+                        execution_id: currentExecution.execution_id,
+                        testcase: testcase,
+                        mode: executionMode
+                    });
+                } else {
+                    addLog('获取测试用例失败：' + (testcaseResponse.data.message || '未知错误'), 'error');
                 }
                 
             } else {
@@ -757,5 +778,6 @@
         document.getElementById('screenshot-placeholder').style.display = 'block';
         document.getElementById('current-screenshot').style.display = 'none';
     }
+
 </script>
 {% endblock %}
