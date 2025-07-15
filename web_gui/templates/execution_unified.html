@@ -8,218 +8,93 @@
 
 {% block extra_css %}
 <style>
-    .execution-container {
+    /* 执行控制台特定样式 */
+    .execution-grid {
         display: grid;
         grid-template-columns: 400px 1fr;
         gap: 24px;
-        height: calc(100vh - 160px);
-    }
-    
-    .left-panel {
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .right-panel {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-    }
-
-    .panel {
-        border: 1px solid #e8e8e8;
-        border-radius: 4px;
-        background: #ffffff;
-        display: flex;
-        flex-direction: column;
-        transition: border-color 0.2s ease;
-    }
-    
-    .left-panel .panel {
-        flex: 1;
-    }
-    
-    .log-panel {
-        flex: 1;
-        min-height: 250px;
-    }
-    
-    .screenshot-panel {
-        flex: 0 0 300px;
-    }
-    
-    .history-panel {
-        flex: 0 0 200px;
-    }
-
-    .panel-header {
-        padding: 16px 24px;
-        border-bottom: 1px solid #e8e8e8;
-        font-weight: 500;
-        font-size: 16px;
-        color: #333333;
-    }
-
-    .panel-content {
-        flex: 1;
-        padding: 24px;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-    }
-
-    .testcase-selector {
-        margin-bottom: 20px;
-    }
-
-    .testcase-selector label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 400;
-        font-size: 13px;
-        color: #666666;
-        min-width: 80px;
-    }
-
-    .testcase-select {
-        width: 100%;
-        padding: 12px;
-        border: 1px solid #e8e8e8;
-        border-radius: 4px;
-        font-size: 14px;
-        background: #ffffff;
-        color: #333333;
-        transition: border-color 0.2s ease;
-    }
-
-    .testcase-select:focus {
-        outline: none;
-        border-color: #333333;
-    }
-
-    .execution-controls {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-    }
-
-    .control-group {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .control-group label {
-        font-weight: 400;
-        color: #666666;
-        min-width: 80px;
-        font-size: 13px;
-    }
-
-    .control-select {
-        flex: 1;
-        padding: 12px;
-        border: 1px solid #e8e8e8;
-        border-radius: 4px;
-        font-size: 14px;
-        background: #ffffff;
-        color: #333333;
-        transition: border-color 0.2s ease;
-    }
-
-    .control-select:focus {
-        outline: none;
-        border-color: #333333;
-    }
-
-    .execution-actions {
-        display: flex;
-        gap: 12px;
-        margin-top: 20px;
-    }
-
-    .btn {
-        padding: 12px 24px;
-        border: 1px solid #e8e8e8;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 400;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        background: #ffffff;
-        color: #333333;
-        text-decoration: none;
-    }
-
-    .btn-primary {
-        background: #333333;
-        color: #ffffff;
-        border-color: #333333;
-    }
-
-    .btn-primary:hover {
-        background: #555555;
-        border-color: #555555;
-    }
-
-    .btn-primary:disabled {
-        background: #f8f8f8;
-        color: #cccccc;
-        cursor: not-allowed;
-        border-color: #e8e8e8;
-    }
-
-    .btn-danger {
-        background: #dc3545;
-        color: #ffffff;
-        border-color: #dc3545;
-    }
-
-    .btn-danger:hover {
-        background: #c82333;
-        border-color: #c82333;
-    }
-
-    .btn-danger:disabled {
-        background: #f8f8f8;
-        color: #cccccc;
-        cursor: not-allowed;
-        border-color: #e8e8e8;
-    }
-
-    .status-section {
-        margin-top: 20px;
-        padding: 16px;
-        background: #f8f8f8;
-        border-radius: 4px;
-        border: 1px solid #e8e8e8;
-    }
-
-    .status-item {
-        display: flex;
-        align-items: center;
-        margin-bottom: 8px;
-        font-size: 14px;
-    }
-
-    .status-item:last-child {
         margin-bottom: 0;
     }
-
-    .status-label {
-        font-weight: 400;
+    
+    .execution-right-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .log-container {
+        background: #f8f8f8;
+        border: 1px solid #e8e8e8;
+        border-radius: 4px;
+        padding: 16px;
+        font-family: 'SF Mono', Monaco, monospace;
+        font-size: 12px;
+        line-height: 1.5;
+        height: 250px;
+        overflow-y: auto;
         color: #333333;
-        min-width: 80px;
     }
-
-    .status-value {
-        color: #666666;
+    
+    .log-entry {
+        margin-bottom: 2px;
+        word-wrap: break-word;
     }
-
+    
+    .log-entry-time {
+        color: #999999;
+        margin-right: 8px;
+    }
+    
+    .log-entry-success {
+        color: #28a745;
+    }
+    
+    .log-entry-warning {
+        color: #ffc107;
+    }
+    
+    .log-entry-error {
+        color: #dc3545;
+    }
+    
+    .log-entry.info {
+        color: #333333;
+    }
+    
+    .log-entry.success {
+        color: #28a745;
+    }
+    
+    .log-entry.error {
+        color: #dc3545;
+    }
+    
+    .log-entry.warning {
+        color: #ffc107;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #999999;
+    }
+    
+    .empty-state-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+    
+    .empty-state-text {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+    
+    .empty-state-subtext {
+        font-size: 14px;
+        color: #bbbbbb;
+    }
+    
     .proxy-status {
         width: 12px;
         height: 12px;
@@ -229,24 +104,24 @@
         position: relative;
         cursor: pointer;
     }
-
+    
     .proxy-status.connected {
         background: #28a745;
         box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.3);
         animation: pulse 2s infinite;
     }
-
+    
     .proxy-status.disconnected {
         background: #dc3545;
         box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.3);
     }
-
+    
     .proxy-status.connecting {
         background: #ffc107;
         box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.3);
         animation: pulse 1s infinite;
     }
-
+    
     @keyframes pulse {
         0% {
             transform: scale(0.95);
@@ -261,7 +136,7 @@
             box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
         }
     }
-
+    
     .proxy-status-tooltip {
         position: absolute;
         bottom: 20px;
@@ -278,93 +153,18 @@
         transition: opacity 0.3s;
         z-index: 1000;
     }
-
+    
     .proxy-status:hover .proxy-status-tooltip {
         opacity: 1;
     }
-
-    .progress-container {
-        margin-top: 16px;
-    }
-
-    .progress-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 8px;
-        font-size: 14px;
-    }
-
-    .progress-item:last-child {
-        margin-bottom: 0;
-    }
-
-    .progress-label {
-        font-weight: 400;
-        color: #333333;
-    }
-
-    .progress-value {
-        color: #666666;
-    }
-
-    .screenshot-container {
-        border: 1px solid #e8e8e8;
-        border-radius: 4px;
-        padding: 16px;
-        text-align: center;
-        background: #f8f8f8;
-    }
-
+    
     .screenshot-image {
         max-width: 100%;
         max-height: 400px;
         border-radius: 4px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
-
-    .screenshot-placeholder {
-        color: #999999;
-        font-size: 14px;
-        padding: 40px;
-    }
-
-    .log-container {
-        background: #f8f8f8;
-        color: #333333;
-        padding: 16px;
-        border-radius: 4px;
-        font-family: 'SF Mono', Monaco, monospace;
-        font-size: 12px;
-        line-height: 1.5;
-        height: 100%;
-        min-height: 200px;
-        overflow-y: auto;
-        overflow-x: hidden;
-        border: 1px solid #e8e8e8;
-    }
-
-    .log-entry {
-        margin-bottom: 2px;
-        word-wrap: break-word;
-    }
-
-    .log-entry.info {
-        color: #333333;
-    }
-
-    .log-entry.success {
-        color: #28a745;
-    }
-
-    .log-entry.error {
-        color: #dc3545;
-    }
-
-    .log-entry.warning {
-        color: #ffc107;
-    }
-
+    
     .screenshot-history-container {
         display: flex;
         flex-wrap: wrap;
@@ -372,7 +172,7 @@
         max-height: 200px;
         overflow-y: auto;
     }
-
+    
     .screenshot-thumbnail {
         width: 80px;
         height: 60px;
@@ -382,114 +182,105 @@
         transition: all 0.2s ease;
         object-fit: cover;
     }
-
+    
     .screenshot-thumbnail:hover {
         border-color: #333333;
         transform: scale(1.05);
     }
-
+    
     .screenshot-thumbnail.active {
         border-color: #333333;
         box-shadow: 0 0 0 2px rgba(51, 51, 51, 0.2);
     }
-
+    
     .screenshot-info {
         font-size: 12px;
         color: #666666;
         margin-top: 4px;
         text-align: center;
     }
-
+    
     @media (max-width: 1200px) {
-        .execution-container {
+        .execution-grid {
             grid-template-columns: 1fr;
             gap: 16px;
         }
         
-        .right-panel {
-            flex-direction: column;
-        }
-        
-        .log-panel {
-            flex: 0 0 200px;
-        }
-        
-        .screenshot-panel {
-            flex: 0 0 250px;
-        }
-        
-        .history-panel {
-            flex: 0 0 150px;
+        .log-container {
+            height: 200px;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="execution-container">
-    <!-- 左侧控制面板 -->
-    <div class="left-panel">
-        <div class="panel">
-            <div class="panel-header">执行控制</div>
-            <div class="panel-content">
-                <!-- 测试用例选择 -->
-                <div class="testcase-selector">
-                    <label for="testcase-select">选择测试用例:</label>
-                    <select id="testcase-select" class="testcase-select">
-                        <option value="">请选择测试用例</option>
+<!-- 主要内容区域 -->
+<div class="execution-grid">
+    <!-- 左侧：执行控制 -->
+    <div class="card">
+        <h3 class="card-title">执行控制</h3>
+        <p class="card-subtitle">测试用例选择和执行配置</p>
+        
+        <div class="card-content">
+            <!-- 测试用例选择 -->
+            <div class="form-group">
+                <label class="form-label">选择测试用例</label>
+                <select id="testcase-select" class="form-select">
+                    <option value="">请选择测试用例</option>
+                </select>
+            </div>
+
+            <!-- 执行配置 -->
+            <div class="grid grid-cols-2 gap-2">
+                <div class="form-group">
+                    <label class="form-label">执行模式</label>
+                    <select id="execution-mode" class="form-select">
+                        <option value="headless">无头模式</option>
+                        <option value="normal">正常模式</option>
+                        <option value="debug">调试模式</option>
                     </select>
                 </div>
-
-                <!-- 执行设置 -->
-                <div class="execution-controls">
-                    <div class="control-group">
-                        <label for="execution-mode">执行模式:</label>
-                        <select id="execution-mode" class="control-select">
-                            <option value="headless">无头模式</option>
-                            <option value="normal">正常模式</option>
-                            <option value="debug">调试模式</option>
-                        </select>
-                    </div>
-
-                    <div class="control-group">
-                        <label for="execution-type">执行类型:</label>
-                        <select id="execution-type" class="control-select" disabled>
-                            <option value="local">本地代理执行 (仅支持此模式)</option>
-                        </select>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">执行类型</label>
+                    <select id="execution-type" class="form-select" disabled>
+                        <option value="local">本地代理执行</option>
+                    </select>
                 </div>
+            </div>
 
-                <!-- 执行按钮 -->
-                <div class="execution-actions">
-                    <button id="start-execution" class="btn btn-primary">
-                        <span>▶️</span>
-                        开始执行
-                    </button>
-                    <button id="stop-execution" class="btn btn-danger" disabled>
-                        <span>⏹️</span>
-                        停止执行
-                    </button>
-                </div>
+            <!-- 执行按钮 -->
+            <div class="flex gap-2 mb-3">
+                <button id="start-execution" class="btn btn-primary w-full">开始执行</button>
+                <button id="stop-execution" class="btn btn-ghost w-full" disabled>停止执行</button>
+            </div>
 
-                <!-- 状态信息 -->
-                <div class="status-section">
-                    <div class="status-item">
-                        <div class="status-label">本地代理服务器:</div>
-                        <div class="status-value">
-                            <span id="proxy-status" class="proxy-status disconnected">
-                                <span class="proxy-status-tooltip">未连接</span>
-                            </span>
-                            <span id="proxy-status-text">未连接</span>
+            <!-- 状态信息 -->
+            <div class="card" style="background: #f8f8f8; border: 1px solid #e8e8e8;">
+                <div class="card-title text-base">状态信息</div>
+                <div class="list" style="background: transparent; border: none;">
+                    <div class="list-item" style="background: transparent; border: none;">
+                        <div class="list-item-content">
+                            <div class="list-item-title">本地代理服务器</div>
+                            <div class="list-item-subtitle">localhost:3001</div>
+                        </div>
+                        <div id="proxy-status" class="status status-error">
+                            <span class="proxy-status-tooltip">未连接</span>
                         </div>
                     </div>
-                    <div class="status-item">
-                        <div class="status-label">执行状态:</div>
-                        <div class="status-value" id="execution-status">等待中</div>
+                    <div class="list-item" style="background: transparent; border: none;">
+                        <div class="list-item-content">
+                            <div class="list-item-title">执行状态</div>
+                            <div class="list-item-subtitle" id="execution-status">等待中</div>
+                        </div>
+                        <div class="status status-inactive"></div>
                     </div>
-                    <div class="progress-container">
-                        <div class="progress-item">
-                            <div class="progress-label">执行进度:</div>
-                            <div class="progress-value" id="execution-progress">0/0</div>
+                    <div class="list-item" style="background: transparent; border: none;">
+                        <div class="list-item-content">
+                            <div class="list-item-title">执行进度</div>
+                            <div class="list-item-subtitle" id="execution-progress">0/0</div>
+                        </div>
+                        <div class="progress" style="width: 60px; margin: 0;">
+                            <div class="progress-bar" style="width: 0%;"></div>
                         </div>
                     </div>
                 </div>
@@ -497,41 +288,81 @@
         </div>
     </div>
 
-    <!-- 右侧信息面板 -->
-    <div class="right-panel">
+    <!-- 右侧：实时信息 -->
+    <div class="execution-right-panel">
         <!-- 执行日志 -->
-        <div class="panel log-panel">
-            <div class="panel-header">执行日志</div>
-            <div class="panel-content">
-                <div id="log-container" class="log-container">
-                    <div class="log-entry info">本地代理执行控制台已就绪</div>
-                    <div class="log-entry warning">注意：此控制台仅支持本地代理执行模式</div>
-                    <div class="log-entry info">请先在您的电脑上下载并启动本地代理服务器(端口3001)，然后选择测试用例开始执行</div>
+        <div class="card" style="flex: 1;">
+            <h3 class="card-title">执行日志</h3>
+            <p class="card-subtitle">实时执行日志输出</p>
+            <div id="log-container" class="log-container">
+                <div class="log-entry">
+                    <span class="log-entry-time">[14:32:15]</span>
+                    本地代理执行控制台已就绪
+                </div>
+                <div class="log-entry">
+                    <span class="log-entry-time">[14:32:15]</span>
+                    <span class="log-entry-warning">注意：此控制台仅支持本地代理执行模式</span>
+                </div>
+                <div class="log-entry">
+                    <span class="log-entry-time">[14:32:15]</span>
+                    请先在您的电脑上下载并启动本地代理服务器(端口3001)
                 </div>
             </div>
         </div>
 
         <!-- 当前截图 -->
-        <div class="panel screenshot-panel">
-            <div class="panel-header">当前截图</div>
-            <div class="panel-content">
-                <div class="screenshot-container">
-                    <div id="screenshot-placeholder" class="screenshot-placeholder">
-                        执行开始后将显示截图
-                    </div>
-                    <img id="current-screenshot" class="screenshot-image" style="display: none;">
+        <div class="card">
+            <h3 class="card-title">当前截图</h3>
+            <p class="card-subtitle">当前执行步骤的截图</p>
+            <div class="card-content">
+                <div id="screenshot-placeholder" class="empty-state" style="padding: 40px 20px;">
+                    <div class="empty-state-icon">🖼️</div>
+                    <div class="empty-state-text">执行开始后将显示截图</div>
                 </div>
+                <img id="current-screenshot" class="screenshot-image" style="display: none;">
             </div>
         </div>
 
         <!-- 步骤截图历史 -->
-        <div class="panel history-panel">
-            <div class="panel-header">步骤截图历史</div>
-            <div class="panel-content">
+        <div class="card">
+            <h3 class="card-title">步骤截图历史</h3>
+            <p class="card-subtitle">执行过程中的截图记录</p>
+            <div class="card-content">
                 <div id="screenshot-history-container" class="screenshot-history-container">
-                    <!-- 截图历史将在这里动态加载 -->
+                    <div class="empty-state" style="padding: 30px 20px;">
+                        <div class="empty-state-icon">📸</div>
+                        <div class="empty-state-text">暂无截图历史</div>
+                        <div class="empty-state-subtext">执行测试后将显示截图</div>
+                    </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- 最近执行记录 -->
+<div class="card mt-4">
+    <h3 class="card-title">最近执行记录</h3>
+    <p class="card-subtitle">最近的测试执行历史</p>
+    
+    <div id="recent-executions-list" class="list">
+        <!-- 执行记录将在这里动态加载 -->
+        <div class="list-item">
+            <div class="list-item-content">
+                <div class="list-item-title">暂无执行记录</div>
+                <div class="list-item-subtitle">执行测试后将显示记录</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分页 -->
+    <div class="divider"></div>
+    <div class="flex items-center justify-between">
+        <div class="text-sm text-gray-600">
+            显示最近 5 条执行记录
+        </div>
+        <div class="flex items-center gap-1">
+            <button class="btn btn-small btn-ghost" onclick="loadAllExecutions()">查看全部</button>
         </div>
     </div>
 </div>
@@ -547,6 +378,7 @@
     // 页面初始化
     document.addEventListener('DOMContentLoaded', function() {
         loadTestCases();
+        loadRecentExecutions();
         initializeWebSocket();
         connectToLocalProxy();
         
@@ -684,23 +516,20 @@
     // 更新代理状态
     function updateProxyStatus(status) {
         const statusElement = document.getElementById('proxy-status');
-        const statusText = document.getElementById('proxy-status-text');
-        const tooltip = statusElement.querySelector('.proxy-status-tooltip');
         
-        statusElement.className = 'proxy-status ' + status;
+        // 移除所有状态类
+        statusElement.className = 'status';
         
+        // 添加新状态类
         switch(status) {
             case 'connected':
-                statusText.textContent = '已连接';
-                tooltip.textContent = '已连接';
+                statusElement.classList.add('status-success');
                 break;
             case 'connecting':
-                statusText.textContent = '连接中';
-                tooltip.textContent = '连接中';
+                statusElement.classList.add('status-warning');
                 break;
             case 'disconnected':
-                statusText.textContent = '未连接';
-                tooltip.textContent = '未连接';
+                statusElement.classList.add('status-error');
                 break;
         }
     }
@@ -837,6 +666,13 @@
     // 更新执行进度
     function updateExecutionProgress(current, total) {
         document.getElementById('execution-progress').textContent = `${current}/${total}`;
+        
+        // 更新进度条
+        const progressBar = document.querySelector('.progress-bar');
+        if (progressBar && total > 0) {
+            const percentage = (current / total) * 100;
+            progressBar.style.width = `${percentage}%`;
+        }
     }
 
     // 执行完成回调
@@ -847,6 +683,9 @@
         
         addLog(`执行完成: ${data.status}`, data.status === 'success' ? 'success' : 'error');
         currentExecution = null;
+        
+        // 刷新最近执行记录
+        loadRecentExecutions();
     }
 
     // 添加日志
@@ -876,6 +715,12 @@
         screenshotHistory.push(screenshot);
         
         const container = document.getElementById('screenshot-history-container');
+        
+        // 如果这是第一个截图，清空空状态
+        if (screenshotHistory.length === 1) {
+            container.innerHTML = '';
+        }
+        
         const thumbnailDiv = document.createElement('div');
         thumbnailDiv.style.textAlign = 'center';
         
@@ -899,9 +744,98 @@
     // 清空截图历史
     function clearScreenshotHistory() {
         screenshotHistory = [];
-        document.getElementById('screenshot-history-container').innerHTML = '';
+        const historyContainer = document.getElementById('screenshot-history-container');
+        historyContainer.innerHTML = `
+            <div class="empty-state" style="padding: 30px 20px;">
+                <div class="empty-state-icon">📸</div>
+                <div class="empty-state-text">暂无截图历史</div>
+                <div class="empty-state-subtext">执行测试后将显示截图</div>
+            </div>
+        `;
         document.getElementById('screenshot-placeholder').style.display = 'block';
         document.getElementById('current-screenshot').style.display = 'none';
+    }
+
+    // 加载最近执行记录
+    async function loadRecentExecutions() {
+        try {
+            const response = await axios.get('/api/executions?page=1&size=5');
+            const listContainer = document.getElementById('recent-executions-list');
+            
+            if (response.data.code === 200) {
+                const executions = response.data.data.items;
+                
+                if (executions.length === 0) {
+                    listContainer.innerHTML = `
+                        <div class="list-item">
+                            <div class="list-item-content">
+                                <div class="list-item-title">暂无执行记录</div>
+                                <div class="list-item-subtitle">执行测试后将显示记录</div>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                listContainer.innerHTML = '';
+                
+                executions.forEach(execution => {
+                    const statusClass = execution.status === 'success' ? 'status-success' : 
+                                      execution.status === 'failed' ? 'status-error' : 'status-warning';
+                    
+                    const timeAgo = formatTimeAgo(execution.created_at);
+                    const duration = execution.duration || 0;
+                    const stepCount = execution.step_count || 0;
+                    
+                    const listItem = document.createElement('div');
+                    listItem.className = 'list-item';
+                    listItem.innerHTML = `
+                        <div class="list-item-content">
+                            <div class="list-item-title">${execution.testcase_name || '未知测试用例'}</div>
+                            <div class="list-item-subtitle">${execution.created_at} • ${execution.mode}模式 • 本地代理执行</div>
+                            <div class="list-item-meta">
+                                <span class="text-gray-600">耗时 ${duration}s</span>
+                                <span class="text-gray-400">•</span>
+                                <span class="text-gray-600">${stepCount}个步骤</span>
+                                <span class="text-gray-400">•</span>
+                                <span class="text-gray-600">${execution.status === 'success' ? '全部成功' : execution.status === 'failed' ? '执行失败' : '执行中'}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="text-sm text-gray-500">${timeAgo}</span>
+                            <div class="status ${statusClass}"></div>
+                        </div>
+                    `;
+                    
+                    listContainer.appendChild(listItem);
+                });
+            }
+        } catch (error) {
+            console.error('加载执行记录失败:', error);
+        }
+    }
+
+    // 格式化时间差
+    function formatTimeAgo(dateString) {
+        const now = new Date();
+        const date = new Date(dateString);
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        
+        if (diffMins < 1) return '刚刚';
+        if (diffMins < 60) return `${diffMins}分钟前`;
+        
+        const diffHours = Math.floor(diffMins / 60);
+        if (diffHours < 24) return `${diffHours}小时前`;
+        
+        const diffDays = Math.floor(diffHours / 24);
+        return `${diffDays}天前`;
+    }
+
+    // 加载所有执行记录
+    function loadAllExecutions() {
+        // 跳转到报告页面
+        window.location.href = '/reports';
     }
 
 </script>
