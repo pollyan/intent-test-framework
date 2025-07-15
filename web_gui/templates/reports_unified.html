@@ -6,11 +6,7 @@
 
 {% block extra_css %}
 <style>
-    .reports-container {
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-
+    /* 统计卡片样式 */
     .stats-overview {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -19,112 +15,32 @@
     }
 
     .stat-card {
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
         text-align: center;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        transition: transform 0.3s ease;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-2px);
+        padding: 32px 24px;
     }
 
     .stat-number {
-        font-size: 28px;
-        font-weight: bold;
+        font-size: 48px;
+        font-weight: 200;
+        color: #333333;
         margin-bottom: 8px;
-    }
-
-    .stat-number.success {
-        color: #52c41a;
-    }
-
-    .stat-number.failed {
-        color: #ff4d4f;
-    }
-
-    .stat-number.total {
-        color: #1890ff;
-    }
-
-    .stat-number.rate {
-        color: #722ed1;
+        line-height: 1;
+        letter-spacing: -2px;
     }
 
     .stat-label {
-        color: #666;
-        font-size: 14px;
+        font-size: 13px;
+        color: #999999;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
-    .reports-section {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        overflow: hidden;
-        margin-bottom: 24px;
-    }
-
-    .section-header {
-        padding: 16px 24px;
-        border-bottom: 1px solid #f0f0f0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .section-title {
-        font-size: 16px;
-        font-weight: 600;
-        margin: 0;
-    }
-
-    .section-actions {
-        display: flex;
-        gap: 12px;
-    }
-
-    .btn {
-        padding: 6px 12px;
-        border: 1px solid #d9d9d9;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 12px;
-        transition: all 0.3s;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .btn-primary {
-        background: #1890ff;
-        color: white;
-        border-color: #1890ff;
-    }
-
-    .btn-primary:hover {
-        background: #40a9ff;
-        border-color: #40a9ff;
-    }
-
-    .btn-default {
-        background: white;
-        color: #262626;
-    }
-
-    .btn-default:hover {
-        background: #f5f5f5;
-        border-color: #40a9ff;
-    }
-
+    /* 过滤器样式 */
     .filter-bar {
-        padding: 16px 24px;
-        border-bottom: 1px solid #f0f0f0;
         display: flex;
         gap: 16px;
         align-items: center;
+        margin-bottom: 24px;
     }
 
     .filter-item {
@@ -134,43 +50,42 @@
     }
 
     .filter-item label {
-        font-size: 14px;
-        font-weight: 500;
-        color: #262626;
+        font-size: 13px;
+        font-weight: 400;
+        color: #666666;
+        min-width: 50px;
     }
 
-    .filter-input {
-        padding: 6px 12px;
-        border: 1px solid #d9d9d9;
+    .filter-input,
+    .filter-select {
+        padding: 8px 12px;
+        border: 1px solid #e8e8e8;
         border-radius: 4px;
         font-size: 14px;
+        background: #ffffff;
+        color: #333333;
         min-width: 120px;
     }
 
-    .filter-select {
-        padding: 6px 12px;
-        border: 1px solid #d9d9d9;
-        border-radius: 4px;
-        font-size: 14px;
-        min-width: 100px;
+    .filter-input:focus,
+    .filter-select:focus {
+        outline: none;
+        border-color: #333333;
     }
 
-    .reports-list {
-        padding: 24px;
-    }
-
+    /* 报告列表样式 */
     .report-item {
-        border: 1px solid #f0f0f0;
-        border-radius: 8px;
+        border: 1px solid #e8e8e8;
+        border-radius: 4px;
         padding: 16px;
         margin-bottom: 16px;
-        transition: all 0.3s;
+        transition: all 0.2s ease;
         cursor: pointer;
     }
 
     .report-item:hover {
-        border-color: #1890ff;
-        box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+        border-color: #d0d0d0;
+        background: #f8f8f8;
     }
 
     .report-header {
@@ -182,41 +97,40 @@
 
     .report-title {
         font-size: 16px;
-        font-weight: 600;
-        color: #262626;
+        font-weight: 500;
+        color: #333333;
         margin: 0;
     }
 
     .report-status {
-        font-size: 12px;
+        font-size: 11px;
         padding: 2px 8px;
         border-radius: 12px;
-        font-weight: 500;
+        font-weight: 400;
+        background: #f0f0f0;
+        color: #666666;
     }
 
     .report-status.success {
         background: #f6ffed;
         color: #52c41a;
-        border: 1px solid #b7eb8f;
     }
 
     .report-status.failed {
         background: #fff2f0;
         color: #ff4d4f;
-        border: 1px solid #ffccc7;
     }
 
     .report-status.running {
         background: #e6f7ff;
         color: #1890ff;
-        border: 1px solid #91d5ff;
     }
 
     .report-meta {
         display: flex;
         gap: 16px;
         font-size: 12px;
-        color: #999;
+        color: #999999;
         margin-bottom: 8px;
     }
 
@@ -224,7 +138,7 @@
         display: flex;
         gap: 16px;
         font-size: 12px;
-        color: #666;
+        color: #666666;
     }
 
     .report-actions {
@@ -235,68 +149,27 @@
 
     .action-btn {
         padding: 4px 8px;
-        border: 1px solid #d9d9d9;
+        border: 1px solid #e8e8e8;
         border-radius: 4px;
         cursor: pointer;
         font-size: 12px;
-        transition: all 0.3s;
+        transition: all 0.2s ease;
         text-decoration: none;
-        color: #666;
+        color: #666666;
+        background: #ffffff;
     }
 
     .action-btn:hover {
-        border-color: #1890ff;
-        color: #1890ff;
+        border-color: #333333;
+        color: #333333;
     }
 
     .action-btn.delete:hover {
-        border-color: #ff4d4f;
-        color: #ff4d4f;
+        border-color: #dc3545;
+        color: #dc3545;
     }
 
-    .empty-state {
-        text-align: center;
-        padding: 60px 24px;
-        color: #999;
-    }
-
-    .empty-icon {
-        font-size: 48px;
-        margin-bottom: 16px;
-    }
-
-    .empty-text {
-        font-size: 16px;
-        margin-bottom: 16px;
-    }
-
-    .empty-desc {
-        font-size: 14px;
-        color: #ccc;
-    }
-
-    .loading {
-        text-align: center;
-        padding: 40px;
-        color: #666;
-    }
-
-    .loading-spinner {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        border: 2px solid #f3f3f3;
-        border-top: 2px solid #1890ff;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin-right: 8px;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
+    /* 分页样式 */
     .pagination {
         display: flex;
         justify-content: center;
@@ -306,40 +179,94 @@
     }
 
     .pagination-btn {
-        padding: 6px 12px;
-        border: 1px solid #d9d9d9;
+        padding: 8px 16px;
+        border: 1px solid #e8e8e8;
         border-radius: 4px;
         cursor: pointer;
         font-size: 14px;
-        transition: all 0.3s;
+        transition: all 0.2s ease;
+        background: #ffffff;
+        color: #333333;
     }
 
     .pagination-btn:hover {
-        border-color: #1890ff;
-        color: #1890ff;
+        border-color: #333333;
+        color: #333333;
     }
 
     .pagination-btn.active {
-        background: #1890ff;
-        color: white;
-        border-color: #1890ff;
+        background: #333333;
+        color: #ffffff;
+        border-color: #333333;
     }
 
     .pagination-btn.disabled {
         cursor: not-allowed;
-        color: #ccc;
+        color: #cccccc;
         border-color: #f0f0f0;
+        background: #f8f8f8;
     }
 
     .pagination-info {
         font-size: 14px;
-        color: #666;
+        color: #666666;
         margin: 0 16px;
     }
 
+    /* 空状态样式 */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999999;
+    }
+
+    .empty-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+
+    .empty-text {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+
+    .empty-desc {
+        font-size: 14px;
+        color: #bbbbbb;
+    }
+
+    /* 加载状态样式 */
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: #999999;
+    }
+
+    .loading-spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #f0f0f0;
+        border-top: 2px solid #333333;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* 响应式设计 */
     @media (max-width: 768px) {
         .stats-overview {
             grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .filter-bar {
+            flex-direction: column;
+            align-items: stretch;
         }
     }
 
@@ -352,92 +279,94 @@
 {% endblock %}
 
 {% block content %}
-<div class="reports-container">
-    <!-- 统计概览 -->
-    <div class="stats-overview">
-        <div class="stat-card">
-            <div class="stat-number total" id="total-executions">0</div>
-            <div class="stat-label">总执行次数</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number success" id="success-executions">0</div>
-            <div class="stat-label">成功次数</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number failed" id="failed-executions">0</div>
-            <div class="stat-label">失败次数</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number rate" id="success-rate">0%</div>
-            <div class="stat-label">成功率</div>
-        </div>
+<!-- 统计概览 -->
+<div class="stats-overview mb-3">
+    <div class="card stat-card">
+        <div class="stat-number" id="total-executions">0</div>
+        <div class="stat-label">总执行次数</div>
     </div>
+    <div class="card stat-card">
+        <div class="stat-number" id="success-executions">0</div>
+        <div class="stat-label">成功次数</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-number" id="failed-executions">0</div>
+        <div class="stat-label">失败次数</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-number" id="success-rate">0%</div>
+        <div class="stat-label">成功率</div>
+    </div>
+</div>
 
-    <!-- 执行报告列表 -->
-    <div class="reports-section">
-        <div class="section-header">
-            <h3 class="section-title">执行报告</h3>
-            <div class="section-actions">
-                <button class="btn btn-default" onclick="refreshReports()">
-                    <span>🔄</span>
-                    刷新
-                </button>
-                <button class="btn btn-primary" onclick="exportReports()">
-                    <span>📊</span>
-                    导出报告
-                </button>
-            </div>
-        </div>
-
-        <div class="filter-bar">
-            <div class="filter-item">
-                <label for="search">搜索:</label>
-                <input type="text" id="search" class="filter-input" placeholder="输入测试用例名称...">
-            </div>
-            <div class="filter-item">
-                <label for="status">状态:</label>
-                <select id="status" class="filter-select">
-                    <option value="">全部状态</option>
-                    <option value="success">成功</option>
-                    <option value="failed">失败</option>
-                    <option value="running">运行中</option>
-                </select>
-            </div>
-            <div class="filter-item">
-                <label for="date-range">日期范围:</label>
-                <select id="date-range" class="filter-select">
-                    <option value="">全部时间</option>
-                    <option value="today">今天</option>
-                    <option value="week">本周</option>
-                    <option value="month">本月</option>
-                </select>
-            </div>
-            <button class="btn btn-default" onclick="applyFilters()">
-                <span>🔍</span>
-                筛选
+<!-- 操作栏 -->
+<div class="card mb-3">
+    <div class="flex items-center justify-between">
+        <h3 class="card-title mb-0">执行报告</h3>
+        <div class="flex gap-2">
+            <button class="btn btn-ghost" onclick="refreshReports()">
+                <span>🔄</span>
+                刷新
+            </button>
+            <button class="btn btn-primary" onclick="exportReports()">
+                <span>📊</span>
+                导出报告
             </button>
         </div>
+    </div>
+</div>
 
-        <div class="reports-list">
-            <div id="loading" class="loading" style="display: none;">
-                <div class="loading-spinner"></div>
-                正在加载执行报告...
-            </div>
-            
-            <div id="reports-items">
-                <!-- 报告项目会在这里动态加载 -->
-            </div>
-
-            <div id="empty-state" class="empty-state" style="display: none;">
-                <div class="empty-icon">📊</div>
-                <div class="empty-text">暂无执行报告</div>
-                <div class="empty-desc">执行测试用例后，报告将会显示在这里</div>
-            </div>
-
-            <div id="pagination" class="pagination" style="display: none;">
-                <!-- 分页控件会在这里动态生成 -->
-            </div>
+<!-- 筛选器 -->
+<div class="card mb-3">
+    <div class="filter-bar">
+        <div class="filter-item">
+            <label for="search">搜索:</label>
+            <input type="text" id="search" class="filter-input" placeholder="输入测试用例名称...">
         </div>
+        <div class="filter-item">
+            <label for="status">状态:</label>
+            <select id="status" class="filter-select">
+                <option value="">全部状态</option>
+                <option value="success">成功</option>
+                <option value="failed">失败</option>
+                <option value="running">运行中</option>
+            </select>
+        </div>
+        <div class="filter-item">
+            <label for="date-range">日期范围:</label>
+            <select id="date-range" class="filter-select">
+                <option value="">全部时间</option>
+                <option value="today">今天</option>
+                <option value="week">本周</option>
+                <option value="month">本月</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" onclick="applyFilters()">
+            <span>🔍</span>
+            筛选
+        </button>
+    </div>
+</div>
+
+<!-- 执行报告列表 -->
+<div class="card">
+    <div id="loading" class="loading" style="display: none;">
+        <div class="loading-spinner"></div>
+        正在加载执行报告...
+    </div>
+    
+    <div id="reports-items">
+        <!-- 报告项目会在这里动态加载 -->
+    </div>
+
+    <div id="empty-state" class="empty-state" style="display: none;">
+        <div class="empty-icon">📊</div>
+        <div class="empty-text">暂无执行报告</div>
+        <div class="empty-desc">执行测试用例后，报告将会显示在这里</div>
+    </div>
+
+    <div id="pagination" class="pagination" style="display: none;">
+        <!-- 分页控件会在这里动态生成 -->
     </div>
 </div>
 {% endblock %}

@@ -4,6 +4,8 @@
 
 {% block page_title %}执行控制台{% endblock %}
 
+{% block page_subtitle %}本地代理测试执行和监控{% endblock %}
+
 {% block extra_css %}
 <style>
     .execution-container {
@@ -25,11 +27,12 @@
     }
 
     .panel {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e8e8e8;
+        border-radius: 4px;
+        background: #ffffff;
         display: flex;
         flex-direction: column;
+        transition: border-color 0.2s ease;
     }
     
     .left-panel .panel {
@@ -51,9 +54,10 @@
 
     .panel-header {
         padding: 16px 24px;
-        border-bottom: 1px solid #f0f0f0;
-        font-weight: 600;
+        border-bottom: 1px solid #e8e8e8;
+        font-weight: 500;
         font-size: 16px;
+        color: #333333;
     }
 
     .panel-content {
@@ -72,16 +76,26 @@
     .testcase-selector label {
         display: block;
         margin-bottom: 8px;
-        font-weight: 500;
+        font-weight: 400;
+        font-size: 13px;
+        color: #666666;
         min-width: 80px;
     }
 
     .testcase-select {
         width: 100%;
-        padding: 8px 12px;
-        border: 1px solid #d9d9d9;
+        padding: 12px;
+        border: 1px solid #e8e8e8;
         border-radius: 4px;
         font-size: 14px;
+        background: #ffffff;
+        color: #333333;
+        transition: border-color 0.2s ease;
+    }
+
+    .testcase-select:focus {
+        outline: none;
+        border-color: #333333;
     }
 
     .execution-controls {
@@ -97,17 +111,26 @@
     }
 
     .control-group label {
-        font-weight: 500;
-        color: #262626;
+        font-weight: 400;
+        color: #666666;
         min-width: 80px;
+        font-size: 13px;
     }
 
     .control-select {
         flex: 1;
-        padding: 8px 12px;
-        border: 1px solid #d9d9d9;
+        padding: 12px;
+        border: 1px solid #e8e8e8;
         border-radius: 4px;
         font-size: 14px;
+        background: #ffffff;
+        color: #333333;
+        transition: border-color 0.2s ease;
+    }
+
+    .control-select:focus {
+        outline: none;
+        border-color: #333333;
     }
 
     .execution-actions {
@@ -117,53 +140,63 @@
     }
 
     .btn {
-        padding: 10px 20px;
-        border: none;
+        padding: 12px 24px;
+        border: 1px solid #e8e8e8;
         border-radius: 4px;
         cursor: pointer;
         font-size: 14px;
-        font-weight: 500;
-        transition: all 0.3s;
+        font-weight: 400;
+        transition: all 0.2s ease;
         display: flex;
         align-items: center;
         gap: 8px;
+        background: #ffffff;
+        color: #333333;
+        text-decoration: none;
     }
 
     .btn-primary {
-        background: #1890ff;
-        color: white;
+        background: #333333;
+        color: #ffffff;
+        border-color: #333333;
     }
 
     .btn-primary:hover {
-        background: #40a9ff;
+        background: #555555;
+        border-color: #555555;
     }
 
     .btn-primary:disabled {
-        background: #f5f5f5;
-        color: #ccc;
+        background: #f8f8f8;
+        color: #cccccc;
         cursor: not-allowed;
+        border-color: #e8e8e8;
     }
 
     .btn-danger {
-        background: #ff4d4f;
-        color: white;
+        background: #dc3545;
+        color: #ffffff;
+        border-color: #dc3545;
     }
 
     .btn-danger:hover {
-        background: #ff7875;
+        background: #c82333;
+        border-color: #c82333;
     }
 
     .btn-danger:disabled {
-        background: #f5f5f5;
-        color: #ccc;
+        background: #f8f8f8;
+        color: #cccccc;
         cursor: not-allowed;
+        border-color: #e8e8e8;
     }
 
     .status-section {
         margin-top: 20px;
         padding: 16px;
-        background: #f8f9fa;
-        border-radius: 8px;
+        background: #f8f8f8;
+        border-radius: 4px;
+        border: 1px solid #e8e8e8;
     }
 
     .status-item {
@@ -178,13 +211,13 @@
     }
 
     .status-label {
-        font-weight: 500;
-        color: #262626;
+        font-weight: 400;
+        color: #333333;
         min-width: 80px;
     }
 
     .status-value {
-        color: #666;
+        color: #666666;
     }
 
     .proxy-status {
@@ -198,34 +231,34 @@
     }
 
     .proxy-status.connected {
-        background: #52c41a;
-        box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.3);
+        background: #28a745;
+        box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.3);
         animation: pulse 2s infinite;
     }
 
     .proxy-status.disconnected {
-        background: #ff4d4f;
-        box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.3);
+        background: #dc3545;
+        box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.3);
     }
 
     .proxy-status.connecting {
-        background: #fadb14;
-        box-shadow: 0 0 0 2px rgba(250, 219, 20, 0.3);
+        background: #ffc107;
+        box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.3);
         animation: pulse 1s infinite;
     }
 
     @keyframes pulse {
         0% {
             transform: scale(0.95);
-            box-shadow: 0 0 0 0 rgba(82, 196, 26, 0.7);
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
         }
         70% {
             transform: scale(1);
-            box-shadow: 0 0 0 10px rgba(82, 196, 26, 0);
+            box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
         }
         100% {
             transform: scale(0.95);
-            box-shadow: 0 0 0 0 rgba(82, 196, 26, 0);
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
         }
     }
 
@@ -267,21 +300,20 @@
     }
 
     .progress-label {
-        font-weight: 500;
-        color: #262626;
+        font-weight: 400;
+        color: #333333;
     }
 
     .progress-value {
-        color: #666;
+        color: #666666;
     }
 
-
     .screenshot-container {
-        border: 1px solid #f0f0f0;
-        border-radius: 8px;
+        border: 1px solid #e8e8e8;
+        border-radius: 4px;
         padding: 16px;
         text-align: center;
-        background: #fafafa;
+        background: #f8f8f8;
     }
 
     .screenshot-image {
@@ -292,46 +324,46 @@
     }
 
     .screenshot-placeholder {
-        color: #999;
+        color: #999999;
         font-size: 14px;
         padding: 40px;
     }
 
     .log-container {
-        background: #1f1f1f;
-        color: #fff;
+        background: #f8f8f8;
+        color: #333333;
         padding: 16px;
-        border-radius: 8px;
-        font-family: 'Consolas', 'Monaco', monospace;
+        border-radius: 4px;
+        font-family: 'SF Mono', Monaco, monospace;
         font-size: 12px;
-        line-height: 1.4;
+        line-height: 1.5;
         height: 100%;
         min-height: 200px;
         overflow-y: auto;
         overflow-x: hidden;
+        border: 1px solid #e8e8e8;
     }
 
     .log-entry {
-        margin-bottom: 4px;
+        margin-bottom: 2px;
         word-wrap: break-word;
     }
 
     .log-entry.info {
-        color: #1890ff;
+        color: #333333;
     }
 
     .log-entry.success {
-        color: #52c41a;
+        color: #28a745;
     }
 
     .log-entry.error {
-        color: #ff4d4f;
+        color: #dc3545;
     }
 
     .log-entry.warning {
-        color: #fadb14;
+        color: #ffc107;
     }
-
 
     .screenshot-history-container {
         display: flex;
@@ -344,26 +376,26 @@
     .screenshot-thumbnail {
         width: 80px;
         height: 60px;
-        border: 2px solid #f0f0f0;
+        border: 2px solid #e8e8e8;
         border-radius: 4px;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: all 0.2s ease;
         object-fit: cover;
     }
 
     .screenshot-thumbnail:hover {
-        border-color: #1890ff;
+        border-color: #333333;
         transform: scale(1.05);
     }
 
     .screenshot-thumbnail.active {
-        border-color: #1890ff;
-        box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        border-color: #333333;
+        box-shadow: 0 0 0 2px rgba(51, 51, 51, 0.2);
     }
 
     .screenshot-info {
         font-size: 12px;
-        color: #666;
+        color: #666666;
         margin-top: 4px;
         text-align: center;
     }

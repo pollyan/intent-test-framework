@@ -5,12 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}AI测试用例管理系统{% endblock %}</title>
     
-    <!-- Ant Design CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.css" rel="stylesheet">
-    
-    <!-- 统一样式 -->
+    <!-- 极简风格样式 -->
     <style>
+        /* 基础重置 */
         * {
             margin: 0;
             padding: 0;
@@ -19,175 +16,435 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f0f2f5;
-        }
-
-        .main-layout {
-            display: flex;
+            background: #ffffff;
+            color: #333333;
+            line-height: 1.6;
+            font-size: 14px;
             min-height: 100vh;
         }
 
-        /* 侧边栏样式 */
-        .sidebar {
-            width: 200px;
-            background: #001529;
-            color: white;
+        /* 顶部导航 */
+        .top-nav {
+            background: #ffffff;
+            border-bottom: 1px solid #e8e8e8;
+            padding: 0 40px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
             display: flex;
-            flex-direction: column;
+            align-items: center;
             justify-content: space-between;
-        }
-
-        .logo {
+            max-width: 1200px;
+            margin: 0 auto;
             height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
+        }
+
+        .nav-brand {
             font-size: 16px;
-            border-bottom: 1px solid #002140;
-        }
-
-        .nav-menu {
-            padding: 16px 0;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 24px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .nav-item:hover {
-            background-color: #1890ff;
-        }
-
-        .nav-item.active {
-            background-color: #1890ff;
-        }
-
-        .nav-icon {
-            margin-right: 12px;
-            font-size: 16px;
-        }
-
-        .nav-label {
-            font-size: 14px;
-        }
-
-        .nav-section {
-            flex: 1;
-        }
-
-        .aux-functions {
-            border-top: 1px solid #002140;
-            padding: 16px 0;
-        }
-
-        .aux-item {
-            display: flex;
-            align-items: center;
-            padding: 8px 24px;
-            cursor: pointer;
-            font-size: 12px;
-            color: #8c8c8c;
-            transition: all 0.3s;
-        }
-
-        .aux-item:hover {
-            background-color: #1890ff;
-            color: white;
-        }
-
-        .aux-icon {
-            margin-right: 8px;
-            font-size: 14px;
-        }
-
-        /* 主内容区样式 */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .header {
-            height: 64px;
-            background: white;
-            display: flex;
-            align-items: center;
-            padding: 0 24px;
-            border-bottom: 1px solid #f0f0f0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        }
-
-        .header h2 {
-            margin: 0;
-            font-size: 18px;
             font-weight: 600;
+            color: #333333;
+            letter-spacing: -0.5px;
         }
 
-        .content-area {
-            flex: 1;
-            padding: 24px;
+        .nav-links {
+            display: flex;
+            gap: 40px;
         }
+
+        .nav-link {
+            color: #666666;
+            text-decoration: none;
+            font-weight: 400;
+            font-size: 14px;
+            transition: color 0.2s ease;
+            padding: 8px 0;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            color: #333333;
+        }
+
+        .nav-link.active {
+            color: #333333;
+            position: relative;
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #333333;
+        }
+
+        .nav-user {
+            color: #666666;
+            font-size: 14px;
+        }
+
+        /* 主容器 */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+
+        /* 页面标题 */
+        .page-header {
+            margin-bottom: 40px;
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 300;
+            color: #333333;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .page-subtitle {
+            font-size: 16px;
+            color: #666666;
+            font-weight: 400;
+        }
+
+        /* 网格布局 */
+        .grid {
+            display: grid;
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .grid-cols-1 { grid-template-columns: 1fr; }
+        .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+        /* 卡片样式 */
+        .card {
+            background: #ffffff;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            padding: 24px;
+            transition: border-color 0.2s ease;
+        }
+
+        .card:hover {
+            border-color: #d0d0d0;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #333333;
+            margin-bottom: 8px;
+        }
+
+        .card-subtitle {
+            font-size: 13px;
+            color: #999999;
+            margin-bottom: 16px;
+        }
+
+        .card-content {
+            color: #666666;
+            line-height: 1.6;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: 1px solid #e8e8e8;
+            background: #ffffff;
+            color: #333333;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 400;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: #f8f8f8;
+            border-color: #d0d0d0;
+        }
+
+        .btn-primary {
+            background: #333333;
+            color: #ffffff;
+            border-color: #333333;
+        }
+
+        .btn-primary:hover {
+            background: #555555;
+            border-color: #555555;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: #666666;
+            border: 1px solid #e8e8e8;
+        }
+
+        .btn-ghost:hover {
+            background: #f8f8f8;
+            color: #333333;
+        }
+
+        /* 表单元素 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #666666;
+            font-weight: 400;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            font-size: 14px;
+            background: #ffffff;
+            color: #333333;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #333333;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* 列表样式 */
+        .list {
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            background: #ffffff;
+        }
+
+        .list-item {
+            padding: 16px;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.2s ease;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-item:hover {
+            background: #f8f8f8;
+        }
+
+        .list-item-content {
+            flex: 1;
+        }
+
+        .list-item-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333333;
+            margin-bottom: 4px;
+        }
+
+        .list-item-subtitle {
+            font-size: 13px;
+            color: #666666;
+        }
+
+        .list-item-meta {
+            font-size: 12px;
+            color: #999999;
+            margin-top: 4px;
+        }
+
+        /* 状态指示器 */
+        .status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 16px;
+        }
+
+        .status-success {
+            background: #28a745;
+        }
+
+        .status-warning {
+            background: #ffc107;
+        }
+
+        .status-error {
+            background: #dc3545;
+        }
+
+        .status-inactive {
+            background: #6c757d;
+        }
+
+        /* 进度条 */
+        .progress {
+            width: 100%;
+            height: 4px;
+            background: #f0f0f0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 12px 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #333333;
+            transition: width 0.3s ease;
+        }
+
+        /* 分隔线 */
+        .divider {
+            height: 1px;
+            background: #e8e8e8;
+            margin: 24px 0;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 20px;
+            }
+            
+            .nav-container {
+                padding: 0 20px;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .grid-cols-2,
+            .grid-cols-3,
+            .grid-cols-4 {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-title {
+                font-size: 24px;
+            }
+        }
+
+        /* 工具类 */
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        .text-right { text-align: right; }
+
+        .mb-0 { margin-bottom: 0; }
+        .mb-1 { margin-bottom: 8px; }
+        .mb-2 { margin-bottom: 16px; }
+        .mb-3 { margin-bottom: 24px; }
+        .mb-4 { margin-bottom: 32px; }
+
+        .mt-0 { margin-top: 0; }
+        .mt-1 { margin-top: 8px; }
+        .mt-2 { margin-top: 16px; }
+        .mt-3 { margin-top: 24px; }
+        .mt-4 { margin-top: 32px; }
+
+        .flex { display: flex; }
+        .flex-column { flex-direction: column; }
+        .flex-wrap { flex-wrap: wrap; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .gap-1 { gap: 8px; }
+        .gap-2 { gap: 16px; }
+        .gap-3 { gap: 24px; }
+
+        .w-full { width: 100%; }
+        .h-full { height: 100%; }
+
+        .text-sm { font-size: 12px; }
+        .text-base { font-size: 14px; }
+        .text-lg { font-size: 16px; }
+        .text-xl { font-size: 18px; }
+        .text-2xl { font-size: 24px; }
+
+        .font-light { font-weight: 300; }
+        .font-normal { font-weight: 400; }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+
+        .text-gray-300 { color: #d0d0d0; }
+        .text-gray-400 { color: #bbbbbb; }
+        .text-gray-500 { color: #999999; }
+        .text-gray-600 { color: #666666; }
+        .text-gray-700 { color: #555555; }
+        .text-gray-800 { color: #333333; }
+        .text-gray-900 { color: #222222; }
 
         {% block extra_css %}{% endblock %}
     </style>
 </head>
 <body>
-    <div class="main-layout">
-        <!-- 侧边栏 -->
-        <div class="sidebar">
-            <div class="nav-section">
-                <div class="logo">AI测试管理</div>
-                <nav class="nav-menu">
-                    <div class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}" data-page="dashboard">
-                        <span class="nav-icon">📊</span>
-                        <span class="nav-label">仪表板</span>
-                    </div>
-                    <div class="nav-item {% if request.endpoint == 'testcases' %}active{% endif %}" data-page="testcases">
-                        <span class="nav-icon">📝</span>
-                        <span class="nav-label">测试用例</span>
-                    </div>
-                    <div class="nav-item {% if request.endpoint == 'execution' %}active{% endif %}" data-page="execution">
-                        <span class="nav-icon">▶️</span>
-                        <span class="nav-label">执行控制台</span>
-                    </div>
-                    <div class="nav-item {% if request.endpoint == 'reports' %}active{% endif %}" data-page="reports">
-                        <span class="nav-icon">📈</span>
-                        <span class="nav-label">测试报告</span>
-                    </div>
-                    <div class="nav-item {% if request.endpoint == 'templates' %}active{% endif %}" data-page="templates">
-                        <span class="nav-icon">📋</span>
-                        <span class="nav-label">模板库</span>
-                    </div>
-                </nav>
+    <!-- 顶部导航 -->
+    <nav class="top-nav">
+        <div class="nav-container">
+            <div class="nav-brand">Intent Test Framework</div>
+            <div class="nav-links">
+                <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" data-page="dashboard">仪表板</a>
+                <a class="nav-link {% if request.endpoint == 'testcases' %}active{% endif %}" data-page="testcases">测试用例</a>
+                <a class="nav-link {% if request.endpoint == 'execution' %}active{% endif %}" data-page="execution">执行控制台</a>
+                <a class="nav-link {% if request.endpoint == 'reports' %}active{% endif %}" data-page="reports">报告</a>
+                <a class="nav-link {% if request.endpoint == 'templates' %}active{% endif %}" data-page="templates">模板库</a>
+                <a class="nav-link {% if request.endpoint == 'local-proxy' %}active{% endif %}" data-page="local-proxy">本地代理</a>
             </div>
-            
-            <div class="aux-functions">
-                <div class="aux-item {% if request.endpoint == 'local-proxy' %}active{% endif %}" data-page="local-proxy" title="本地调试脚本需要下载并运行本地代理服务器">
-                    <span class="aux-icon">🖥️</span>
-                    <span>本地代理下载</span>
-                </div>
-            </div>
+            <div class="nav-user">用户</div>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <main class="main-container">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h1 class="page-title">{% block page_title %}AI测试用例管理系统{% endblock %}</h1>
+            {% if self.page_subtitle() %}
+                <p class="page-subtitle">{% block page_subtitle %}{% endblock %}</p>
+            {% endif %}
         </div>
 
-        <!-- 主内容区 -->
-        <div class="main-content">
-            <!-- 头部 -->
-            <div class="header">
-                <h2>{% block page_title %}AI测试用例管理系统{% endblock %}</h2>
-                {% block header_extra %}{% endblock %}
-            </div>
-
-            <!-- 内容区域 -->
-            <div class="content-area">
-                {% block content %}{% endblock %}
-            </div>
-        </div>
-    </div>
+        <!-- 页面内容 -->
+        {% block content %}{% endblock %}
+    </main>
 
     <!-- 基础库 -->
     <script src="https://unpkg.com/axios@1.6.0/dist/axios.min.js"></script>
@@ -197,22 +454,12 @@
     <script>
         // 设置导航点击事件
         document.addEventListener('DOMContentLoaded', function() {
-            const navItems = document.querySelectorAll('.nav-item');
-            navItems.forEach(item => {
-                item.addEventListener('click', function() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
                     const page = this.dataset.page;
                     if (page && page !== '{{ request.endpoint }}') {
-                        window.location.href = '/' + page;
-                    }
-                });
-            });
-
-            // 设置辅助功能点击事件
-            const auxItems = document.querySelectorAll('.aux-item');
-            auxItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    const page = this.dataset.page;
-                    if (page) {
                         window.location.href = '/' + page;
                     }
                 });
@@ -232,13 +479,16 @@
                 border-radius: 4px;
                 color: white;
                 z-index: 1000;
-                background-color: ${type === 'success' ? '#52c41a' : '#ff4d4f'};
+                background-color: ${type === 'success' ? '#28a745' : '#dc3545'};
+                border: 1px solid ${type === 'success' ? '#28a745' : '#dc3545'};
             `;
 
             document.body.appendChild(messageEl);
 
             setTimeout(() => {
-                document.body.removeChild(messageEl);
+                if (document.body.contains(messageEl)) {
+                    document.body.removeChild(messageEl);
+                }
             }, 3000);
         }
     </script>

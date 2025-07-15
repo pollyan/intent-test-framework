@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仪表板 - Intent Test Framework</title>
+    <link rel="stylesheet" href="assets/css/minimal-style.css">
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <nav class="top-nav">
+        <div class="nav-container">
+            <div class="nav-brand">Intent Test Framework</div>
+            <div class="nav-links">
+                <a href="dashboard.html" class="nav-link active">仪表板</a>
+                <a href="testcases.html" class="nav-link">测试用例</a>
+                <a href="execution.html" class="nav-link">执行控制台</a>
+                <a href="reports.html" class="nav-link">报告</a>
+            </div>
+            <div class="nav-user">用户</div>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <main class="main-container">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h1 class="page-title">仪表板</h1>
+            <p class="page-subtitle">系统概览和快速操作</p>
+        </div>
+
+        <!-- 统计概览 -->
+        <div class="grid grid-cols-4 mb-4">
+            <div class="card stat-card">
+                <div class="stat-number">156</div>
+                <div class="stat-label">测试用例</div>
+                <div class="stat-change">+12 本月</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-number">2,847</div>
+                <div class="stat-label">执行次数</div>
+                <div class="stat-change">+234 本周</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-number">94.2%</div>
+                <div class="stat-label">成功率</div>
+                <div class="stat-change">+2.1%</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-number">1.2s</div>
+                <div class="stat-label">平均耗时</div>
+                <div class="stat-change">-0.3s</div>
+            </div>
+        </div>
+
+        <!-- 主要内容区域 -->
+        <div class="grid grid-cols-3 gap-3">
+            <!-- 最近执行 -->
+            <div class="card">
+                <h3 class="card-title">最近执行</h3>
+                <p class="card-subtitle">最新的测试执行记录</p>
+                <div class="list">
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">用户登录功能测试</div>
+                            <div class="list-item-subtitle">2分钟前执行</div>
+                            <div class="list-item-meta">耗时 0.8s</div>
+                        </div>
+                        <div class="status status-success"></div>
+                    </div>
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">商品搜索功能测试</div>
+                            <div class="list-item-subtitle">5分钟前执行</div>
+                            <div class="list-item-meta">耗时 1.2s</div>
+                        </div>
+                        <div class="status status-success"></div>
+                    </div>
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">购物车结算测试</div>
+                            <div class="list-item-subtitle">8分钟前执行</div>
+                            <div class="list-item-meta">耗时 0.5s</div>
+                        </div>
+                        <div class="status status-error"></div>
+                    </div>
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">用户注册功能测试</div>
+                            <div class="list-item-subtitle">12分钟前执行</div>
+                            <div class="list-item-meta">耗时 1.5s</div>
+                        </div>
+                        <div class="status status-success"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 系统状态 -->
+            <div class="card">
+                <h3 class="card-title">系统状态</h3>
+                <p class="card-subtitle">服务运行状态</p>
+                <div class="list">
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">本地代理服务器</div>
+                            <div class="list-item-subtitle">localhost:3001</div>
+                            <div class="list-item-meta">运行中</div>
+                        </div>
+                        <div class="status status-success"></div>
+                    </div>
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">AI模型服务</div>
+                            <div class="list-item-subtitle">qwen-vl-max-latest</div>
+                            <div class="list-item-meta">响应时间 0.8s</div>
+                        </div>
+                        <div class="status status-success"></div>
+                    </div>
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">数据库连接</div>
+                            <div class="list-item-subtitle">PostgreSQL</div>
+                            <div class="list-item-meta">连接正常</div>
+                        </div>
+                        <div class="status status-success"></div>
+                    </div>
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">WebSocket服务</div>
+                            <div class="list-item-subtitle">实时通信</div>
+                            <div class="list-item-meta">3个连接</div>
+                        </div>
+                        <div class="status status-warning"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 快速操作 -->
+            <div class="card">
+                <h3 class="card-title">快速操作</h3>
+                <p class="card-subtitle">常用功能入口</p>
+                <div class="card-content">
+                    <div class="flex flex-column gap-2">
+                        <a href="testcases.html" class="btn btn-primary">创建测试用例</a>
+                        <a href="execution.html" class="btn btn-ghost">执行控制台</a>
+                        <a href="reports.html" class="btn btn-ghost">查看报告</a>
+                        <a href="#" class="btn btn-ghost">导入用例</a>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="mb-2">
+                        <div class="text-sm text-gray-600 mb-1">今日执行进度</div>
+                        <div class="progress">
+                            <div class="progress-bar" style="width: 68%;"></div>
+                        </div>
+                        <div class="text-sm text-gray-500">68% (89/130)</div>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <div class="text-sm text-gray-600 mb-1">本周成功率</div>
+                        <div class="progress">
+                            <div class="progress-bar" style="width: 94%;"></div>
+                        </div>
+                        <div class="text-sm text-gray-500">94.2%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 活动日志 -->
+        <div class="card mt-4">
+            <h3 class="card-title">活动日志</h3>
+            <p class="card-subtitle">系统活动记录</p>
+            <div class="log-container">
+                <div class="log-entry">
+                    <span class="log-entry-time">[14:32:15]</span>
+                    <span class="log-entry-success">用户登录功能测试 - 执行成功</span>
+                </div>
+                <div class="log-entry">
+                    <span class="log-entry-time">[14:31:42]</span>
+                    本地代理服务器连接成功
+                </div>
+                <div class="log-entry">
+                    <span class="log-entry-time">[14:30:18]</span>
+                    <span class="log-entry-success">商品搜索功能测试 - 执行成功</span>
+                </div>
+                <div class="log-entry">
+                    <span class="log-entry-time">[14:29:33]</span>
+                    <span class="log-entry-warning">AI模型响应时间较慢: 2.3s</span>
+                </div>
+                <div class="log-entry">
+                    <span class="log-entry-time">[14:28:45]</span>
+                    <span class="log-entry-error">购物车结算测试 - 执行失败</span>
+                </div>
+                <div class="log-entry">
+                    <span class="log-entry-time">[14:27:12]</span>
+                    新用例创建: 用户注册功能测试
+                </div>
+                <div class="log-entry">
+                    <span class="log-entry-time">[14:26:03]</span>
+                    用户登录: admin
+                </div>
+                <div class="log-entry">
+                    <span class="log-entry-time">[14:25:31]</span>
+                    系统启动完成
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
