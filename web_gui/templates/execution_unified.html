@@ -11,7 +11,7 @@
     /* 执行控制台特定样式 */
     .execution-grid {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: 1fr 2fr;
         gap: 24px;
         margin-bottom: 0;
     }
@@ -201,7 +201,7 @@
     }
     
     @media (max-width: 1200px) {
-        .grid-cols-2 {
+        .execution-grid {
             grid-template-columns: 1fr;
             gap: 16px;
         }
@@ -215,7 +215,7 @@
 
 {% block content %}
 <!-- 主要内容区域 -->
-<div class="grid grid-cols-2 gap-3">
+<div class="execution-grid">
     <!-- 左侧：执行控制 -->
     <div class="card">
         <h3 class="card-title">执行控制</h3>
