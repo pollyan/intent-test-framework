@@ -41,10 +41,15 @@ const packageJson = {
     },
     "dependencies": {
         "@midscene/web": "^0.20.1",
+        "@playwright/test": "^1.45.0",
+        "axios": "^1.10.0",
         "cors": "^2.8.5",
-        "express": "^5.1.0",
+        "express": "^4.18.2",
         "playwright": "^1.45.0",
         "socket.io": "^4.7.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0"
     },
     "keywords": ["midscene", "automation", "testing", "ai"],
     "author": "Intent Test Framework",
@@ -120,22 +125,78 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-REM 首次运行安装依赖
+REM 检查和安装依赖
 echo.
 echo [2/4] 检查依赖包...
-if not exist node_modules (
-    echo 📦 首次运行，正在安装依赖包...
-    echo 这可能需要几分钟时间，请耐心等待...
-    npm install
-    if %errorlevel% neq 0 (
-        echo ❌ 依赖安装失败
-        pause
-        exit /b 1
-    )
-    echo ✅ 依赖安装完成
-) else (
-    echo ✅ 依赖包已存在
+
+REM 检查关键依赖是否存在
+set PLAYWRIGHT_TEST_MISSING=false
+set AXIOS_MISSING=false
+
+if not exist "node_modules\\@playwright\\test" (
+    set PLAYWRIGHT_TEST_MISSING=true
 )
+
+if not exist "node_modules\\axios" (
+    set AXIOS_MISSING=true
+)
+
+REM 如果关键依赖缺失或node_modules不存在，则重新安装
+if not exist node_modules (
+    goto install_deps
+)
+if "%PLAYWRIGHT_TEST_MISSING%"=="true" (
+    goto install_deps
+)
+if "%AXIOS_MISSING%"=="true" (
+    goto install_deps
+)
+
+echo ✅ 依赖包已存在
+goto check_config
+
+:install_deps
+echo 📦 安装/更新依赖包...
+echo 这可能需要几分钟时间，请耐心等待...
+
+REM 清理旧的依赖
+if exist node_modules (
+    echo 🧹 清理旧依赖...
+    rmdir /s /q node_modules
+    if exist package-lock.json (
+        del package-lock.json
+    )
+)
+
+REM 安装依赖
+npm install
+if %errorlevel% neq 0 (
+    echo ❌ 依赖安装失败
+    echo.
+    echo 可能的解决方案:
+    echo 1. 检查网络连接
+    echo 2. 清理npm缓存: npm cache clean --force
+    echo 3. 使用国内镜像: npm config set registry https://registry.npmmirror.com
+    pause
+    exit /b 1
+)
+
+REM 验证关键依赖
+if not exist "node_modules\\@playwright\\test" (
+    echo ❌ @playwright/test 依赖安装失败
+    pause
+    exit /b 1
+)
+
+if not exist "node_modules\\axios" (
+    echo ❌ axios 依赖安装失败
+    pause
+    exit /b 1
+)
+
+echo ✅ 依赖安装完成
+
+:check_config
 
 REM 检查配置文件
 echo.
@@ -216,17 +277,56 @@ if ! command -v npm &> /dev/null; then
     exit 1
 fi
 
-# 首次运行安装依赖
+# 检查和安装依赖
 echo ""
 echo -e "\${BLUE}[2/4]\${NC} 检查依赖包..."
-if [ ! -d "node_modules" ]; then
-    echo -e "\${YELLOW}📦 首次运行，正在安装依赖包...\${NC}"
+
+# 检查关键依赖是否存在
+PLAYWRIGHT_TEST_MISSING=false
+AXIOS_MISSING=false
+
+if [ ! -d "node_modules/@playwright/test" ]; then
+    PLAYWRIGHT_TEST_MISSING=true
+fi
+
+if [ ! -d "node_modules/axios" ]; then
+    AXIOS_MISSING=true
+fi
+
+# 如果关键依赖缺失或node_modules不存在，则重新安装
+if [ ! -d "node_modules" ] || [ "\$PLAYWRIGHT_TEST_MISSING" = true ] || [ "\$AXIOS_MISSING" = true ]; then
+    echo -e "\${YELLOW}📦 安装/更新依赖包...\${NC}"
     echo "这可能需要几分钟时间，请耐心等待..."
+    
+    # 清理旧的依赖
+    if [ -d "node_modules" ]; then
+        echo -e "\${YELLOW}🧹 清理旧依赖...\${NC}"
+        rm -rf node_modules package-lock.json
+    fi
+    
+    # 安装依赖
     npm install
     if [ \$? -ne 0 ]; then
         echo -e "\${RED}❌ 依赖安装失败\${NC}"
+        echo ""
+        echo "可能的解决方案:"
+        echo "1. 检查网络连接"
+        echo "2. 清理npm缓存: npm cache clean --force"
+        echo "3. 使用国内镜像: npm config set registry https://registry.npmmirror.com"
         exit 1
     fi
+    
+    # 验证关键依赖
+    if [ ! -d "node_modules/@playwright/test" ]; then
+        echo -e "\${RED}❌ @playwright/test 依赖安装失败\${NC}"
+        exit 1
+    fi
+    
+    if [ ! -d "node_modules/axios" ]; then
+        echo -e "\${RED}❌ axios 依赖安装失败\${NC}"
+        exit 1
+    fi
+    
     echo -e "\${GREEN}✅ 依赖安装完成\${NC}"
 else
     echo -e "\${GREEN}✅ 依赖包已存在\${NC}"
