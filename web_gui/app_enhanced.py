@@ -156,6 +156,7 @@ execution_manager = {}
 # ==================== 主页路由 ====================
 
 @app.route('/')
+@app.route('/dashboard')
 def index():
     """主页"""
     return render_template('index_enhanced.html')
@@ -163,17 +164,22 @@ def index():
 @app.route('/testcases')
 def testcases_page():
     """测试用例管理页面"""
-    return render_template('testcases.html')
+    return render_template('testcases_unified.html')
 
 @app.route('/execution')
 def execution_page():
     """执行控制台页面"""
-    return render_template('execution.html')
+    return render_template('execution_unified.html')
 
 @app.route('/reports')
 def reports_page():
     """测试报告页面"""
     return render_template('reports.html')
+
+@app.route('/local-proxy')
+def local_proxy_page():
+    """本地代理下载页面"""
+    return render_template('local_proxy_unified.html', current_date=datetime.utcnow().strftime('%Y-%m-%d'))
 
 @app.route('/debug_screenshot_history.html')
 def debug_screenshot_history():

@@ -32,6 +32,9 @@
             width: 200px;
             background: #001529;
             color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .logo {
@@ -70,6 +73,35 @@
         }
 
         .nav-label {
+            font-size: 14px;
+        }
+
+        .nav-section {
+            flex: 1;
+        }
+
+        .aux-functions {
+            border-top: 1px solid #002140;
+            padding: 16px 0;
+        }
+
+        .aux-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 24px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #8c8c8c;
+            transition: all 0.3s;
+        }
+
+        .aux-item:hover {
+            background-color: #1890ff;
+            color: white;
+        }
+
+        .aux-icon {
+            margin-right: 8px;
             font-size: 14px;
         }
 
@@ -272,33 +304,38 @@
             <div class="main-layout">
                 <!-- 侧边栏 -->
                 <div class="sidebar">
-                    <div class="logo">AI测试管理</div>
-                    <nav class="nav-menu">
-                        <div class="nav-item active" data-page="dashboard">
-                            <span class="nav-icon">📊</span>
-                            <span class="nav-label">仪表板</span>
+                    <div class="nav-section">
+                        <div class="logo">AI测试管理</div>
+                        <nav class="nav-menu">
+                            <div class="nav-item active" data-page="dashboard">
+                                <span class="nav-icon">📊</span>
+                                <span class="nav-label">仪表板</span>
+                            </div>
+                            <div class="nav-item" data-page="testcases">
+                                <span class="nav-icon">📝</span>
+                                <span class="nav-label">测试用例</span>
+                            </div>
+                            <div class="nav-item" data-page="execution">
+                                <span class="nav-icon">▶️</span>
+                                <span class="nav-label">执行控制台</span>
+                            </div>
+                            <div class="nav-item" data-page="reports">
+                                <span class="nav-icon">📈</span>
+                                <span class="nav-label">测试报告</span>
+                            </div>
+                            <div class="nav-item" data-page="templates">
+                                <span class="nav-icon">📋</span>
+                                <span class="nav-label">模板库</span>
+                            </div>
+                        </nav>
+                    </div>
+                    
+                    <div class="aux-functions">
+                        <div class="aux-item" data-page="local-proxy" title="本地调试脚本需要下载并运行本地代理服务器">
+                            <span class="aux-icon">🖥️</span>
+                            <span>本地代理下载</span>
                         </div>
-                        <div class="nav-item" data-page="testcases">
-                            <span class="nav-icon">📝</span>
-                            <span class="nav-label">测试用例</span>
-                        </div>
-                        <div class="nav-item" data-page="execution">
-                            <span class="nav-icon">▶️</span>
-                            <span class="nav-label">执行控制台</span>
-                        </div>
-                        <div class="nav-item" data-page="local-proxy">
-                            <span class="nav-icon">🖥️</span>
-                            <span class="nav-label">本地代理</span>
-                        </div>
-                        <div class="nav-item" data-page="reports">
-                            <span class="nav-icon">📈</span>
-                            <span class="nav-label">测试报告</span>
-                        </div>
-                        <div class="nav-item" data-page="templates">
-                            <span class="nav-icon">📋</span>
-                            <span class="nav-label">模板库</span>
-                        </div>
-                    </nav>
+                    </div>
                 </div>
 
                 <!-- 主内容区 -->
@@ -416,6 +453,17 @@
                 item.addEventListener('click', function() {
                     const page = this.dataset.page;
                     if (page && page !== 'dashboard') {
+                        window.location.href = '/' + page;
+                    }
+                });
+            });
+
+            // 设置辅助功能点击事件
+            const auxItems = document.querySelectorAll('.aux-item');
+            auxItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const page = this.dataset.page;
+                    if (page) {
                         window.location.href = '/' + page;
                     }
                 });

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI测试用例管理系统{% endblock %}</title>
+    
+    <!-- Ant Design CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/antd.min.css" rel="stylesheet">
+    
+    <!-- 统一样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        .main-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏样式 */
+        .sidebar {
+            width: 200px;
+            background: #001529;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .logo {
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            border-bottom: 1px solid #002140;
+        }
+
+        .nav-menu {
+            padding: 16px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 24px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .nav-item:hover {
+            background-color: #1890ff;
+        }
+
+        .nav-item.active {
+            background-color: #1890ff;
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 16px;
+        }
+
+        .nav-label {
+            font-size: 14px;
+        }
+
+        .nav-section {
+            flex: 1;
+        }
+
+        .aux-functions {
+            border-top: 1px solid #002140;
+            padding: 16px 0;
+        }
+
+        .aux-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 24px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #8c8c8c;
+            transition: all 0.3s;
+        }
+
+        .aux-item:hover {
+            background-color: #1890ff;
+            color: white;
+        }
+
+        .aux-icon {
+            margin-right: 8px;
+            font-size: 14px;
+        }
+
+        /* 主内容区样式 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            height: 64px;
+            background: white;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            border-bottom: 1px solid #f0f0f0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 24px;
+        }
+
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+<body>
+    <div class="main-layout">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <div class="nav-section">
+                <div class="logo">AI测试管理</div>
+                <nav class="nav-menu">
+                    <div class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}" data-page="dashboard">
+                        <span class="nav-icon">📊</span>
+                        <span class="nav-label">仪表板</span>
+                    </div>
+                    <div class="nav-item {% if request.endpoint == 'testcases' %}active{% endif %}" data-page="testcases">
+                        <span class="nav-icon">📝</span>
+                        <span class="nav-label">测试用例</span>
+                    </div>
+                    <div class="nav-item {% if request.endpoint == 'execution' %}active{% endif %}" data-page="execution">
+                        <span class="nav-icon">▶️</span>
+                        <span class="nav-label">执行控制台</span>
+                    </div>
+                    <div class="nav-item {% if request.endpoint == 'reports' %}active{% endif %}" data-page="reports">
+                        <span class="nav-icon">📈</span>
+                        <span class="nav-label">测试报告</span>
+                    </div>
+                    <div class="nav-item {% if request.endpoint == 'templates' %}active{% endif %}" data-page="templates">
+                        <span class="nav-icon">📋</span>
+                        <span class="nav-label">模板库</span>
+                    </div>
+                </nav>
+            </div>
+            
+            <div class="aux-functions">
+                <div class="aux-item {% if request.endpoint == 'local-proxy' %}active{% endif %}" data-page="local-proxy" title="本地调试脚本需要下载并运行本地代理服务器">
+                    <span class="aux-icon">🖥️</span>
+                    <span>本地代理下载</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 头部 -->
+            <div class="header">
+                <h2>{% block page_title %}AI测试用例管理系统{% endblock %}</h2>
+                {% block header_extra %}{% endblock %}
+            </div>
+
+            <!-- 内容区域 -->
+            <div class="content-area">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 基础库 -->
+    <script src="https://unpkg.com/axios@1.6.0/dist/axios.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+    <!-- 通用脚本 -->
+    <script>
+        // 设置导航点击事件
+        document.addEventListener('DOMContentLoaded', function() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const page = this.dataset.page;
+                    if (page && page !== '{{ request.endpoint }}') {
+                        window.location.href = '/' + page;
+                    }
+                });
+            });
+
+            // 设置辅助功能点击事件
+            const auxItems = document.querySelectorAll('.aux-item');
+            auxItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const page = this.dataset.page;
+                    if (page) {
+                        window.location.href = '/' + page;
+                    }
+                });
+            });
+        });
+
+        // 通用消息提示函数
+        function showMessage(message, type) {
+            const messageEl = document.createElement('div');
+            messageEl.className = 'message ' + type;
+            messageEl.textContent = message;
+            messageEl.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 4px;
+                color: white;
+                z-index: 1000;
+                background-color: ${type === 'success' ? '#52c41a' : '#ff4d4f'};
+            `;
+
+            document.body.appendChild(messageEl);
+
+            setTimeout(() => {
+                document.body.removeChild(messageEl);
+            }, 3000);
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

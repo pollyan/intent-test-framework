@@ -1,0 +1,554 @@
+{% extends "base_layout.html" %}
+
+{% block title %}测试用例管理 - AI测试系统{% endblock %}
+
+{% block page_title %}测试用例管理{% endblock %}
+
+{% block extra_css %}
+<style>
+    .testcase-container {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+    }
+
+    .testcase-header {
+        padding: 16px 24px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .testcase-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .testcase-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .btn {
+        padding: 6px 12px;
+        border: 1px solid #d9d9d9;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .btn-primary {
+        background: #1890ff;
+        color: white;
+        border-color: #1890ff;
+    }
+
+    .btn-primary:hover {
+        background: #40a9ff;
+        border-color: #40a9ff;
+    }
+
+    .btn-default {
+        background: white;
+        color: #262626;
+    }
+
+    .btn-default:hover {
+        background: #f5f5f5;
+        border-color: #40a9ff;
+    }
+
+    .filter-bar {
+        padding: 16px 24px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        gap: 16px;
+        align-items: center;
+    }
+
+    .filter-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .filter-item label {
+        font-size: 14px;
+        font-weight: 500;
+        color: #262626;
+    }
+
+    .filter-input {
+        padding: 6px 12px;
+        border: 1px solid #d9d9d9;
+        border-radius: 4px;
+        font-size: 14px;
+        min-width: 120px;
+    }
+
+    .filter-select {
+        padding: 6px 12px;
+        border: 1px solid #d9d9d9;
+        border-radius: 4px;
+        font-size: 14px;
+        min-width: 100px;
+    }
+
+    .testcase-list {
+        padding: 24px;
+    }
+
+    .testcase-item {
+        border: 1px solid #f0f0f0;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .testcase-item:hover {
+        border-color: #1890ff;
+        box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+    }
+
+    .testcase-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
+    }
+
+    .testcase-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #262626;
+        margin: 0;
+    }
+
+    .testcase-status {
+        font-size: 12px;
+        padding: 2px 8px;
+        border-radius: 12px;
+        background: #f6ffed;
+        color: #52c41a;
+        border: 1px solid #b7eb8f;
+    }
+
+    .testcase-description {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 12px;
+        line-height: 1.5;
+    }
+
+    .testcase-meta {
+        display: flex;
+        gap: 16px;
+        font-size: 12px;
+        color: #999;
+    }
+
+    .testcase-tags {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+    }
+
+    .tag {
+        font-size: 12px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: #f0f0f0;
+        color: #666;
+    }
+
+    .testcase-actions-item {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+    }
+
+    .action-btn {
+        padding: 4px 8px;
+        border: 1px solid #d9d9d9;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.3s;
+        text-decoration: none;
+        color: #666;
+    }
+
+    .action-btn:hover {
+        border-color: #1890ff;
+        color: #1890ff;
+    }
+
+    .action-btn.delete:hover {
+        border-color: #ff4d4f;
+        color: #ff4d4f;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        margin-top: 24px;
+    }
+
+    .pagination-btn {
+        padding: 6px 12px;
+        border: 1px solid #d9d9d9;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+
+    .pagination-btn:hover {
+        border-color: #1890ff;
+        color: #1890ff;
+    }
+
+    .pagination-btn.active {
+        background: #1890ff;
+        color: white;
+        border-color: #1890ff;
+    }
+
+    .pagination-btn.disabled {
+        cursor: not-allowed;
+        color: #ccc;
+        border-color: #f0f0f0;
+    }
+
+    .pagination-info {
+        font-size: 14px;
+        color: #666;
+        margin: 0 16px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 24px;
+        color: #999;
+    }
+
+    .empty-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+    }
+
+    .empty-text {
+        font-size: 16px;
+        margin-bottom: 16px;
+    }
+
+    .empty-desc {
+        font-size: 14px;
+        color: #ccc;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #1890ff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 8px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="testcase-container">
+    <div class="testcase-header">
+        <h3 class="testcase-title">测试用例列表</h3>
+        <div class="testcase-actions">
+            <a href="/testcases/create" class="btn btn-primary">
+                <span>➕</span>
+                创建用例
+            </a>
+            <button class="btn btn-default" onclick="refreshList()">
+                <span>🔄</span>
+                刷新
+            </button>
+        </div>
+    </div>
+
+    <div class="filter-bar">
+        <div class="filter-item">
+            <label for="search">搜索:</label>
+            <input type="text" id="search" class="filter-input" placeholder="输入用例名称...">
+        </div>
+        <div class="filter-item">
+            <label for="category">分类:</label>
+            <select id="category" class="filter-select">
+                <option value="">全部分类</option>
+                <option value="功能测试">功能测试</option>
+                <option value="性能测试">性能测试</option>
+                <option value="兼容性测试">兼容性测试</option>
+                <option value="安全测试">安全测试</option>
+            </select>
+        </div>
+        <div class="filter-item">
+            <label for="priority">优先级:</label>
+            <select id="priority" class="filter-select">
+                <option value="">全部优先级</option>
+                <option value="1">高</option>
+                <option value="2">中</option>
+                <option value="3">低</option>
+            </select>
+        </div>
+        <button class="btn btn-default" onclick="applyFilters()">
+            <span>🔍</span>
+            筛选
+        </button>
+    </div>
+
+    <div class="testcase-list">
+        <div id="loading" class="loading" style="display: none;">
+            <div class="loading-spinner"></div>
+            正在加载测试用例...
+        </div>
+        
+        <div id="testcase-items">
+            <!-- 测试用例项目会在这里动态加载 -->
+        </div>
+
+        <div id="empty-state" class="empty-state" style="display: none;">
+            <div class="empty-icon">📝</div>
+            <div class="empty-text">暂无测试用例</div>
+            <div class="empty-desc">点击"创建用例"按钮开始创建您的第一个测试用例</div>
+        </div>
+
+        <div id="pagination" class="pagination" style="display: none;">
+            <!-- 分页控件会在这里动态生成 -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentPage = 1;
+    let pageSize = 10;
+    let totalItems = 0;
+    let totalPages = 0;
+    
+    // 页面初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        loadTestCases();
+        
+        // 搜索框回车搜索
+        document.getElementById('search').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                applyFilters();
+            }
+        });
+    });
+    
+    // 加载测试用例列表
+    async function loadTestCases(page = 1) {
+        try {
+            showLoading(true);
+            
+            const search = document.getElementById('search').value;
+            const category = document.getElementById('category').value;
+            const priority = document.getElementById('priority').value;
+            
+            const params = new URLSearchParams({
+                page: page,
+                size: pageSize
+            });
+            
+            if (search) params.append('search', search);
+            if (category) params.append('category', category);
+            if (priority) params.append('priority', priority);
+            
+            const response = await axios.get(`/api/testcases?${params}`);
+            
+            if (response.data.code === 200) {
+                const data = response.data.data;
+                totalItems = data.total;
+                totalPages = data.pages;
+                currentPage = data.page;
+                
+                renderTestCases(data.items);
+                renderPagination();
+                
+                if (data.items.length === 0) {
+                    showEmptyState();
+                }
+            } else {
+                showMessage(response.data.message || '加载失败', 'error');
+            }
+        } catch (error) {
+            console.error('加载测试用例失败:', error);
+            showMessage('加载测试用例失败', 'error');
+        } finally {
+            showLoading(false);
+        }
+    }
+    
+    // 渲染测试用例列表
+    function renderTestCases(testcases) {
+        const container = document.getElementById('testcase-items');
+        container.innerHTML = '';
+        
+        testcases.forEach(testcase => {
+            const item = createTestCaseItem(testcase);
+            container.appendChild(item);
+        });
+    }
+    
+    // 创建测试用例项目
+    function createTestCaseItem(testcase) {
+        const item = document.createElement('div');
+        item.className = 'testcase-item';
+        item.onclick = () => viewTestCase(testcase.id);
+        
+        const tags = testcase.tags ? testcase.tags.split(',').map(tag => 
+            `<span class="tag">${tag.trim()}</span>`
+        ).join('') : '';
+        
+        const steps = JSON.parse(testcase.steps || '[]');
+        const stepCount = steps.length;
+        
+        item.innerHTML = `
+            <div class="testcase-item-header">
+                <h4 class="testcase-name">${testcase.name}</h4>
+                <span class="testcase-status">活跃</span>
+            </div>
+            <div class="testcase-description">${testcase.description || '暂无描述'}</div>
+            <div class="testcase-meta">
+                <span>📋 ${stepCount} 个步骤</span>
+                <span>📁 ${testcase.category || '未分类'}</span>
+                <span>⭐ 优先级: ${getPriorityText(testcase.priority)}</span>
+                <span>👤 ${testcase.created_by || '未知'}</span>
+                <span>🕒 ${new Date(testcase.created_at).toLocaleString()}</span>
+            </div>
+            ${tags ? `<div class="testcase-tags">${tags}</div>` : ''}
+            <div class="testcase-actions-item">
+                <a href="/testcases/${testcase.id}/edit" class="action-btn" onclick="event.stopPropagation()">✏️ 编辑</a>
+                <a href="/execution?testcase_id=${testcase.id}" class="action-btn" onclick="event.stopPropagation()">▶️ 执行</a>
+                <button class="action-btn delete" onclick="event.stopPropagation(); deleteTestCase(${testcase.id})">🗑️ 删除</button>
+            </div>
+        `;
+        
+        return item;
+    }
+    
+    // 获取优先级文本
+    function getPriorityText(priority) {
+        switch(priority) {
+            case 1: return '高';
+            case 2: return '中';
+            case 3: return '低';
+            default: return '未设置';
+        }
+    }
+    
+    // 渲染分页控件
+    function renderPagination() {
+        const container = document.getElementById('pagination');
+        
+        if (totalPages <= 1) {
+            container.style.display = 'none';
+            return;
+        }
+        
+        container.style.display = 'flex';
+        container.innerHTML = `
+            <button class="pagination-btn ${currentPage === 1 ? 'disabled' : ''}" 
+                    onclick="loadTestCases(${currentPage - 1})" 
+                    ${currentPage === 1 ? 'disabled' : ''}>
+                上一页
+            </button>
+            <span class="pagination-info">
+                第 ${currentPage} 页 / 共 ${totalPages} 页 (${totalItems} 条记录)
+            </span>
+            <button class="pagination-btn ${currentPage === totalPages ? 'disabled' : ''}" 
+                    onclick="loadTestCases(${currentPage + 1})" 
+                    ${currentPage === totalPages ? 'disabled' : ''}>
+                下一页
+            </button>
+        `;
+    }
+    
+    // 显示加载状态
+    function showLoading(show) {
+        document.getElementById('loading').style.display = show ? 'block' : 'none';
+        document.getElementById('testcase-items').style.display = show ? 'none' : 'block';
+        document.getElementById('empty-state').style.display = 'none';
+        document.getElementById('pagination').style.display = show ? 'none' : 'flex';
+    }
+    
+    // 显示空状态
+    function showEmptyState() {
+        document.getElementById('empty-state').style.display = 'block';
+        document.getElementById('testcase-items').style.display = 'none';
+        document.getElementById('pagination').style.display = 'none';
+    }
+    
+    // 应用筛选
+    function applyFilters() {
+        currentPage = 1;
+        loadTestCases(1);
+    }
+    
+    // 刷新列表
+    function refreshList() {
+        loadTestCases(currentPage);
+    }
+    
+    // 查看测试用例
+    function viewTestCase(id) {
+        window.location.href = `/testcases/${id}`;
+    }
+    
+    // 删除测试用例
+    async function deleteTestCase(id) {
+        if (!confirm('确定要删除这个测试用例吗？此操作不可恢复。')) {
+            return;
+        }
+        
+        try {
+            const response = await axios.delete(`/api/testcases/${id}`);
+            
+            if (response.data.code === 200) {
+                showMessage('测试用例删除成功', 'success');
+                loadTestCases(currentPage);
+            } else {
+                showMessage(response.data.message || '删除失败', 'error');
+            }
+        } catch (error) {
+            console.error('删除测试用例失败:', error);
+            showMessage('删除测试用例失败', 'error');
+        }
+    }
+</script>
+{% endblock %}

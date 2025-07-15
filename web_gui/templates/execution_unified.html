@@ -1,0 +1,761 @@
+{% extends "base_layout.html" %}
+
+{% block title %}执行控制台 - AI测试系统{% endblock %}
+
+{% block page_title %}执行控制台{% endblock %}
+
+{% block extra_css %}
+<style>
+    .execution-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        height: calc(100vh - 160px);
+    }
+
+    .panel {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .panel-header {
+        padding: 16px 24px;
+        border-bottom: 1px solid #f0f0f0;
+        font-weight: 600;
+        font-size: 16px;
+    }
+
+    .panel-content {
+        flex: 1;
+        padding: 24px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .testcase-selector {
+        margin-bottom: 20px;
+    }
+
+    .testcase-selector label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        min-width: 80px;
+    }
+
+    .testcase-select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #d9d9d9;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .execution-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .control-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .control-group label {
+        font-weight: 500;
+        color: #262626;
+        min-width: 80px;
+    }
+
+    .control-select {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid #d9d9d9;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .execution-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-primary {
+        background: #1890ff;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #40a9ff;
+    }
+
+    .btn-primary:disabled {
+        background: #f5f5f5;
+        color: #ccc;
+        cursor: not-allowed;
+    }
+
+    .btn-danger {
+        background: #ff4d4f;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #ff7875;
+    }
+
+    .btn-danger:disabled {
+        background: #f5f5f5;
+        color: #ccc;
+        cursor: not-allowed;
+    }
+
+    .status-section {
+        margin-top: 20px;
+        padding: 16px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .status-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .status-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .status-label {
+        font-weight: 500;
+        color: #262626;
+        min-width: 80px;
+    }
+
+    .status-value {
+        color: #666;
+    }
+
+    .proxy-status {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+        position: relative;
+        cursor: pointer;
+    }
+
+    .proxy-status.connected {
+        background: #52c41a;
+        box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.3);
+        animation: pulse 2s infinite;
+    }
+
+    .proxy-status.disconnected {
+        background: #ff4d4f;
+        box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.3);
+    }
+
+    .proxy-status.connecting {
+        background: #fadb14;
+        box-shadow: 0 0 0 2px rgba(250, 219, 20, 0.3);
+        animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(82, 196, 26, 0.7);
+        }
+        70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 10px rgba(82, 196, 26, 0);
+        }
+        100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(82, 196, 26, 0);
+        }
+    }
+
+    .proxy-status-tooltip {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+        z-index: 1000;
+    }
+
+    .proxy-status:hover .proxy-status-tooltip {
+        opacity: 1;
+    }
+
+    .progress-container {
+        margin-top: 16px;
+    }
+
+    .progress-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .progress-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .progress-label {
+        font-weight: 500;
+        color: #262626;
+    }
+
+    .progress-value {
+        color: #666;
+    }
+
+    .current-screenshot {
+        margin-top: 20px;
+    }
+
+    .screenshot-container {
+        border: 1px solid #f0f0f0;
+        border-radius: 8px;
+        padding: 16px;
+        text-align: center;
+        background: #fafafa;
+    }
+
+    .screenshot-image {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .screenshot-placeholder {
+        color: #999;
+        font-size: 14px;
+        padding: 40px;
+    }
+
+    .log-container {
+        background: #1f1f1f;
+        color: #fff;
+        padding: 16px;
+        border-radius: 8px;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 12px;
+        line-height: 1.4;
+        height: 300px;
+        min-height: 300px;
+        max-height: 300px;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .log-entry {
+        margin-bottom: 4px;
+        word-wrap: break-word;
+    }
+
+    .log-entry.info {
+        color: #1890ff;
+    }
+
+    .log-entry.success {
+        color: #52c41a;
+    }
+
+    .log-entry.error {
+        color: #ff4d4f;
+    }
+
+    .log-entry.warning {
+        color: #fadb14;
+    }
+
+    .screenshot-history {
+        margin-top: 20px;
+    }
+
+    .screenshot-history-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .screenshot-thumbnail {
+        width: 80px;
+        height: 60px;
+        border: 2px solid #f0f0f0;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s;
+        object-fit: cover;
+    }
+
+    .screenshot-thumbnail:hover {
+        border-color: #1890ff;
+        transform: scale(1.05);
+    }
+
+    .screenshot-thumbnail.active {
+        border-color: #1890ff;
+        box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    }
+
+    .screenshot-info {
+        font-size: 12px;
+        color: #666;
+        margin-top: 4px;
+        text-align: center;
+    }
+
+    @media (max-width: 1200px) {
+        .execution-container {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        
+        .log-container {
+            height: 200px;
+            min-height: 200px;
+            max-height: 200px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="execution-container">
+    <!-- 左侧控制面板 -->
+    <div class="panel">
+        <div class="panel-header">执行控制</div>
+        <div class="panel-content">
+            <!-- 测试用例选择 -->
+            <div class="testcase-selector">
+                <label for="testcase-select">选择测试用例:</label>
+                <select id="testcase-select" class="testcase-select">
+                    <option value="">请选择测试用例</option>
+                </select>
+            </div>
+
+            <!-- 执行设置 -->
+            <div class="execution-controls">
+                <div class="control-group">
+                    <label for="execution-mode">执行模式:</label>
+                    <select id="execution-mode" class="control-select">
+                        <option value="headless">无头模式</option>
+                        <option value="normal">正常模式</option>
+                        <option value="debug">调试模式</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="execution-type">执行类型:</label>
+                    <select id="execution-type" class="control-select">
+                        <option value="local">本地执行</option>
+                        <option value="cloud">云端执行</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 执行按钮 -->
+            <div class="execution-actions">
+                <button id="start-execution" class="btn btn-primary">
+                    <span>▶️</span>
+                    开始执行
+                </button>
+                <button id="stop-execution" class="btn btn-danger" disabled>
+                    <span>⏹️</span>
+                    停止执行
+                </button>
+            </div>
+
+            <!-- 状态信息 -->
+            <div class="status-section">
+                <div class="status-item">
+                    <div class="status-label">本地代理:</div>
+                    <div class="status-value">
+                        <span id="proxy-status" class="proxy-status disconnected">
+                            <span class="proxy-status-tooltip">未连接</span>
+                        </span>
+                        <span id="proxy-status-text">未连接</span>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">执行状态:</div>
+                    <div class="status-value" id="execution-status">等待中</div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-item">
+                        <div class="progress-label">执行进度:</div>
+                        <div class="progress-value" id="execution-progress">0/0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 当前截图 -->
+            <div class="current-screenshot">
+                <h4>当前截图</h4>
+                <div class="screenshot-container">
+                    <div id="screenshot-placeholder" class="screenshot-placeholder">
+                        执行开始后将显示截图
+                    </div>
+                    <img id="current-screenshot" class="screenshot-image" style="display: none;">
+                </div>
+            </div>
+
+            <!-- 步骤截图历史 -->
+            <div class="screenshot-history">
+                <h4>步骤截图历史</h4>
+                <div id="screenshot-history-container" class="screenshot-history-container">
+                    <!-- 截图历史将在这里动态加载 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右侧日志面板 -->
+    <div class="panel">
+        <div class="panel-header">执行日志</div>
+        <div class="panel-content">
+            <div id="log-container" class="log-container">
+                <div class="log-entry info">系统已就绪，请选择测试用例开始执行...</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentExecution = null;
+    let screenshotHistory = [];
+    let localProxySocket = null;
+    let executionSocket = null;
+
+    // 页面初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        loadTestCases();
+        initializeWebSocket();
+        connectToLocalProxy();
+        
+        // 设置事件监听器
+        document.getElementById('start-execution').addEventListener('click', startExecution);
+        document.getElementById('stop-execution').addEventListener('click', stopExecution);
+        document.getElementById('execution-type').addEventListener('change', updateExecutionType);
+    });
+
+    // 加载测试用例列表
+    async function loadTestCases() {
+        try {
+            const response = await axios.get('/api/testcases?size=100');
+            const select = document.getElementById('testcase-select');
+            
+            if (response.data.code === 200) {
+                const testcases = response.data.data.items;
+                select.innerHTML = '<option value="">请选择测试用例</option>';
+                
+                testcases.forEach(testcase => {
+                    const option = document.createElement('option');
+                    option.value = testcase.id;
+                    option.textContent = testcase.name;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('加载测试用例失败:', error);
+            addLog('加载测试用例失败', 'error');
+        }
+    }
+
+    // 初始化WebSocket连接
+    function initializeWebSocket() {
+        if (typeof io !== 'undefined') {
+            executionSocket = io();
+            
+            executionSocket.on('connect', function() {
+                addLog('WebSocket连接成功', 'success');
+            });
+            
+            executionSocket.on('execution_update', function(data) {
+                updateExecutionStatus(data);
+            });
+            
+            executionSocket.on('execution_log', function(data) {
+                addLog(data.message, data.type || 'info');
+            });
+            
+            executionSocket.on('execution_completed', function(data) {
+                onExecutionCompleted(data);
+            });
+        }
+    }
+
+    // 连接到本地代理服务器
+    function connectToLocalProxy() {
+        if (document.getElementById('execution-type').value === 'local') {
+            try {
+                localProxySocket = io('http://localhost:3001');
+                
+                localProxySocket.on('connect', function() {
+                    updateProxyStatus('connected');
+                    addLog('本地代理连接成功', 'success');
+                });
+                
+                localProxySocket.on('disconnect', function() {
+                    updateProxyStatus('disconnected');
+                    addLog('本地代理连接断开', 'warning');
+                });
+                
+                localProxySocket.on('screenshot-taken', function(data) {
+                    const screenshot = {
+                        step_index: data.stepIndex,
+                        step_name: `步骤 ${data.stepIndex + 1}`,
+                        path: `data:image/png;base64,${data.screenshot}`
+                    };
+                    addScreenshotToHistory(screenshot);
+                    // 立即更新当前截图显示
+                    showScreenshot(screenshot.path);
+                });
+                
+                localProxySocket.on('step-completed', function(data) {
+                    updateExecutionProgress(data.stepIndex + 1, data.totalSteps);
+                });
+                
+                localProxySocket.on('error', function(error) {
+                    addLog(`本地代理错误: ${error.message}`, 'error');
+                });
+                
+            } catch (error) {
+                updateProxyStatus('disconnected');
+                addLog('无法连接到本地代理服务器', 'error');
+            }
+        }
+    }
+
+    // 更新代理状态
+    function updateProxyStatus(status) {
+        const statusElement = document.getElementById('proxy-status');
+        const statusText = document.getElementById('proxy-status-text');
+        const tooltip = statusElement.querySelector('.proxy-status-tooltip');
+        
+        statusElement.className = 'proxy-status ' + status;
+        
+        switch(status) {
+            case 'connected':
+                statusText.textContent = '已连接';
+                tooltip.textContent = '已连接';
+                break;
+            case 'connecting':
+                statusText.textContent = '连接中';
+                tooltip.textContent = '连接中';
+                break;
+            case 'disconnected':
+                statusText.textContent = '未连接';
+                tooltip.textContent = '未连接';
+                break;
+        }
+    }
+
+    // 更新执行类型
+    function updateExecutionType() {
+        const executionType = document.getElementById('execution-type').value;
+        
+        if (executionType === 'local') {
+            connectToLocalProxy();
+        } else {
+            if (localProxySocket) {
+                localProxySocket.disconnect();
+                localProxySocket = null;
+            }
+            updateProxyStatus('disconnected');
+        }
+    }
+
+    // 开始执行
+    async function startExecution() {
+        const testcaseId = document.getElementById('testcase-select').value;
+        const executionMode = document.getElementById('execution-mode').value;
+        const executionType = document.getElementById('execution-type').value;
+        
+        if (!testcaseId) {
+            showMessage('请选择测试用例', 'error');
+            return;
+        }
+        
+        if (executionType === 'local' && (!localProxySocket || !localProxySocket.connected)) {
+            showMessage('本地代理未连接，请检查代理服务器状态', 'error');
+            return;
+        }
+        
+        try {
+            // 清空截图历史
+            clearScreenshotHistory();
+            
+            const response = await axios.post('/api/executions', {
+                testcase_id: parseInt(testcaseId),
+                mode: executionMode,
+                browser: 'chrome',
+                executed_by: 'user'
+            });
+            
+            if (response.data.code === 200) {
+                currentExecution = response.data.data;
+                
+                // 更新UI状态
+                document.getElementById('start-execution').disabled = true;
+                document.getElementById('stop-execution').disabled = false;
+                document.getElementById('execution-status').textContent = '执行中';
+                
+                addLog('开始执行测试用例...', 'info');
+                
+                // 如果是本地执行，发送到本地代理
+                if (executionType === 'local' && localProxySocket) {
+                    const testcaseResponse = await axios.get(`/api/testcases/${testcaseId}`);
+                    if (testcaseResponse.data.code === 200) {
+                        const testcase = testcaseResponse.data.data;
+                        localProxySocket.emit('execute-testcase', {
+                            execution_id: currentExecution.execution_id,
+                            testcase: testcase,
+                            mode: executionMode
+                        });
+                    }
+                }
+                
+            } else {
+                showMessage(response.data.message || '启动执行失败', 'error');
+            }
+        } catch (error) {
+            console.error('启动执行失败:', error);
+            showMessage('启动执行失败', 'error');
+        }
+    }
+
+    // 停止执行
+    function stopExecution() {
+        if (currentExecution) {
+            if (localProxySocket) {
+                localProxySocket.emit('stop-execution', {
+                    execution_id: currentExecution.execution_id
+                });
+            }
+            
+            // 更新UI状态
+            document.getElementById('start-execution').disabled = false;
+            document.getElementById('stop-execution').disabled = true;
+            document.getElementById('execution-status').textContent = '已停止';
+            
+            addLog('执行已停止', 'warning');
+            currentExecution = null;
+        }
+    }
+
+    // 更新执行进度
+    function updateExecutionProgress(current, total) {
+        document.getElementById('execution-progress').textContent = `${current}/${total}`;
+    }
+
+    // 执行完成回调
+    function onExecutionCompleted(data) {
+        document.getElementById('start-execution').disabled = false;
+        document.getElementById('stop-execution').disabled = true;
+        document.getElementById('execution-status').textContent = data.status === 'success' ? '执行成功' : '执行失败';
+        
+        addLog(`执行完成: ${data.status}`, data.status === 'success' ? 'success' : 'error');
+        currentExecution = null;
+    }
+
+    // 添加日志
+    function addLog(message, type = 'info') {
+        const logContainer = document.getElementById('log-container');
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = document.createElement('div');
+        logEntry.className = `log-entry ${type}`;
+        logEntry.textContent = `[${timestamp}] ${message}`;
+        
+        logContainer.appendChild(logEntry);
+        logContainer.scrollTop = logContainer.scrollHeight;
+    }
+
+    // 显示截图
+    function showScreenshot(imagePath) {
+        const placeholder = document.getElementById('screenshot-placeholder');
+        const screenshot = document.getElementById('current-screenshot');
+        
+        placeholder.style.display = 'none';
+        screenshot.src = imagePath;
+        screenshot.style.display = 'block';
+    }
+
+    // 添加截图到历史
+    function addScreenshotToHistory(screenshot) {
+        screenshotHistory.push(screenshot);
+        
+        const container = document.getElementById('screenshot-history-container');
+        const thumbnailDiv = document.createElement('div');
+        thumbnailDiv.style.textAlign = 'center';
+        
+        const img = document.createElement('img');
+        img.src = screenshot.path;
+        img.className = 'screenshot-thumbnail';
+        img.onclick = () => showScreenshot(screenshot.path);
+        
+        const info = document.createElement('div');
+        info.className = 'screenshot-info';
+        info.textContent = screenshot.step_name;
+        
+        thumbnailDiv.appendChild(img);
+        thumbnailDiv.appendChild(info);
+        container.appendChild(thumbnailDiv);
+        
+        // 滚动到最新截图
+        container.scrollTop = container.scrollHeight;
+    }
+
+    // 清空截图历史
+    function clearScreenshotHistory() {
+        screenshotHistory = [];
+        document.getElementById('screenshot-history-container').innerHTML = '';
+        document.getElementById('screenshot-placeholder').style.display = 'block';
+        document.getElementById('current-screenshot').style.display = 'none';
+    }
+</script>
+{% endblock %}
