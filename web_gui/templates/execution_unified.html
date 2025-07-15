@@ -458,7 +458,7 @@
             <div id="log-container" class="log-container">
                 <div class="log-entry info">本地代理执行控制台已就绪</div>
                 <div class="log-entry warning">注意：此控制台仅支持本地代理执行模式</div>
-                <div class="log-entry info">请先下载并启动本地代理服务器，然后选择测试用例开始执行</div>
+                <div class="log-entry info">请先在您的电脑上下载并启动本地代理服务器(端口3001)，然后选择测试用例开始执行</div>
             </div>
         </div>
     </div>
@@ -509,41 +509,10 @@
 
     // 初始化WebSocket连接
     function initializeWebSocket() {
-        if (typeof io !== 'undefined') {
-            try {
-                executionSocket = io({
-                    timeout: 5000,
-                    forceNew: true,
-                    reconnection: false
-                });
-                
-                executionSocket.on('connect', function() {
-                    addLog('WebSocket连接成功', 'success');
-                });
-                
-                executionSocket.on('connect_error', function(error) {
-                    addLog('WebSocket连接失败，将使用轮询模式', 'warning');
-                    executionSocket = null;
-                });
-                
-                executionSocket.on('execution_update', function(data) {
-                    updateExecutionStatus(data);
-                });
-                
-                executionSocket.on('execution_log', function(data) {
-                    addLog(data.message, data.type || 'info');
-                });
-                
-                executionSocket.on('execution_completed', function(data) {
-                    onExecutionCompleted(data);
-                });
-            } catch (error) {
-                addLog('WebSocket初始化失败，将使用轮询模式', 'warning');
-                executionSocket = null;
-            }
-        } else {
-            addLog('Socket.io库未加载，将使用轮询模式', 'warning');
-        }
+        // 在Vercel环境中跳过服务器WebSocket连接
+        // 因为我们只需要连接到客户端本地的代理服务器
+        addLog('跳过服务器WebSocket连接，仅使用本地代理连接', 'info');
+        executionSocket = null;
     }
 
     // 连接到本地代理服务器
