@@ -31,7 +31,8 @@
         font-family: 'SF Mono', Monaco, monospace;
         font-size: 12px;
         line-height: 1.5;
-        height: 250px;
+        min-height: 100px;
+        max-height: 400px;
         overflow-y: auto;
         color: #333333;
     }
@@ -203,7 +204,8 @@
         }
         
         .log-container {
-            height: 200px;
+            min-height: 80px;
+            max-height: 300px;
         }
     }
 </style>
@@ -326,7 +328,7 @@
                 <div class="text-sm text-gray-500 mt-1" id="current-step-info">等待执行开始...</div>
             </div>
             
-            <div id="log-container" class="log-container" style="height: 200px;">
+            <div id="log-container" class="log-container">
                 <div class="log-entry">
                     <span class="log-entry-time">[14:32:15]</span>
                     本地代理执行控制台已就绪
