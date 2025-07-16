@@ -103,9 +103,9 @@
         <div class="card-title">步骤类型库</div>
         <div class="card-subtitle">拖拽到左侧添加步骤</div>
         
-        <!-- 导航类步骤 -->
+        <!-- 页面导航操作 -->
         <div class="mb-3">
-            <div class="text-sm font-medium text-gray-700 mb-2">导航操作</div>
+            <div class="text-sm font-medium text-gray-700 mb-2">页面导航</div>
             <div class="flex flex-column gap-1">
                 <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="goto">
                     <div>
@@ -125,91 +125,146 @@
                         <div class="text-xs text-gray-500">返回上一页</div>
                     </div>
                 </div>
+                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="evaluateJavaScript">
+                    <div>
+                        <div class="text-sm font-medium">evaluateJavaScript</div>
+                        <div class="text-xs text-gray-500">执行JS代码</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- 交互类步骤 -->
+        <!-- 智能交互操作 -->
         <div class="mb-3">
-            <div class="text-sm font-medium text-gray-700 mb-2">交互操作</div>
+            <div class="text-sm font-medium text-gray-700 mb-2">智能交互</div>
             <div class="flex flex-column gap-1">
-                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="ai_input">
+                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="ai">
                     <div>
-                        <div class="text-sm font-medium">ai_input</div>
-                        <div class="text-xs text-gray-500">AI输入文本</div>
+                        <div class="text-sm font-medium">ai</div>
+                        <div class="text-xs text-gray-500">智能操作规划</div>
                     </div>
                 </div>
-                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="ai_tap">
+                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="aiTap">
                     <div>
-                        <div class="text-sm font-medium">ai_tap</div>
+                        <div class="text-sm font-medium">aiTap</div>
                         <div class="text-xs text-gray-500">AI点击元素</div>
                     </div>
                 </div>
-                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="ai_select">
+                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="aiInput">
                     <div>
-                        <div class="text-sm font-medium">ai_select</div>
-                        <div class="text-xs text-gray-500">AI选择选项</div>
+                        <div class="text-sm font-medium">aiInput</div>
+                        <div class="text-xs text-gray-500">AI输入文本</div>
                     </div>
                 </div>
-                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="ai_upload">
+                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="aiHover">
                     <div>
-                        <div class="text-sm font-medium">ai_upload</div>
-                        <div class="text-xs text-gray-500">AI上传文件</div>
+                        <div class="text-sm font-medium">aiHover</div>
+                        <div class="text-xs text-gray-500">AI悬停元素</div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- 验证类步骤 -->
-        <div class="mb-3">
-            <div class="text-sm font-medium text-gray-700 mb-2">验证操作</div>
-            <div class="flex flex-column gap-1">
-                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="ai_assert">
+                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="aiScroll">
                     <div>
-                        <div class="text-sm font-medium">ai_assert</div>
-                        <div class="text-xs text-gray-500">AI断言验证</div>
-                    </div>
-                </div>
-                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="ai_wait_for">
-                    <div>
-                        <div class="text-sm font-medium">ai_wait_for</div>
-                        <div class="text-xs text-gray-500">等待元素出现</div>
-                    </div>
-                </div>
-                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="ai_check">
-                    <div>
-                        <div class="text-sm font-medium">ai_check</div>
-                        <div class="text-xs text-gray-500">检查元素状态</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 操作类步骤 -->
-        <div class="mb-3">
-            <div class="text-sm font-medium text-gray-700 mb-2">其他操作</div>
-            <div class="flex flex-column gap-1">
-                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="ai_scroll">
-                    <div>
-                        <div class="text-sm font-medium">ai_scroll</div>
+                        <div class="text-sm font-medium">aiScroll</div>
                         <div class="text-xs text-gray-500">AI滚动页面</div>
                     </div>
                 </div>
-                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="ai_drag">
+                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="aiKeyboardPress">
                     <div>
-                        <div class="text-sm font-medium">ai_drag</div>
-                        <div class="text-xs text-gray-500">AI拖拽元素</div>
+                        <div class="text-sm font-medium">aiKeyboardPress</div>
+                        <div class="text-xs text-gray-500">AI键盘按键</div>
+                    </div>
+                </div>
+                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="aiRightClick">
+                    <div>
+                        <div class="text-sm font-medium">aiRightClick</div>
+                        <div class="text-xs text-gray-500">AI右键点击</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 数据提取操作 -->
+        <div class="mb-3">
+            <div class="text-sm font-medium text-gray-700 mb-2">数据提取</div>
+            <div class="flex flex-column gap-1">
+                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="aiQuery">
+                    <div>
+                        <div class="text-sm font-medium">aiQuery</div>
+                        <div class="text-xs text-gray-500">提取结构化数据</div>
+                    </div>
+                </div>
+                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="aiAsk">
+                    <div>
+                        <div class="text-sm font-medium">aiAsk</div>
+                        <div class="text-xs text-gray-500">询问页面信息</div>
+                    </div>
+                </div>
+                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="aiBoolean">
+                    <div>
+                        <div class="text-sm font-medium">aiBoolean</div>
+                        <div class="text-xs text-gray-500">提取布尔值</div>
+                    </div>
+                </div>
+                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="aiNumber">
+                    <div>
+                        <div class="text-sm font-medium">aiNumber</div>
+                        <div class="text-xs text-gray-500">提取数值</div>
+                    </div>
+                </div>
+                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="aiString">
+                    <div>
+                        <div class="text-sm font-medium">aiString</div>
+                        <div class="text-xs text-gray-500">提取字符串</div>
+                    </div>
+                </div>
+                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="aiLocate">
+                    <div>
+                        <div class="text-sm font-medium">aiLocate</div>
+                        <div class="text-xs text-gray-500">定位元素坐标</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 验证等待操作 -->
+        <div class="mb-3">
+            <div class="text-sm font-medium text-gray-700 mb-2">验证等待</div>
+            <div class="flex flex-column gap-1">
+                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="aiAssert">
+                    <div>
+                        <div class="text-sm font-medium">aiAssert</div>
+                        <div class="text-xs text-gray-500">AI断言验证</div>
+                    </div>
+                </div>
+                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="aiWaitFor">
+                    <div>
+                        <div class="text-sm font-medium">aiWaitFor</div>
+                        <div class="text-xs text-gray-500">等待条件满足</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 工具操作 -->
+        <div class="mb-3">
+            <div class="text-sm font-medium text-gray-700 mb-2">工具操作</div>
+            <div class="flex flex-column gap-1">
+                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="logScreenshot">
+                    <div>
+                        <div class="text-sm font-medium">logScreenshot</div>
+                        <div class="text-xs text-gray-500">截图并记录</div>
                     </div>
                 </div>
                 <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="sleep">
                     <div>
                         <div class="text-sm font-medium">sleep</div>
-                        <div class="text-xs text-gray-500">等待指定时间</div>
+                        <div class="text-xs text-gray-500">延时等待</div>
                     </div>
                 </div>
-                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="screenshot">
+                <div class="btn btn-small btn-ghost text-left step-type-btn" style="justify-content: flex-start; cursor: grab;" data-action="runYaml">
                     <div>
-                        <div class="text-sm font-medium">screenshot</div>
-                        <div class="text-xs text-gray-500">截图保存</div>
+                        <div class="text-sm font-medium">runYaml</div>
+                        <div class="text-xs text-gray-500">执行YAML脚本</div>
                     </div>
                 </div>
             </div>
@@ -411,15 +466,37 @@ class TestCaseEditor {
     
     getActionDescription(action) {
         const descriptions = {
+            // 页面导航操作
             'goto': '导航到页面',
-            'ai_input': 'AI输入文本',
-            'ai_tap': 'AI点击元素',
-            'ai_assert': 'AI断言验证',
-            'ai_wait_for': '等待元素出现',
-            'ai_scroll': 'AI滚动页面',
-            'ai_drag': 'AI拖拽元素',
-            'sleep': '等待指定时间',
-            'screenshot': '截图保存'
+            'refresh': '刷新页面',
+            'back': '返回上一页',
+            'evaluateJavaScript': '执行JavaScript代码',
+            
+            // 智能交互操作
+            'ai': '智能操作规划',
+            'aiTap': 'AI点击元素',
+            'aiInput': 'AI输入文本',
+            'aiHover': 'AI悬停元素',
+            'aiScroll': 'AI滚动页面',
+            'aiKeyboardPress': 'AI键盘按键',
+            'aiRightClick': 'AI右键点击',
+            
+            // 数据提取操作
+            'aiQuery': '提取结构化数据',
+            'aiAsk': '询问页面信息',
+            'aiBoolean': '提取布尔值',
+            'aiNumber': '提取数值',
+            'aiString': '提取字符串',
+            'aiLocate': '定位元素坐标',
+            
+            // 验证等待操作
+            'aiAssert': 'AI断言验证',
+            'aiWaitFor': '等待条件满足',
+            
+            // 工具操作
+            'logScreenshot': '截图并记录',
+            'sleep': '延时等待',
+            'runYaml': '执行YAML脚本'
         };
         return descriptions[action] || action;
     }
@@ -428,18 +505,60 @@ class TestCaseEditor {
         if (!params) return '无参数';
         
         switch(action) {
+            // 页面导航操作
             case 'goto':
                 return `访问 ${params.url || '未指定URL'}`;
-            case 'ai_input':
+            case 'refresh':
+                return '刷新当前页面';
+            case 'back':
+                return '返回上一页';
+            case 'evaluateJavaScript':
+                return `执行代码: ${params.code ? params.code.substring(0, 30) + '...' : '未指定代码'}`;
+                
+            // 智能交互操作
+            case 'ai':
+                return `智能操作: ${params.instruction || '未指定操作'}`;
+            case 'aiTap':
+                return `点击 "${params.locate || '未指定元素'}"`;
+            case 'aiInput':
                 return `在 "${params.locate || '未指定位置'}" 输入 "${params.text || '未指定文本'}"`;
-            case 'ai_tap':
-                return `点击 "${params.prompt || '未指定元素'}"`;
-            case 'ai_assert':
-                return `验证 "${params.prompt || '未指定条件'}"`;
-            case 'ai_wait_for':
-                return `等待 "${params.prompt || '未指定元素'}" 出现`;
+            case 'aiHover':
+                return `悬停 "${params.locate || '未指定元素'}"`;
+            case 'aiScroll':
+                return `滚动 "${params.locate || '页面'}"`;
+            case 'aiKeyboardPress':
+                return `按键 "${params.keys || '未指定按键'}"`;
+            case 'aiRightClick':
+                return `右键点击 "${params.locate || '未指定元素'}"`;
+                
+            // 数据提取操作
+            case 'aiQuery':
+                return `提取数据: ${params.schema ? Object.keys(params.schema).join(', ') : '未指定字段'}`;
+            case 'aiAsk':
+                return `询问: ${params.question || '未指定问题'}`;
+            case 'aiBoolean':
+                return `布尔值: ${params.question || '未指定问题'}`;
+            case 'aiNumber':
+                return `数值: ${params.question || '未指定问题'}`;
+            case 'aiString':
+                return `字符串: ${params.question || '未指定问题'}`;
+            case 'aiLocate':
+                return `定位: ${params.locate || '未指定元素'}`;
+                
+            // 验证等待操作
+            case 'aiAssert':
+                return `断言: ${params.assertion || '未指定条件'}`;
+            case 'aiWaitFor':
+                return `等待: ${params.assertion || '未指定条件'}`;
+                
+            // 工具操作
+            case 'logScreenshot':
+                return `截图: ${params.description || '未指定描述'}`;
             case 'sleep':
                 return `等待 ${params.duration || 1000}ms`;
+            case 'runYaml':
+                return `执行脚本: ${params.yaml ? params.yaml.substring(0, 30) + '...' : '未指定脚本'}`;
+                
             default:
                 return JSON.stringify(params);
         }
@@ -449,16 +568,52 @@ class TestCaseEditor {
         if (!params) return '无参数';
         
         switch(action) {
+            // 页面导航操作
             case 'goto':
                 return `目标URL: ${params.url || '未指定'}`;
-            case 'ai_input':
+            case 'refresh':
+            case 'back':
+                return '无需参数';
+            case 'evaluateJavaScript':
+                return `JS代码: ${params.code ? params.code.substring(0, 20) + '...' : '未指定'}`;
+                
+            // 智能交互操作
+            case 'ai':
+                return `操作指令: ${params.instruction || '未指定'}`;
+            case 'aiTap':
+            case 'aiHover':
+            case 'aiScroll':
+            case 'aiRightClick':
                 return `定位描述: ${params.locate || '未指定'}`;
-            case 'ai_tap':
-            case 'ai_assert':
-            case 'ai_wait_for':
-                return `定位描述: ${params.prompt || '未指定'}`;
+            case 'aiInput':
+                return `输入文本: ${params.text || '未指定'}`;
+            case 'aiKeyboardPress':
+                return `按键: ${params.keys || '未指定'}`;
+                
+            // 数据提取操作
+            case 'aiQuery':
+                return `数据结构: ${params.schema ? Object.keys(params.schema).length + '个字段' : '未指定'}`;
+            case 'aiAsk':
+            case 'aiBoolean':
+            case 'aiNumber':
+            case 'aiString':
+                return `问题: ${params.question || '未指定'}`;
+            case 'aiLocate':
+                return `定位描述: ${params.locate || '未指定'}`;
+                
+            // 验证等待操作
+            case 'aiAssert':
+            case 'aiWaitFor':
+                return `条件: ${params.assertion || '未指定'}`;
+                
+            // 工具操作
+            case 'logScreenshot':
+                return `描述: ${params.description || '未指定'}`;
             case 'sleep':
                 return `等待时间: ${params.duration || 1000}ms`;
+            case 'runYaml':
+                return `脚本: ${params.yaml ? '已定义' : '未指定'}`;
+                
             default:
                 return Object.keys(params).length > 0 ? Object.keys(params)[0] + ': ' + params[Object.keys(params)[0]] : '无参数';
         }
@@ -506,20 +661,38 @@ class TestCaseEditor {
                 <div>
                     <label class="form-label" style="margin-bottom: 4px;">动作类型</label>
                     <select class="form-select" id="edit-action-${index}">
-                        <option value="goto" ${step.action === 'goto' ? 'selected' : ''}>goto</option>
-                        <option value="ai_input" ${step.action === 'ai_input' ? 'selected' : ''}>ai_input</option>
-                        <option value="ai_tap" ${step.action === 'ai_tap' ? 'selected' : ''}>ai_tap</option>
-                        <option value="ai_assert" ${step.action === 'ai_assert' ? 'selected' : ''}>ai_assert</option>
-                        <option value="ai_wait_for" ${step.action === 'ai_wait_for' ? 'selected' : ''}>ai_wait_for</option>
-                        <option value="ai_scroll" ${step.action === 'ai_scroll' ? 'selected' : ''}>ai_scroll</option>
-                        <option value="ai_drag" ${step.action === 'ai_drag' ? 'selected' : ''}>ai_drag</option>
-                        <option value="sleep" ${step.action === 'sleep' ? 'selected' : ''}>sleep</option>
-                        <option value="screenshot" ${step.action === 'screenshot' ? 'selected' : ''}>screenshot</option>
-                        <option value="refresh" ${step.action === 'refresh' ? 'selected' : ''}>refresh</option>
-                        <option value="back" ${step.action === 'back' ? 'selected' : ''}>back</option>
-                        <option value="ai_select" ${step.action === 'ai_select' ? 'selected' : ''}>ai_select</option>
-                        <option value="ai_upload" ${step.action === 'ai_upload' ? 'selected' : ''}>ai_upload</option>
-                        <option value="ai_check" ${step.action === 'ai_check' ? 'selected' : ''}>ai_check</option>
+                        <optgroup label="页面导航">
+                            <option value="goto" ${step.action === 'goto' ? 'selected' : ''}>goto - 导航到页面</option>
+                            <option value="refresh" ${step.action === 'refresh' ? 'selected' : ''}>refresh - 刷新页面</option>
+                            <option value="back" ${step.action === 'back' ? 'selected' : ''}>back - 返回上一页</option>
+                            <option value="evaluateJavaScript" ${step.action === 'evaluateJavaScript' ? 'selected' : ''}>evaluateJavaScript - 执行JS代码</option>
+                        </optgroup>
+                        <optgroup label="智能交互">
+                            <option value="ai" ${step.action === 'ai' ? 'selected' : ''}>ai - 智能操作规划</option>
+                            <option value="aiTap" ${step.action === 'aiTap' ? 'selected' : ''}>aiTap - AI点击元素</option>
+                            <option value="aiInput" ${step.action === 'aiInput' ? 'selected' : ''}>aiInput - AI输入文本</option>
+                            <option value="aiHover" ${step.action === 'aiHover' ? 'selected' : ''}>aiHover - AI悬停元素</option>
+                            <option value="aiScroll" ${step.action === 'aiScroll' ? 'selected' : ''}>aiScroll - AI滚动页面</option>
+                            <option value="aiKeyboardPress" ${step.action === 'aiKeyboardPress' ? 'selected' : ''}>aiKeyboardPress - AI键盘按键</option>
+                            <option value="aiRightClick" ${step.action === 'aiRightClick' ? 'selected' : ''}>aiRightClick - AI右键点击</option>
+                        </optgroup>
+                        <optgroup label="数据提取">
+                            <option value="aiQuery" ${step.action === 'aiQuery' ? 'selected' : ''}>aiQuery - 提取结构化数据</option>
+                            <option value="aiAsk" ${step.action === 'aiAsk' ? 'selected' : ''}>aiAsk - 询问页面信息</option>
+                            <option value="aiBoolean" ${step.action === 'aiBoolean' ? 'selected' : ''}>aiBoolean - 提取布尔值</option>
+                            <option value="aiNumber" ${step.action === 'aiNumber' ? 'selected' : ''}>aiNumber - 提取数值</option>
+                            <option value="aiString" ${step.action === 'aiString' ? 'selected' : ''}>aiString - 提取字符串</option>
+                            <option value="aiLocate" ${step.action === 'aiLocate' ? 'selected' : ''}>aiLocate - 定位元素坐标</option>
+                        </optgroup>
+                        <optgroup label="验证等待">
+                            <option value="aiAssert" ${step.action === 'aiAssert' ? 'selected' : ''}>aiAssert - AI断言验证</option>
+                            <option value="aiWaitFor" ${step.action === 'aiWaitFor' ? 'selected' : ''}>aiWaitFor - 等待条件满足</option>
+                        </optgroup>
+                        <optgroup label="工具操作">
+                            <option value="logScreenshot" ${step.action === 'logScreenshot' ? 'selected' : ''}>logScreenshot - 截图并记录</option>
+                            <option value="sleep" ${step.action === 'sleep' ? 'selected' : ''}>sleep - 延时等待</option>
+                            <option value="runYaml" ${step.action === 'runYaml' ? 'selected' : ''}>runYaml - 执行YAML脚本</option>
+                        </optgroup>
                     </select>
                 </div>
                 <div>
@@ -657,15 +830,37 @@ class TestCaseEditor {
     
     getDefaultParams(action) {
         const defaults = {
+            // 页面导航操作
             'goto': { url: 'https://example.com' },
-            'ai_input': { text: '', locate: '输入框' },
-            'ai_tap': { prompt: '按钮' },
-            'ai_assert': { prompt: '页面内容' },
-            'ai_wait_for': { prompt: '元素', timeout: 10000 },
-            'ai_scroll': { direction: 'down', scroll_type: 'once' },
-            'ai_drag': { from: '源元素', to: '目标元素' },
+            'refresh': {},
+            'back': {},
+            'evaluateJavaScript': { code: 'console.log("Hello World");' },
+            
+            // 智能交互操作
+            'ai': { instruction: '描述您要执行的操作' },
+            'aiTap': { locate: '按钮描述', options: { deepThink: false, cacheable: true } },
+            'aiInput': { text: '输入内容', locate: '输入框描述', options: { deepThink: false, cacheable: true } },
+            'aiHover': { locate: '元素描述', options: { deepThink: false, cacheable: true } },
+            'aiScroll': { locate: '滚动区域', options: { deepThink: false, cacheable: true } },
+            'aiKeyboardPress': { keys: 'Enter', options: { deepThink: false } },
+            'aiRightClick': { locate: '右键目标', options: { deepThink: false, cacheable: true } },
+            
+            // 数据提取操作
+            'aiQuery': { schema: { '字段名': '字段描述, 数据类型' } },
+            'aiAsk': { question: '询问关于页面的问题' },
+            'aiBoolean': { question: '返回布尔值的问题' },
+            'aiNumber': { question: '返回数值的问题' },
+            'aiString': { question: '返回字符串的问题' },
+            'aiLocate': { locate: '元素描述' },
+            
+            // 验证等待操作
+            'aiAssert': { assertion: '断言条件描述', errorMsg: '断言失败时的错误信息' },
+            'aiWaitFor': { assertion: '等待条件描述', options: { timeoutMs: 15000, checkIntervalMs: 3000 } },
+            
+            // 工具操作
+            'logScreenshot': { description: '截图描述' },
             'sleep': { duration: 1000 },
-            'screenshot': { title: '截图' }
+            'runYaml': { yaml: 'steps:\n  - action: aiTap\n    locate: 按钮' }
         };
         return defaults[action] || {};
     }
