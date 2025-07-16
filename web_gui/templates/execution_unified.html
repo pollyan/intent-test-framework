@@ -244,9 +244,15 @@
                 </div>
             </div>
 
+            <!-- 执行按钮 -->
+            <div class="flex gap-2 mb-3">
+                <button id="start-execution" class="btn btn-primary w-full">开始执行</button>
+                <button id="stop-execution" class="btn btn-ghost w-full" disabled>停止执行</button>
+            </div>
+
             <!-- 超时设置 -->
             <div class="card" style="background: #f8f8f8; border: 1px solid #e8e8e8; margin-bottom: 16px;">
-                <div class="card-title text-base">超时设置</div>
+                <div class="card-title">超时设置</div>
                 <div class="card-subtitle">配置页面加载和操作的超时时间</div>
                 
                 <div class="grid grid-cols-2 gap-2">
@@ -268,29 +274,23 @@
                 </div>
             </div>
 
-            <!-- 执行按钮 -->
-            <div class="flex gap-2 mb-3">
-                <button id="start-execution" class="btn btn-primary w-full">开始执行</button>
-                <button id="stop-execution" class="btn btn-ghost w-full" disabled>停止执行</button>
-            </div>
-
             <!-- 状态信息 -->
             <div class="card" style="background: #f8f8f8; border: 1px solid #e8e8e8;">
-                <div class="card-title text-base">状态信息</div>
+                <div class="card-title">状态信息</div>
                 <div class="list" style="background: transparent; border: none;">
-                    <div class="list-item" style="background: transparent; border: none;">
+                    <div class="list-item" style="background: transparent; border: none; padding: 12px 0;">
                         <div class="list-item-content">
                             <div class="list-item-title">本地代理服务器</div>
                             <div class="list-item-subtitle">localhost:3001</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button class="btn btn-small btn-ghost" onclick="reconnectLocalProxy()" style="font-size: 12px; padding: 4px 8px;">重连</button>
+                            <button class="btn btn-small btn-ghost" onclick="reconnectLocalProxy()">重连</button>
                             <div id="proxy-status" class="status status-error">
                                 <span class="proxy-status-tooltip">未连接</span>
                             </div>
                         </div>
                     </div>
-                    <div class="list-item" style="background: transparent; border: none;">
+                    <div class="list-item" style="background: transparent; border: none; padding: 12px 0;">
                         <div class="list-item-content">
                             <div class="list-item-title">执行状态</div>
                             <div class="list-item-subtitle" id="execution-status">等待中</div>
@@ -370,29 +370,30 @@
     </div>
 </div>
 
-<!-- 最近执行记录 -->
+<!-- 执行报告 -->
 <div class="card mt-4">
-    <h3 class="card-title">最近执行记录</h3>
-    <p class="card-subtitle">最近的测试执行历史</p>
+    <h3 class="card-title">执行报告</h3>
+    <p class="card-subtitle">点击报告链接查看详细的执行过程和问题诊断</p>
     
-    <div id="recent-executions-list" class="list">
-        <!-- 执行记录将在这里动态加载 -->
+    <div id="execution-reports-list" class="list">
+        <!-- 执行报告将在这里动态加载 -->
         <div class="list-item">
             <div class="list-item-content">
-                <div class="list-item-title">暂无执行记录</div>
-                <div class="list-item-subtitle">执行测试后将显示记录</div>
+                <div class="list-item-title">暂无执行报告</div>
+                <div class="list-item-subtitle">执行测试后将生成详细报告</div>
             </div>
         </div>
     </div>
 
-    <!-- 分页 -->
+    <!-- 操作按钮 -->
     <div class="divider"></div>
     <div class="flex items-center justify-between">
         <div class="text-sm text-gray-600">
-            显示最近 5 条执行记录
+            报告包含截图、日志和错误诊断信息
         </div>
         <div class="flex items-center gap-1">
-            <button class="btn btn-small btn-ghost" onclick="loadAllExecutions()">查看全部</button>
+            <button class="btn btn-small btn-ghost" onclick="clearReports()">清空报告</button>
+            <button class="btn btn-small btn-ghost" onclick="refreshReports()">刷新</button>
         </div>
     </div>
 </div>
@@ -408,7 +409,7 @@
     // 页面初始化
     document.addEventListener('DOMContentLoaded', function() {
         loadTestCases();
-        loadRecentExecutions();
+        updateExecutionReportsUI();
         initializeWebSocket();
         connectToLocalProxy();
         
@@ -875,8 +876,8 @@
         
         currentExecution = null;
         
-        // 刷新最近执行记录
-        loadRecentExecutions();
+        // 刷新执行报告
+        updateExecutionReportsUI();
     }
 
     // 添加日志
@@ -889,6 +890,9 @@
         
         logContainer.appendChild(logEntry);
         logContainer.scrollTop = logContainer.scrollHeight;
+        
+        // 处理报告路径
+        processLogForReports(message);
     }
 
     // 显示截图
@@ -944,63 +948,98 @@
         document.getElementById('current-screenshot').style.display = 'none';
     }
 
-    // 加载最近执行记录
-    async function loadRecentExecutions() {
-        try {
-            const response = await axios.get('/api/executions?page=1&size=5');
-            const listContainer = document.getElementById('recent-executions-list');
-            
-            if (response.data.code === 200) {
-                const executions = response.data.data.items;
-                
-                if (executions.length === 0) {
-                    listContainer.innerHTML = `
-                        <div class="list-item">
-                            <div class="list-item-content">
-                                <div class="list-item-title">暂无执行记录</div>
-                                <div class="list-item-subtitle">执行测试后将显示记录</div>
-                            </div>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                listContainer.innerHTML = '';
-                
-                executions.forEach(execution => {
-                    const statusClass = execution.status === 'success' ? 'status-success' : 
-                                      execution.status === 'failed' ? 'status-error' : 'status-warning';
-                    
-                    const timeAgo = formatTimeAgo(execution.created_at);
-                    const duration = execution.duration || 0;
-                    const stepCount = execution.step_count || 0;
-                    
-                    const listItem = document.createElement('div');
-                    listItem.className = 'list-item';
-                    listItem.innerHTML = `
-                        <div class="list-item-content">
-                            <div class="list-item-title">${execution.testcase_name || '未知测试用例'}</div>
-                            <div class="list-item-subtitle">${execution.created_at} • ${execution.mode}模式 • 本地代理执行</div>
-                            <div class="list-item-meta">
-                                <span class="text-gray-600">耗时 ${duration}s</span>
-                                <span class="text-gray-400">•</span>
-                                <span class="text-gray-600">${stepCount}个步骤</span>
-                                <span class="text-gray-400">•</span>
-                                <span class="text-gray-600">${execution.status === 'success' ? '全部成功' : execution.status === 'failed' ? '执行失败' : '执行中'}</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <span class="text-sm text-gray-500">${timeAgo}</span>
-                            <div class="status ${statusClass}"></div>
-                        </div>
-                    `;
-                    
-                    listContainer.appendChild(listItem);
-                });
-            }
-        } catch (error) {
-            console.error('加载执行记录失败:', error);
+    // 全局变量存储执行报告
+    let executionReports = [];
+    
+    // 添加执行报告
+    function addExecutionReport(reportPath, testcaseName, executionId) {
+        const report = {
+            id: executionId,
+            path: reportPath,
+            testcaseName: testcaseName,
+            timestamp: new Date().toISOString(),
+            status: 'generated'
+        };
+        
+        executionReports.unshift(report); // 添加到开头
+        
+        // 最多保存10个报告
+        if (executionReports.length > 10) {
+            executionReports = executionReports.slice(0, 10);
         }
+        
+        updateExecutionReportsUI();
+    }
+    
+    // 更新执行报告UI
+    function updateExecutionReportsUI() {
+        const listContainer = document.getElementById('execution-reports-list');
+        
+        if (executionReports.length === 0) {
+            listContainer.innerHTML = `
+                <div class="list-item">
+                    <div class="list-item-content">
+                        <div class="list-item-title">暂无执行报告</div>
+                        <div class="list-item-subtitle">执行测试后将生成详细报告</div>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        listContainer.innerHTML = '';
+        
+        executionReports.forEach(report => {
+            const timeAgo = formatTimeAgo(report.timestamp);
+            const fileName = report.path.split('/').pop();
+            
+            const listItem = document.createElement('div');
+            listItem.className = 'list-item';
+            listItem.innerHTML = `
+                <div class="list-item-content">
+                    <div class="list-item-title">${report.testcaseName || '未知测试用例'}</div>
+                    <div class="list-item-subtitle">
+                        <a href="file://${report.path}" target="_blank" class="text-blue-600 hover:text-blue-800" style="text-decoration: underline;">
+                            ${report.path}
+                        </a>
+                    </div>
+                    <div class="list-item-meta">
+                        <span class="text-gray-600">报告文件: ${fileName}</span>
+                        <span class="text-gray-400">•</span>
+                        <span class="text-gray-600">${timeAgo}</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button class="btn btn-small btn-ghost" onclick="copyReportPath('${report.path}')">复制路径</button>
+                    <div class="status status-success"></div>
+                </div>
+            `;
+            
+            listContainer.appendChild(listItem);
+        });
+    }
+    
+    // 复制报告路径
+    function copyReportPath(path) {
+        navigator.clipboard.writeText(path).then(() => {
+            showMessage('报告路径已复制到剪贴板', 'success');
+        }).catch(err => {
+            console.error('复制失败:', err);
+            showMessage('复制失败', 'error');
+        });
+    }
+    
+    // 清空报告
+    function clearReports() {
+        executionReports = [];
+        updateExecutionReportsUI();
+        showMessage('报告已清空', 'success');
+    }
+    
+    // 刷新报告
+    function refreshReports() {
+        updateExecutionReportsUI();
+        showMessage('报告已刷新', 'success');
     }
 
     // 格式化时间差
@@ -1020,10 +1059,17 @@
         return `${diffDays}天前`;
     }
 
-    // 加载所有执行记录
-    function loadAllExecutions() {
-        // 跳转到报告页面
-        window.location.href = '/reports';
+    // 监听日志消息，提取报告路径
+    function processLogForReports(message) {
+        // 检查是否是报告生成消息
+        if (message.includes('Midscene - report file updated:')) {
+            const reportPath = message.split('Midscene - report file updated: ')[1];
+            if (reportPath && reportPath.includes('playwright-') && reportPath.includes('.html')) {
+                const testcaseName = currentExecution ? currentExecution.testcase_name : '未知测试用例';
+                const executionId = currentExecution ? currentExecution.execution_id : 'unknown';
+                addExecutionReport(reportPath.trim(), testcaseName, executionId);
+            }
+        }
     }
 
 </script>
