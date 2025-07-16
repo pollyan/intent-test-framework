@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑测试用例 - Intent Test Framework</title>
+    <link rel="stylesheet" href="assets/css/minimal-style.css">
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <nav class="top-nav">
+        <div class="nav-container">
+            <div class="nav-brand">Intent Test Framework</div>
+            <div class="nav-links">
+                <a href="dashboard.html" class="nav-link">仪表板</a>
+                <a href="testcases.html" class="nav-link active">测试用例</a>
+                <a href="execution.html" class="nav-link">执行控制台</a>
+                <a href="reports.html" class="nav-link">报告</a>
+            </div>
+            <div class="nav-user">用户</div>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <main class="main-container">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h1 class="page-title">编辑测试用例</h1>
+            <p class="page-subtitle">修改测试用例的基本信息和执行步骤</p>
+        </div>
+
+        <!-- 基本信息 -->
+        <div class="card mb-3">
+            <div class="card-title">基本信息</div>
+            <div class="card-subtitle">测试用例的基本属性和描述</div>
+            
+            <div class="grid grid-cols-3 gap-2" style="margin-bottom: 6px;">
+                <div>
+                    <label class="form-label" style="margin-bottom: 2px;">用例名称</label>
+                    <input type="text" class="form-input" value="用户登录功能测试" placeholder="请输入用例名称">
+                </div>
+                <div>
+                    <label class="form-label" style="margin-bottom: 2px;">分类</label>
+                    <select class="form-select">
+                        <option>功能测试</option>
+                        <option>性能测试</option>
+                        <option>安全测试</option>
+                        <option>兼容性测试</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" style="margin-bottom: 2px;">优先级</label>
+                    <select class="form-select">
+                        <option>高</option>
+                        <option>中</option>
+                        <option>低</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2" style="margin-bottom: 6px;">
+                <div>
+                    <label class="form-label" style="margin-bottom: 2px;">状态</label>
+                    <select class="form-select">
+                        <option>活跃</option>
+                        <option>暂停</option>
+                        <option>草稿</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" style="margin-bottom: 2px;">标签</label>
+                    <input type="text" class="form-input" value="登录,用户,验证" placeholder="用逗号分隔">
+                </div>
+                <div>
+                    <label class="form-label" style="margin-bottom: 2px;">创建者</label>
+                    <input type="text" class="form-input" value="admin" readonly>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 0;">
+                <label class="form-label" style="margin-bottom: 2px;">用例描述</label>
+                <textarea class="form-textarea" style="min-height: 40px;" placeholder="请输入用例描述">测试用户登录功能的完整流程，包括输入验证、登录验证和页面跳转</textarea>
+            </div>
+        </div>
+
+        <!-- 操作栏 -->
+        <div class="card mb-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <button class="btn btn-primary">保存用例</button>
+                    <button class="btn btn-ghost">取消编辑</button>
+                    <button class="btn btn-ghost">预览执行</button>
+                </div>
+                <div class="text-sm text-gray-600">
+                    最后修改: 2024-01-15 14:32 • 5个步骤 • 执行156次 • 成功率94.2%
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要编辑区域 -->
+        <div class="grid gap-3" style="grid-template-columns: 3fr 1fr;">
+            <!-- 左侧：步骤列表 -->
+            <div class="card">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <div class="card-title">执行步骤</div>
+                        <div class="card-subtitle">拖拽右侧步骤类型到此处，点击步骤可编辑详细参数</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm text-gray-600">共 5 个步骤</span>
+                        <button class="btn btn-primary btn-small">添加步骤</button>
+                    </div>
+                </div>
+
+                <div class="list" style="min-height: 400px;">
+                    <div class="list-item" style="cursor: pointer;">
+                        <div class="list-item-content">
+                            <div class="list-item-title">步骤 1: 导航到登录页面</div>
+                            <div class="list-item-subtitle">navigate • 访问 https://example.com/login</div>
+                            <div class="list-item-meta">
+                                <span class="text-gray-600">动作类型: navigate</span>
+                                <span class="text-gray-400">•</span>
+                                <span class="text-gray-600">目标URL: https://example.com/login</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button class="btn btn-small btn-ghost">↑</button>
+                            <button class="btn btn-small btn-ghost">↓</button>
+                            <button class="btn btn-small btn-ghost">复制</button>
+                            <button class="btn btn-small btn-ghost">删除</button>
+                        </div>
+                    </div>
+
+                    <div class="list-item" style="cursor: pointer;">
+                        <div class="list-item-content">
+                            <div class="list-item-title">步骤 2: 输入用户名</div>
+                            <div class="list-item-subtitle">ai_input • 在用户名输入框中输入 "testuser"</div>
+                            <div class="list-item-meta">
+                                <span class="text-gray-600">动作类型: ai_input</span>
+                                <span class="text-gray-400">•</span>
+                                <span class="text-gray-600">定位描述: 用户名输入框</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button class="btn btn-small btn-ghost">↑</button>
+                            <button class="btn btn-small btn-ghost">↓</button>
+                            <button class="btn btn-small btn-ghost">复制</button>
+                            <button class="btn btn-small btn-ghost">删除</button>
+                        </div>
+                    </div>
+
+                    <div class="list-item" style="cursor: pointer;">
+                        <div class="list-item-content">
+                            <div class="list-item-title">步骤 3: 输入密码</div>
+                            <div class="list-item-subtitle">ai_input • 在密码输入框中输入密码</div>
+                            <div class="list-item-meta">
+                                <span class="text-gray-600">动作类型: ai_input</span>
+                                <span class="text-gray-400">•</span>
+                                <span class="text-gray-600">定位描述: 密码输入框</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button class="btn btn-small btn-ghost">↑</button>
+                            <button class="btn btn-small btn-ghost">↓</button>
+                            <button class="btn btn-small btn-ghost">复制</button>
+                            <button class="btn btn-small btn-ghost">删除</button>
+                        </div>
+                    </div>
+
+                    <div class="list-item" style="cursor: pointer;">
+                        <div class="list-item-content">
+                            <div class="list-item-title">步骤 4: 点击登录按钮</div>
+                            <div class="list-item-subtitle">ai_tap • 点击登录按钮</div>
+                            <div class="list-item-meta">
+                                <span class="text-gray-600">动作类型: ai_tap</span>
+                                <span class="text-gray-400">•</span>
+                                <span class="text-gray-600">定位描述: 登录按钮</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button class="btn btn-small btn-ghost">↑</button>
+                            <button class="btn btn-small btn-ghost">↓</button>
+                            <button class="btn btn-small btn-ghost">复制</button>
+                            <button class="btn btn-small btn-ghost">删除</button>
+                        </div>
+                    </div>
+
+                    <div class="list-item" style="cursor: pointer;">
+                        <div class="list-item-content">
+                            <div class="list-item-title">步骤 5: 验证登录成功</div>
+                            <div class="list-item-subtitle">ai_assert • 验证页面显示欢迎信息</div>
+                            <div class="list-item-meta">
+                                <span class="text-gray-600">动作类型: ai_assert</span>
+                                <span class="text-gray-400">•</span>
+                                <span class="text-gray-600">断言条件: 登录成功</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button class="btn btn-small btn-ghost">↑</button>
+                            <button class="btn btn-small btn-ghost">↓</button>
+                            <button class="btn btn-small btn-ghost">复制</button>
+                            <button class="btn btn-small btn-ghost">删除</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：步骤类型库 -->
+            <div class="card" id="step-types">
+                <div class="card-title">步骤类型库</div>
+                <div class="card-subtitle">拖拽到左侧添加步骤</div>
+                
+                <!-- 导航类步骤 -->
+                <div class="mb-3">
+                    <div class="text-sm font-medium text-gray-700 mb-2">导航操作</div>
+                    <div class="flex flex-column gap-1">
+                        <div class="btn btn-small btn-ghost text-left" style="justify-content: flex-start; cursor: grab;">
+                            <div>
+                                <div class="text-sm font-medium">navigate</div>
+                                <div class="text-xs text-gray-500">导航到页面</div>
+                            </div>
+                        </div>
+                        <div class="btn btn-small btn-ghost text-left" style="justify-content: flex-start; cursor: grab;">
+                            <div>
+                                <div class="text-sm font-medium">refresh</div>
+                                <div class="text-xs text-gray-500">刷新页面</div>
+                            </div>
+                        </div>
+                        <div class="btn btn-small btn-ghost text-left" style="justify-content: flex-start; cursor: grab;">
+                            <div>
+                                <div class="text-sm font-medium">back</div>
+                                <div class="text-xs text-gray-500">返回上一页</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 交互类步骤 -->
+                <div class="mb-3">
+                    <div class="text-sm font-medium text-gray-700 mb-2">交互操作</div>
+                    <div class="flex flex-column gap-1">
+                        <div class="btn btn-small btn-ghost text-left" style="justify-content: flex-start; cursor: grab;">
+                            <div>
+                                <div class="text-sm font-medium">ai_input</div>
+                                <div class="text-xs text-gray-500">AI输入文本</div>
+                            </div>
+                        </div>
+                        <div class="btn btn-small btn-ghost text-left" style="justify-content: flex-start; cursor: grab;">
+                            <div>
+                                <div class="text-sm font-medium">ai_tap</div>
+                                <div class="text-xs text-gray-500">AI点击元素</div>
+                            </div>
+                        </div>
+                        <div class="btn btn-small btn-ghost text-left" style="justify-content: flex-start; cursor: grab;">
+                            <div>
+                                <div class="text-sm font-medium">ai_select</div>
+                                <div class="text-xs text-gray-500">AI选择选项</div>
+                            </div>
+                        </div>
+                        <div class="btn btn-small btn-ghost text-left" style="justify-content: flex-start; cursor: grab;">
+                            <div>
+                                <div class="text-sm font-medium">ai_upload</div>
+                                <div class="text-xs text-gray-500">AI上传文件</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 验证类步骤 -->
+                <div class="mb-3">
+                    <div class="text-sm font-medium text-gray-700 mb-2">验证操作</div>
+                    <div class="flex flex-column gap-1">
+                        <div class="btn btn-small btn-ghost text-left" style="justify-content: flex-start; cursor: grab;">
+                            <div>
+                                <div class="text-sm font-medium">ai_assert</div>
+                                <div class="text-xs text-gray-500">AI断言验证</div>
+                            </div>
+                        </div>
+                        <div class="btn btn-small btn-ghost text-left" style="justify-content: flex-start; cursor: grab;">
+                            <div>
+                                <div class="text-sm font-medium">ai_wait</div>
+                                <div class="text-xs text-gray-500">等待元素出现</div>
+                            </div>
+                        </div>
+                        <div class="btn btn-small btn-ghost text-left" style="justify-content: flex-start; cursor: grab;">
+                            <div>
+                                <div class="text-sm font-medium">ai_check</div>
+                                <div class="text-xs text-gray-500">检查元素状态</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 操作类步骤 -->
+                <div class="mb-3">
+                    <div class="text-sm font-medium text-gray-700 mb-2">其他操作</div>
+                    <div class="flex flex-column gap-1">
+                        <div class="btn btn-small btn-ghost text-left" style="justify-content: flex-start; cursor: grab;">
+                            <div>
+                                <div class="text-sm font-medium">ai_scroll</div>
+                                <div class="text-xs text-gray-500">AI滚动页面</div>
+                            </div>
+                        </div>
+                        <div class="btn btn-small btn-ghost text-left" style="justify-content: flex-start; cursor: grab;">
+                            <div>
+                                <div class="text-sm font-medium">ai_drag</div>
+                                <div class="text-xs text-gray-500">AI拖拽元素</div>
+                            </div>
+                        </div>
+                        <div class="btn btn-small btn-ghost text-left" style="justify-content: flex-start; cursor: grab;">
+                            <div>
+                                <div class="text-sm font-medium">sleep</div>
+                                <div class="text-xs text-gray-500">等待指定时间</div>
+                            </div>
+                        </div>
+                        <div class="btn btn-small btn-ghost text-left" style="justify-content: flex-start; cursor: grab;">
+                            <div>
+                                <div class="text-sm font-medium">screenshot</div>
+                                <div class="text-xs text-gray-500">截图保存</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步骤编辑弹窗/面板 -->
+        <div class="card mt-3" id="step-editor" style="display: none;">
+            <div class="card-title">步骤编辑</div>
+            <div class="card-subtitle">编辑选中步骤的详细参数</div>
+            
+            <div class="grid grid-cols-3 gap-2">
+                <div class="form-group">
+                    <label class="form-label">步骤名称</label>
+                    <input type="text" class="form-input" value="导航到登录页面" placeholder="请输入步骤名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">动作类型</label>
+                    <select class="form-select">
+                        <option>navigate</option>
+                        <option>ai_input</option>
+                        <option>ai_tap</option>
+                        <option>ai_assert</option>
+                        <option>ai_wait</option>
+                        <option>ai_scroll</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">必需步骤</label>
+                    <select class="form-select">
+                        <option>是</option>
+                        <option>否</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">步骤描述</label>
+                <textarea class="form-textarea" style="min-height: 60px;" placeholder="请输入步骤的详细描述">访问 https://example.com/login 页面</textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">动作参数 (JSON)</label>
+                <textarea class="form-textarea" style="font-family: 'SF Mono', Monaco, monospace; font-size: 13px; min-height: 100px;" placeholder="请输入动作参数的JSON格式">{"url": "https://example.com/login"}</textarea>
+            </div>
+
+            <div class="flex gap-2">
+                <button class="btn btn-primary">保存步骤</button>
+                <button class="btn btn-ghost">取消编辑</button>
+                <button class="btn btn-ghost">删除步骤</button>
+            </div>
+        </div>
+
+        <!-- 调试信息 -->
+        <div class="card mt-4">
+            <div class="card-title">调试信息</div>
+            <div class="card-subtitle">测试用例的技术信息和历史记录</div>
+            
+            <div class="grid grid-cols-4 gap-3">
+                <div>
+                    <div class="text-sm text-gray-600 mb-1">用例ID</div>
+                    <div class="text-sm font-medium">TC-001</div>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-600 mb-1">创建时间</div>
+                    <div class="text-sm font-medium">2024-01-15 10:30:25</div>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-600 mb-1">最后修改</div>
+                    <div class="text-sm font-medium">2024-01-15 14:32:15</div>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-600 mb-1">创建者</div>
+                    <div class="text-sm font-medium">admin</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 交互逻辑
+        document.addEventListener('DOMContentLoaded', function() {
+            const listItems = document.querySelectorAll('.list-item');
+            const stepEditor = document.getElementById('step-editor');
+            const stepTypes = document.querySelectorAll('#step-types .btn-small');
+            let selectedStep = null;
+            
+            // 步骤选择和编辑
+            listItems.forEach((item, index) => {
+                item.addEventListener('click', function(e) {
+                    // 阻止事件冒泡到按钮
+                    if (e.target.classList.contains('btn')) return;
+                    
+                    // 清除之前的选择
+                    listItems.forEach(i => i.style.background = '');
+                    
+                    // 高亮当前选择
+                    this.style.background = '#f8f8f8';
+                    selectedStep = index;
+                    
+                    // 显示编辑面板
+                    stepEditor.style.display = 'block';
+                    stepEditor.scrollIntoView({ behavior: 'smooth' });
+                });
+            });
+
+            // 步骤操作按钮
+            document.querySelectorAll('.list-item .btn-small').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const action = this.textContent.trim();
+                    
+                    switch(action) {
+                        case '↑':
+                            console.log('上移步骤');
+                            break;
+                        case '↓':
+                            console.log('下移步骤');
+                            break;
+                        case '复制':
+                            console.log('复制步骤');
+                            break;
+                        case '删除':
+                            if (confirm('确定要删除这个步骤吗？')) {
+                                console.log('删除步骤');
+                            }
+                            break;
+                    }
+                });
+            });
+
+            // 步骤类型拖拽（模拟点击添加）
+            stepTypes.forEach(type => {
+                type.addEventListener('click', function() {
+                    const stepType = this.querySelector('div div').textContent;
+                    console.log('添加步骤类型:', stepType);
+                    
+                    // 这里可以添加实际的步骤添加逻辑
+                    // 比如在步骤列表最后添加一个新步骤
+                });
+            });
+
+            // 编辑面板操作
+            document.querySelectorAll('#step-editor .btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const action = this.textContent.trim();
+                    
+                    switch(action) {
+                        case '保存步骤':
+                            console.log('保存步骤修改');
+                            stepEditor.style.display = 'none';
+                            break;
+                        case '取消编辑':
+                            stepEditor.style.display = 'none';
+                            break;
+                        case '删除步骤':
+                            if (confirm('确定要删除这个步骤吗？')) {
+                                console.log('删除当前步骤');
+                                stepEditor.style.display = 'none';
+                            }
+                            break;
+                    }
+                });
+            });
+
+            // 主要操作按钮
+            document.querySelector('.btn-primary').addEventListener('click', function() {
+                console.log('保存测试用例');
+            });
+            
+            document.querySelectorAll('.main-container > .card:nth-child(3) .btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const action = this.textContent.trim();
+                    
+                    switch(action) {
+                        case '取消编辑':
+                            if (confirm('确定要取消编辑吗？未保存的更改将丢失。')) {
+                                window.history.back();
+                            }
+                            break;
+                        case '预览执行':
+                            console.log('预览执行');
+                            break;
+                        case '清空所有':
+                            if (confirm('确定要清空所有步骤吗？此操作不可恢复。')) {
+                                console.log('清空所有步骤');
+                            }
+                            break;
+                    }
+                });
+            });
+
+            // 键盘快捷键
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    switch(e.key) {
+                        case 's':
+                            e.preventDefault();
+                            console.log('快捷键保存');
+                            break;
+                        case 'Escape':
+                            stepEditor.style.display = 'none';
+                            break;
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

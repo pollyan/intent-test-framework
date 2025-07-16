@@ -214,6 +214,322 @@ def delete_testcase(testcase_id):
             'message': f'删除失败: {str(e)}'
         }), 500
 
+# ==================== 步骤管理相关API ====================
+
+@api_bp.route('/testcases/<int:testcase_id>/steps', methods=['GET'])
+def get_testcase_steps(testcase_id):
+    """获取测试用例的步骤列表"""
+    try:
+        testcase = TestCase.query.get(testcase_id)
+        if not testcase or not testcase.is_active:
+            return jsonify({
+                'code': 404,
+                'message': '测试用例不存在'
+            }), 404
+        
+        steps = json.loads(testcase.steps) if testcase.steps else []
+        
+        return jsonify({
+            'code': 200,
+            'data': {
+                'steps': steps,
+                'total': len(steps)
+            },
+            'message': '获取步骤列表成功'
+        })
+    except Exception as e:
+        return jsonify({
+            'code': 500,
+            'message': f'获取步骤列表失败: {str(e)}'
+        }), 500
+
+@api_bp.route('/testcases/<int:testcase_id>/steps', methods=['POST'])
+def add_testcase_step(testcase_id):
+    """添加新步骤到测试用例"""
+    try:
+        testcase = TestCase.query.get(testcase_id)
+        if not testcase or not testcase.is_active:
+            return jsonify({
+                'code': 404,
+                'message': '测试用例不存在'
+            }), 404
+        
+        data = request.get_json()
+        
+        # 验证步骤数据
+        if not data or 'action' not in data:
+            return jsonify({
+                'code': 400,
+                'message': '步骤数据不完整，需要action字段'
+            }), 400
+        
+        # 验证动作类型
+        valid_actions = ['goto', 'ai_input', 'ai_tap', 'ai_assert', 'ai_wait_for', 'ai_scroll', 'ai_drag', 'sleep', 'screenshot', 'refresh', 'back', 'ai_select', 'ai_upload', 'ai_check']
+        if data['action'] not in valid_actions:
+            return jsonify({
+                'code': 400,
+                'message': f'无效的动作类型: {data["action"]}'
+            }), 400
+        
+        # 验证必需参数
+        params = data.get('params', {})
+        if data['action'] == 'goto' and not params.get('url'):
+            return jsonify({
+                'code': 400,
+                'message': 'goto动作需要url参数'
+            }), 400
+        elif data['action'] in ['ai_input', 'ai_tap', 'ai_assert', 'ai_wait_for'] and not params.get('prompt') and not params.get('locate'):
+            return jsonify({
+                'code': 400,
+                'message': f'{data["action"]}动作需要prompt或locate参数'
+            }), 400
+        
+        # 获取现有步骤
+        steps = json.loads(testcase.steps) if testcase.steps else []
+        
+        # 构建新步骤
+        new_step = {
+            'action': data['action'],
+            'params': data.get('params', {}),
+            'description': data.get('description', ''),
+            'required': data.get('required', True)
+        }
+        
+        # 添加步骤（默认添加到末尾）
+        insert_position = data.get('position', len(steps))
+        steps.insert(insert_position, new_step)
+        
+        # 更新测试用例
+        testcase.steps = json.dumps(steps)
+        testcase.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return jsonify({
+            'code': 200,
+            'data': {
+                'step': new_step,
+                'position': insert_position,
+                'total_steps': len(steps)
+            },
+            'message': '步骤添加成功'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'code': 500,
+            'message': f'添加步骤失败: {str(e)}'
+        }), 500
+
+@api_bp.route('/testcases/<int:testcase_id>/steps/<int:step_index>', methods=['PUT'])
+def update_testcase_step(testcase_id, step_index):
+    """更新特定步骤"""
+    try:
+        testcase = TestCase.query.get(testcase_id)
+        if not testcase or not testcase.is_active:
+            return jsonify({
+                'code': 404,
+                'message': '测试用例不存在'
+            }), 404
+        
+        data = request.get_json()
+        steps = json.loads(testcase.steps) if testcase.steps else []
+        
+        # 验证步骤索引
+        if step_index < 0 or step_index >= len(steps):
+            return jsonify({
+                'code': 400,
+                'message': '步骤索引超出范围'
+            }), 400
+        
+        # 更新步骤
+        if 'action' in data:
+            steps[step_index]['action'] = data['action']
+        if 'params' in data:
+            steps[step_index]['params'] = data['params']
+        if 'description' in data:
+            steps[step_index]['description'] = data['description']
+        if 'required' in data:
+            steps[step_index]['required'] = data['required']
+        
+        # 保存更改
+        testcase.steps = json.dumps(steps)
+        testcase.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return jsonify({
+            'code': 200,
+            'data': {
+                'step': steps[step_index],
+                'index': step_index
+            },
+            'message': '步骤更新成功'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'code': 500,
+            'message': f'更新步骤失败: {str(e)}'
+        }), 500
+
+@api_bp.route('/testcases/<int:testcase_id>/steps/<int:step_index>', methods=['DELETE'])
+def delete_testcase_step(testcase_id, step_index):
+    """删除特定步骤"""
+    try:
+        testcase = TestCase.query.get(testcase_id)
+        if not testcase or not testcase.is_active:
+            return jsonify({
+                'code': 404,
+                'message': '测试用例不存在'
+            }), 404
+        
+        steps = json.loads(testcase.steps) if testcase.steps else []
+        
+        # 验证步骤索引
+        if step_index < 0 or step_index >= len(steps):
+            return jsonify({
+                'code': 400,
+                'message': '步骤索引超出范围'
+            }), 400
+        
+        # 删除步骤
+        deleted_step = steps.pop(step_index)
+        
+        # 保存更改
+        testcase.steps = json.dumps(steps)
+        testcase.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return jsonify({
+            'code': 200,
+            'data': {
+                'deleted_step': deleted_step,
+                'remaining_steps': len(steps)
+            },
+            'message': '步骤删除成功'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'code': 500,
+            'message': f'删除步骤失败: {str(e)}'
+        }), 500
+
+@api_bp.route('/testcases/<int:testcase_id>/steps/reorder', methods=['PUT'])
+def reorder_testcase_steps(testcase_id):
+    """重新排序步骤"""
+    try:
+        testcase = TestCase.query.get(testcase_id)
+        if not testcase or not testcase.is_active:
+            return jsonify({
+                'code': 404,
+                'message': '测试用例不存在'
+            }), 404
+        
+        data = request.get_json()
+        if not data or 'step_orders' not in data:
+            return jsonify({
+                'code': 400,
+                'message': '缺少步骤排序数据'
+            }), 400
+        
+        steps = json.loads(testcase.steps) if testcase.steps else []
+        step_orders = data['step_orders']
+        
+        # 验证排序数据
+        if len(step_orders) != len(steps):
+            return jsonify({
+                'code': 400,
+                'message': '步骤排序数据长度不匹配'
+            }), 400
+        
+        # 重新排序
+        new_steps = []
+        for index in step_orders:
+            if 0 <= index < len(steps):
+                new_steps.append(steps[index])
+            else:
+                return jsonify({
+                    'code': 400,
+                    'message': f'步骤索引 {index} 超出范围'
+                }), 400
+        
+        # 保存更改
+        testcase.steps = json.dumps(new_steps)
+        testcase.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return jsonify({
+            'code': 200,
+            'data': {
+                'steps': new_steps,
+                'total': len(new_steps)
+            },
+            'message': '步骤排序成功'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'code': 500,
+            'message': f'步骤排序失败: {str(e)}'
+        }), 500
+
+@api_bp.route('/testcases/<int:testcase_id>/steps/<int:step_index>/duplicate', methods=['POST'])
+def duplicate_testcase_step(testcase_id, step_index):
+    """复制步骤"""
+    try:
+        testcase = TestCase.query.get(testcase_id)
+        if not testcase or not testcase.is_active:
+            return jsonify({
+                'code': 404,
+                'message': '测试用例不存在'
+            }), 404
+        
+        steps = json.loads(testcase.steps) if testcase.steps else []
+        
+        # 验证步骤索引
+        if step_index < 0 or step_index >= len(steps):
+            return jsonify({
+                'code': 400,
+                'message': '步骤索引超出范围'
+            }), 400
+        
+        # 复制步骤
+        original_step = steps[step_index]
+        duplicated_step = json.loads(json.dumps(original_step))  # 深拷贝
+        
+        # 修改描述以区分复制的步骤
+        if 'description' in duplicated_step:
+            duplicated_step['description'] = f"{duplicated_step['description']} (复制)"
+        
+        # 获取插入位置（默认在原步骤后面）
+        data = request.get_json() or {}
+        insert_position = data.get('position', step_index + 1)
+        
+        # 插入复制的步骤
+        steps.insert(insert_position, duplicated_step)
+        
+        # 保存更改
+        testcase.steps = json.dumps(steps)
+        testcase.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return jsonify({
+            'code': 200,
+            'data': {
+                'duplicated_step': duplicated_step,
+                'original_index': step_index,
+                'new_index': insert_position,
+                'total_steps': len(steps)
+            },
+            'message': '步骤复制成功'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'code': 500,
+            'message': f'复制步骤失败: {str(e)}'
+        }), 500
+
 # ==================== 执行相关API ====================
 
 @api_bp.route('/executions', methods=['POST'])
