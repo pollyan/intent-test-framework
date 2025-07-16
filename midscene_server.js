@@ -540,7 +540,7 @@ async function executeTestCaseAsync(testcase, mode, executionId, timeoutConfig =
         logMessage(executionId, 'success', `测试执行完成！耗时: ${Math.round(executionState.duration / 1000)}秒`);
         
         // 检查并通知MidScene生成的报告
-        await checkAndNotifyMidsceneReport(executionId);
+        await checkAndNotifyMidsceneReport(executionId, testcase, executionState);
 
         // 通知Web系统执行完成
         await notifyExecutionResult(executionId, testcase, mode, 'success', executionState.steps);
@@ -1069,7 +1069,7 @@ app.use((error, req, res, next) => {
 });
 
 // 检查并通知MidScene生成的报告
-async function checkAndNotifyMidsceneReport(executionId) {
+async function checkAndNotifyMidsceneReport(executionId, testcase, executionState) {
     try {
         const fs = require('fs');
         const path = require('path');
@@ -1129,8 +1129,11 @@ async function checkAndNotifyMidsceneReport(executionId) {
             console.log(`📊 找到MidScene报告文件: ${reportPath}`);
             console.log(`📊 报告文件修改时间: ${latestReport.mtime}`);
             
-            // 通过日志消息通知前端
-            logMessage(executionId, 'info', `Midscene - report file updated: ${reportPath}`);
+            // 生成简化的报告
+            const simplifiedReportPath = await generateSimplifiedReport(reportPath, testcase, executionState);
+            
+            // 通过日志消息通知前端使用简化的报告
+            logMessage(executionId, 'info', `Midscene - report file updated: ${simplifiedReportPath || reportPath}`);
             
             // 额外发送一条明确的成功消息
             logMessage(executionId, 'success', `报告已生成: ${latestReport.name}`);
@@ -1140,6 +1143,68 @@ async function checkAndNotifyMidsceneReport(executionId) {
         console.error('检查MidScene报告失败:', error);
         logMessage(executionId, 'error', `检查MidScene报告失败: ${error.message}`);
     }
+}
+
+// 生成简化的报告
+async function generateSimplifiedReport(originalReportPath, testcase, executionState) {
+    try {
+        const fs = require('fs');
+        const path = require('path');
+        
+        // 读取原始报告
+        const originalContent = fs.readFileSync(originalReportPath, 'utf8');
+        
+        // 生成简化的报告文件名
+        const reportDir = path.dirname(originalReportPath);
+        const originalName = path.basename(originalReportPath, '.html');
+        const simplifiedName = `${originalName}_simplified.html`;
+        const simplifiedPath = path.join(reportDir, simplifiedName);
+        
+        // 创建简化的报告内容
+        const simplifiedContent = createSimplifiedReportContent(originalContent, testcase, executionState);
+        
+        // 写入简化报告
+        fs.writeFileSync(simplifiedPath, simplifiedContent, 'utf8');
+        
+        console.log(`📊 生成简化报告: ${simplifiedPath}`);
+        return simplifiedPath;
+        
+    } catch (error) {
+        console.error('生成简化报告失败:', error);
+        return null;
+    }
+}
+
+// 创建简化的报告内容
+function createSimplifiedReportContent(originalContent, testcase, executionState) {
+    const steps = executionState.steps || [];
+    const duration = executionState.duration || 0;
+    
+    // 从原始报告中提取主要内容，去掉统计指标
+    let simplifiedContent = originalContent;
+    
+    // 移除统计指标相关的HTML
+    simplifiedContent = simplifiedContent.replace(/<div[^>]*class="[^"]*summary[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
+    simplifiedContent = simplifiedContent.replace(/<div[^>]*class="[^"]*stats[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
+    simplifiedContent = simplifiedContent.replace(/<div[^>]*class="[^"]*metrics[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
+    
+    // 添加简化的标题信息
+    const titleInfo = `
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h1 style="margin: 0; color: #333;">测试执行报告</h1>
+            <div style="margin-top: 10px; color: #666;">
+                <strong>测试用例:</strong> ${testcase.name} &nbsp;&nbsp;
+                <strong>状态:</strong> ${executionState.status || 'completed'} &nbsp;&nbsp;
+                <strong>耗时:</strong> ${Math.round(duration / 1000)}秒 &nbsp;&nbsp;
+                <strong>步骤数:</strong> ${steps.length}
+            </div>
+        </div>
+    `;
+    
+    // 将标题信息插入到body开头
+    simplifiedContent = simplifiedContent.replace(/<body[^>]*>/i, `$&${titleInfo}`);
+    
+    return simplifiedContent;
 }
 
 // 启动服务器
