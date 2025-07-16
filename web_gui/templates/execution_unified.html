@@ -225,8 +225,8 @@
                     <select id="testcase-select" class="form-select" style="flex: 1;">
                         <option value="">请选择测试用例</option>
                     </select>
-                    <button id="back-to-edit" class="btn btn-ghost btn-small" style="display: none;" onclick="backToEdit()">
-                        编辑
+                    <button id="back-to-edit" class="btn btn-primary btn-small" style="display: none;" onclick="backToEdit()">
+                        修改用例
                     </button>
                 </div>
             </div>
@@ -1110,7 +1110,7 @@
         const backButton = document.getElementById('back-to-edit');
         const testcaseId = backButton.getAttribute('data-testcase-id');
         if (testcaseId) {
-            window.location.href = `/testcases/edit/${testcaseId}`;
+            window.location.href = `/testcases/${testcaseId}/edit`;
         }
     }
 
