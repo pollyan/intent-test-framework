@@ -327,7 +327,6 @@
             <p class="card-subtitle">当前执行步骤的截图</p>
             <div class="card-content">
                 <div id="screenshot-placeholder" class="empty-state" style="padding: 40px 20px;">
-                    <div class="empty-state-text">执行开始后将显示截图</div>
                 </div>
                 <img id="current-screenshot" class="screenshot-image" style="display: none;">
             </div>
@@ -340,8 +339,6 @@
             <div class="card-content">
                 <div id="screenshot-history-container" class="screenshot-history-container">
                     <div class="empty-state" style="padding: 30px 20px;">
-                        <div class="empty-state-text">暂无截图历史</div>
-                        <div class="empty-state-subtext">执行测试后将显示截图</div>
                     </div>
                 </div>
             </div>
@@ -880,8 +877,6 @@
         const historyContainer = document.getElementById('screenshot-history-container');
         historyContainer.innerHTML = `
             <div class="empty-state" style="padding: 30px 20px;">
-                <div class="empty-state-text">暂无截图历史</div>
-                <div class="empty-state-subtext">执行测试后将显示截图</div>
             </div>
         `;
         document.getElementById('screenshot-placeholder').style.display = 'block';
