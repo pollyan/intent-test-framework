@@ -427,7 +427,7 @@ class TestCaseEditor {
         const paramsDesc = this.getParamsDescription(step.action, step.params);
         
         container.innerHTML = `
-            <div class="list-item" style="cursor: pointer;">
+            <div class="list-item" title="点击编辑此步骤">
                 <div class="list-item-content">
                     <div class="list-item-title">步骤 ${index + 1}: ${step.description || actionDesc}</div>
                     <div class="list-item-subtitle">${step.action} • ${paramsDesc}</div>
@@ -435,6 +435,8 @@ class TestCaseEditor {
                         <span class="text-gray-600">动作类型: ${step.action}</span>
                         <span class="text-gray-400">•</span>
                         <span class="text-gray-600">${this.getMainParam(step.action, step.params)}</span>
+                        <span class="text-gray-400">•</span>
+                        <span class="text-gray-600">${step.required !== false ? '必需' : '可选'}</span>
                     </div>
                 </div>
                 <div class="flex items-center gap-1">
@@ -447,13 +449,18 @@ class TestCaseEditor {
             </div>
         `;
         
-        // 绑定按钮事件
+        // 绑定事件
         const listItem = container.querySelector('.list-item');
         const stepUpBtn = container.querySelector('.step-up');
         const stepDownBtn = container.querySelector('.step-down');
         const stepEditBtn = container.querySelector('.step-edit');
         const stepDuplicateBtn = container.querySelector('.step-duplicate');
         const stepDeleteBtn = container.querySelector('.step-delete');
+        
+        // 点击步骤项目进入编辑模式（与点击编辑按钮效果相同）
+        listItem.addEventListener('click', () => {
+            this.showInlineEdit(container, index);
+        });
         
         stepUpBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -1052,6 +1059,40 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
+/* 步骤列表特定样式 */
+.step-container {
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+
+.step-container .list-item {
+    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 0;
+}
+
+.step-container .list-item:last-child {
+    border-bottom: none;
+}
+
+/* 确保行内编辑表单样式 */
+.inline-edit-form {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 16px;
+    margin: 8px 0;
+}
+
+.inline-edit-form .form-group {
+    margin-bottom: 12px;
+}
+
+.inline-edit-form .form-group:last-child {
+    margin-bottom: 0;
+}
+
+/* 动画效果 */
 @keyframes slideInRight {
     from {
         transform: translateX(100%);
