@@ -161,6 +161,37 @@ def local_proxy_page():
     except Exception as e:
         return jsonify({'error': f'无法加载本地代理页面: {str(e)}'}), 500
 
+@app.route('/testcases/<int:testcase_id>/edit')
+def testcase_edit_page(testcase_id):
+    """测试用例编辑页面"""
+    try:
+        from flask import render_template
+        from web_gui.models import TestCase, ExecutionHistory
+        import json
+        
+        # 获取测试用例详情
+        testcase = TestCase.query.get_or_404(testcase_id)
+        
+        # 获取执行统计信息
+        execution_stats = ExecutionHistory.query.filter_by(test_case_id=testcase_id).all()
+        total_executions = len(execution_stats)
+        successful_executions = len([e for e in execution_stats if e.status == 'success'])
+        success_rate = (successful_executions / total_executions * 100) if total_executions > 0 else 0
+        
+        # 确保步骤数据是正确的JSON格式
+        try:
+            steps_data = json.loads(testcase.steps) if testcase.steps else []
+        except (json.JSONDecodeError, TypeError):
+            steps_data = []
+        
+        return render_template('testcase_edit.html', 
+                             testcase=testcase,
+                             steps_data=json.dumps(steps_data),
+                             total_executions=total_executions,
+                             success_rate=success_rate)
+    except Exception as e:
+        return jsonify({'error': f'无法加载测试用例编辑页面: {str(e)}'}), 500
+
 @app.route('/download/local-proxy')
 def download_local_proxy():
     """下载本地代理包 - 动态生成"""
