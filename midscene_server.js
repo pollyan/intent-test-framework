@@ -1074,26 +1074,39 @@ async function checkAndNotifyMidsceneReport(executionId) {
         const fs = require('fs');
         const path = require('path');
         
+        console.log(`📋 开始检查MidScene报告，执行ID: ${executionId}`);
+        console.log(`📋 当前工作目录: ${process.cwd()}`);
+        
         // 检查midscene_run目录是否存在
         const midsceneRunDir = path.join(process.cwd(), 'midscene_run');
+        console.log(`📋 检查目录: ${midsceneRunDir}`);
+        
         if (!fs.existsSync(midsceneRunDir)) {
             console.log('📋 midscene_run目录不存在，跳过报告检查');
+            logMessage(executionId, 'warning', 'MidScene报告目录不存在，请检查测试执行环境');
             return;
         }
         
         // 检查报告目录
         const reportDir = path.join(midsceneRunDir, 'report');
+        console.log(`📋 检查报告目录: ${reportDir}`);
+        
         if (!fs.existsSync(reportDir)) {
             console.log('📋 报告目录不存在，跳过报告检查');
+            logMessage(executionId, 'warning', 'MidScene报告子目录不存在，可能测试未生成报告');
             return;
         }
         
         // 获取报告目录中的所有HTML文件
         const files = fs.readdirSync(reportDir);
+        console.log(`📋 报告目录中的文件: ${files.join(', ')}`);
+        
         const htmlFiles = files.filter(file => file.endsWith('.html') && file.includes('playwright-'));
+        console.log(`📋 找到的HTML报告文件: ${htmlFiles.join(', ')}`);
         
         if (htmlFiles.length === 0) {
             console.log('📋 未找到MidScene报告文件');
+            logMessage(executionId, 'warning', 'MidScene未生成报告文件，可能测试执行过程中出现问题');
             return;
         }
         
@@ -1114,13 +1127,18 @@ async function checkAndNotifyMidsceneReport(executionId) {
         if (latestReport) {
             const reportPath = latestReport.path;
             console.log(`📊 找到MidScene报告文件: ${reportPath}`);
+            console.log(`📊 报告文件修改时间: ${latestReport.mtime}`);
             
             // 通过日志消息通知前端
             logMessage(executionId, 'info', `Midscene - report file updated: ${reportPath}`);
+            
+            // 额外发送一条明确的成功消息
+            logMessage(executionId, 'success', `报告已生成: ${latestReport.name}`);
         }
         
     } catch (error) {
         console.error('检查MidScene报告失败:', error);
+        logMessage(executionId, 'error', `检查MidScene报告失败: ${error.message}`);
     }
 }
 

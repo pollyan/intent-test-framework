@@ -891,6 +891,11 @@
         logContainer.appendChild(logEntry);
         logContainer.scrollTop = logContainer.scrollHeight;
         
+        // 调试：记录所有日志消息
+        if (message.includes('Midscene') || message.includes('report')) {
+            console.log('📋 收到可能的报告相关日志:', message);
+        }
+        
         // 处理报告路径
         processLogForReports(message);
     }
@@ -1065,8 +1070,20 @@
         if (message.includes('Midscene - report file updated:')) {
             const reportPath = message.split('Midscene - report file updated: ')[1];
             if (reportPath && reportPath.includes('playwright-') && reportPath.includes('.html')) {
-                const testcaseName = currentExecution ? currentExecution.testcase_name : '未知测试用例';
-                const executionId = currentExecution ? currentExecution.execution_id : 'unknown';
+                // 获取测试用例名称
+                const testcaseSelect = document.getElementById('testcase-select');
+                const selectedOption = testcaseSelect.options[testcaseSelect.selectedIndex];
+                const testcaseName = selectedOption ? selectedOption.text : '未知测试用例';
+                
+                // 获取执行ID
+                const executionId = currentExecution ? 
+                    (currentExecution.local_execution_id || currentExecution.id || 'unknown') : 
+                    'unknown';
+                
+                console.log('📊 处理报告路径:', reportPath.trim());
+                console.log('📊 测试用例名称:', testcaseName);
+                console.log('📊 执行ID:', executionId);
+                
                 addExecutionReport(reportPath.trim(), testcaseName, executionId);
             }
         }
