@@ -65,6 +65,21 @@
     .status[title] {
         position: relative;
     }
+    
+    /* 测试用例项目点击效果样式 */
+    .list-item {
+        cursor: pointer;
+        transition: background-color 0.2s ease, transform 0.1s ease;
+    }
+    
+    .list-item:hover {
+        background-color: #f8f9fa;
+        transform: translateY(-1px);
+    }
+    
+    .list-item:active {
+        transform: translateY(0);
+    }
 </style>
 {% endblock %}
 
@@ -247,7 +262,8 @@
     function createTestCaseItem(testcase) {
         const item = document.createElement('div');
         item.className = 'list-item';
-        item.onclick = () => viewTestCase(testcase.id);
+        item.title = '点击进入编辑模式';  // 添加提示文本
+        item.onclick = () => editTestCase(testcase.id);
         
         const steps = testcase.steps || [];
         const stepCount = steps.length;
