@@ -562,6 +562,20 @@ async function executeTestCaseAsync(testcase, mode, executionId, timeoutConfig =
 
         // 通知Web系统执行失败
         await notifyExecutionResult(executionId, testcase, mode, 'failed', executionState?.steps || [], error.message);
+    } finally {
+        // 确保每次执行完成后都关闭浏览器，避免资源泄漏和状态污染
+        try {
+            if (browser) {
+                console.log('🔄 关闭浏览器进程，清理资源...');
+                await browser.close();
+                browser = null;
+                page = null;
+                agent = null;
+                console.log('✅ 浏览器进程已关闭');
+            }
+        } catch (closeError) {
+            console.error('⚠️ 关闭浏览器失败:', closeError.message);
+        }
     }
 }
 
