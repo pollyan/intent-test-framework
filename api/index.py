@@ -174,7 +174,7 @@ def testcase_create_page():
                 self.id = None
                 self.name = ''
                 self.description = ''
-                self.category = ''
+                self.category = '功能测试'  # 默认分类
                 self.priority = 2
                 self.tags = ''
                 self.is_active = True

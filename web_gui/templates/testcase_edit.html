@@ -74,7 +74,7 @@
                 <span id="step-count">0</span>个步骤 • 
                 新建用例
             {% else %}
-                最后修改: {{ testcase.updated_at.strftime('%Y-%m-%d %H:%M') if testcase.updated_at else testcase.created_at.strftime('%Y-%m-%d %H:%M') }} • 
+                最后修改: {{ testcase.updated_at.strftime('%Y-%m-%d %H:%M') if testcase.updated_at else (testcase.created_at.strftime('%Y-%m-%d %H:%M') if testcase.created_at else '未知') }} • 
                 <span id="step-count">0</span>个步骤 • 
                 执行{{ total_executions }}次 • 
                 成功率{{ "%.1f"|format(success_rate) }}%
@@ -286,7 +286,7 @@
     <div class="grid grid-cols-4 gap-3">
         <div>
             <div class="text-sm text-gray-600 mb-1">用例ID</div>
-            <div class="text-sm font-medium">{{ testcase.id }}</div>
+            <div class="text-sm font-medium">{{ testcase.id if testcase.id else '新建用例' }}</div>
         </div>
         <div>
             <div class="text-sm text-gray-600 mb-1">创建时间</div>
@@ -294,7 +294,7 @@
         </div>
         <div>
             <div class="text-sm text-gray-600 mb-1">最后修改</div>
-            <div class="text-sm font-medium">{{ testcase.updated_at.strftime('%Y-%m-%d %H:%M:%S') if testcase.updated_at else testcase.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+            <div class="text-sm font-medium">{{ testcase.updated_at.strftime('%Y-%m-%d %H:%M:%S') if testcase.updated_at else (testcase.created_at.strftime('%Y-%m-%d %H:%M:%S') if testcase.created_at else '未知') }}</div>
         </div>
         <div>
             <div class="text-sm text-gray-600 mb-1">创建者</div>
