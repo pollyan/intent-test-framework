@@ -126,21 +126,41 @@ async function notifyExecutionResult(executionId, testcase, mode, status, steps,
 }
 
 // 启动浏览器和页面
-async function initBrowser(headless = true) {
+async function initBrowser(headless = true, timeoutConfig = {}) {
     if (!browser) {
         console.log(`启动浏览器 - 模式: ${headless ? '无头模式' : '浏览器模式'}`);
         browser = await chromium.launch({
             headless: headless,
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
+            args: [
+                '--no-sandbox', 
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-accelerated-2d-canvas',
+                '--no-first-run',
+                '--no-zygote',
+                '--disable-gpu'
+            ]
         });
     }
     
     if (!page) {
         const context = await browser.newContext({
             viewport: { width: 1280, height: 720 },
-            deviceScaleFactor: 1
+            deviceScaleFactor: 1,
+            // 增加超时设置
+            timeout: 30000
         });
         page = await context.newPage();
+        
+        // 设置页面超时
+        const pageTimeout = timeoutConfig.page_timeout || 30000;
+        const actionTimeout = timeoutConfig.action_timeout || 30000;
+        const navigationTimeout = timeoutConfig.navigation_timeout || 30000;
+        
+        page.setDefaultTimeout(actionTimeout);
+        page.setDefaultNavigationTimeout(navigationTimeout);
+        
+        console.log(`⏱️ 超时设置: 页面加载=${pageTimeout}ms, 操作=${actionTimeout}ms, 导航=${navigationTimeout}ms`);
         
         // 配置MidSceneJS AI
         const config = {
@@ -215,7 +235,7 @@ function normalizeStepType(stepType) {
 }
 
 // 执行单个步骤
-async function executeStep(step, page, agent, executionId, stepIndex, totalSteps) {
+async function executeStep(step, page, agent, executionId, stepIndex, totalSteps, timeoutConfig = {}) {
     // 支持新旧格式兼容: 新格式使用type字段，旧格式使用action字段
     const stepType = step.type || step.action;
     const params = step.params || {};
@@ -239,8 +259,24 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
         switch (normalizedAction) {
             case 'navigate':
                 if (params.url) {
-                    await page.goto(params.url, { waitUntil: 'networkidle', timeout: 60000 });
-                    logMessage(executionId, 'info', `导航到: ${params.url}`);
+                    const pageTimeout = timeoutConfig.page_timeout || 30000;
+                    const navigationTimeout = timeoutConfig.navigation_timeout || 30000;
+                    
+                    try {
+                        // 首先尝试使用 domcontentloaded，更快的加载策略
+                        await page.goto(params.url, { waitUntil: 'domcontentloaded', timeout: navigationTimeout });
+                        logMessage(executionId, 'info', `导航到: ${params.url}`);
+                        
+                        // 等待页面稳定
+                        await page.waitForTimeout(2000);
+                    } catch (error) {
+                        // 如果超时，尝试使用更宽松的策略
+                        logMessage(executionId, 'warning', `导航超时，尝试使用基础加载策略: ${error.message}`);
+                        const fallbackTimeout = Math.min(navigationTimeout / 2, 15000);
+                        await page.goto(params.url, { waitUntil: 'commit', timeout: fallbackTimeout });
+                        await page.waitForTimeout(3000);
+                        logMessage(executionId, 'info', `导航到: ${params.url} (使用基础策略，超时=${fallbackTimeout}ms)`);
+                    }
                 }
                 break;
 
@@ -356,7 +392,7 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
 }
 
 // 异步执行完整测试用例
-async function executeTestCaseAsync(testcase, mode, executionId) {
+async function executeTestCaseAsync(testcase, mode, executionId, timeoutConfig = {}) {
     try {
         // 清理旧的执行状态，确保不会累积太多数据
         cleanupOldExecutions();
@@ -409,7 +445,7 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
         const headless = mode === 'headless';
         logMessage(executionId, 'info', `初始化浏览器 (${headless ? '无头模式' : '可视模式'})`);
 
-        const { page, agent } = await initBrowser(headless);
+        const { page, agent } = await initBrowser(headless, timeoutConfig);
 
         // 执行每个步骤
         for (let i = 0; i < steps.length; i++) {
@@ -425,7 +461,7 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
             });
 
             // 执行步骤
-            await executeStep(step, page, agent, executionId, i, steps.length);
+            await executeStep(step, page, agent, executionId, i, steps.length, timeoutConfig);
 
             // 截图
             let screenshot = null;
@@ -534,7 +570,7 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
 // 执行完整测试用例
 app.post('/api/execute-testcase', async (req, res) => {
     try {
-        const { testcase, mode = 'headless' } = req.body;
+        const { testcase, mode = 'headless', timeout_settings = {} } = req.body;
 
         if (!testcase) {
             return res.status(400).json({
@@ -545,8 +581,15 @@ app.post('/api/execute-testcase', async (req, res) => {
 
         const executionId = generateExecutionId();
 
+        // 解析超时设置
+        const timeoutConfig = {
+            page_timeout: timeout_settings.page_timeout || 30000,
+            action_timeout: timeout_settings.action_timeout || 30000,
+            navigation_timeout: timeout_settings.navigation_timeout || 30000
+        };
+
         // 异步执行，立即返回执行ID
-        executeTestCaseAsync(testcase, mode, executionId).catch(error => {
+        executeTestCaseAsync(testcase, mode, executionId, timeoutConfig).catch(error => {
             console.error('异步执行错误:', error);
         });
 

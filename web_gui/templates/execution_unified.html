@@ -227,7 +227,7 @@
             </div>
 
             <!-- 执行配置 -->
-            <div class="grid grid-cols-2 gap-2">
+            <div class="grid grid-cols-2 gap-2 mb-3">
                 <div class="form-group">
                     <label class="form-label">执行模式</label>
                     <select id="execution-mode" class="form-select">
@@ -241,6 +241,30 @@
                     <select id="execution-type" class="form-select" disabled>
                         <option value="local">本地代理执行</option>
                     </select>
+                </div>
+            </div>
+
+            <!-- 超时设置 -->
+            <div class="card" style="background: #f8f8f8; border: 1px solid #e8e8e8; margin-bottom: 16px;">
+                <div class="card-title text-base">超时设置</div>
+                <div class="card-subtitle">配置页面加载和操作的超时时间</div>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="form-group">
+                        <label class="form-label">页面加载超时 (秒)</label>
+                        <input type="number" id="page-timeout" class="form-input" value="30" min="5" max="120" placeholder="30">
+                        <div class="text-sm text-gray-500 mt-1">页面导航的最大等待时间</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">操作超时 (秒)</label>
+                        <input type="number" id="action-timeout" class="form-input" value="30" min="5" max="120" placeholder="30">
+                        <div class="text-sm text-gray-500 mt-1">AI操作的最大等待时间</div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-2 mt-2">
+                    <button class="btn btn-small btn-ghost" onclick="resetTimeouts()">重置默认</button>
+                    <span class="text-sm text-gray-500">建议范围：5-120秒</span>
                 </div>
             </div>
 
@@ -631,15 +655,35 @@
         updateProxyStatus('connecting');
         connectToLocalProxy();
     }
+    
+    // 重置超时设置
+    function resetTimeouts() {
+        document.getElementById('page-timeout').value = 30;
+        document.getElementById('action-timeout').value = 30;
+        showMessage('已重置为默认超时设置', 'success');
+    }
 
     // 开始执行
     async function startExecution() {
         const testcaseId = document.getElementById('testcase-select').value;
         const executionMode = document.getElementById('execution-mode').value;
         const executionType = document.getElementById('execution-type').value;
+        const pageTimeout = parseInt(document.getElementById('page-timeout').value) || 30;
+        const actionTimeout = parseInt(document.getElementById('action-timeout').value) || 30;
         
         if (!testcaseId) {
             showMessage('请选择测试用例', 'error');
+            return;
+        }
+        
+        // 验证超时设置
+        if (pageTimeout < 5 || pageTimeout > 120) {
+            showMessage('页面加载超时时间必须在5-120秒之间', 'error');
+            return;
+        }
+        
+        if (actionTimeout < 5 || actionTimeout > 120) {
+            showMessage('操作超时时间必须在5-120秒之间', 'error');
             return;
         }
         
@@ -704,7 +748,12 @@
                     
                     const executeData = {
                         testcase: testcase,
-                        mode: executionMode
+                        mode: executionMode,
+                        timeout_settings: {
+                            page_timeout: pageTimeout * 1000, // 转换为毫秒
+                            action_timeout: actionTimeout * 1000, // 转换为毫秒
+                            navigation_timeout: pageTimeout * 1000
+                        }
                     };
                     
                     addLog(`发送数据到本地代理服务器: ${JSON.stringify(executeData, null, 2)}`, 'info');
