@@ -143,23 +143,65 @@ io.on('connection', (socket) => {
     });
 });
 
+// 标准化步骤类型 - 将新的MidSceneJS格式映射到执行引擎识别的格式
+function normalizeStepType(stepType) {
+    const typeMapping = {
+        // 新格式 -> 执行引擎格式
+        'goto': 'navigate',
+        'aiTap': 'ai_tap',
+        'aiInput': 'ai_input',
+        'aiAssert': 'ai_assert',
+        'aiHover': 'ai_hover',
+        'aiScroll': 'ai_scroll',
+        'aiWaitFor': 'ai_wait_for',
+        'evaluateJavaScript': 'evaluate_javascript',
+        'logScreenshot': 'screenshot',
+        
+        // 保持旧格式兼容
+        'navigate': 'navigate',
+        'ai_tap': 'ai_tap',
+        'ai_input': 'ai_input',
+        'ai_assert': 'ai_assert',
+        'ai_hover': 'ai_hover',
+        'ai_scroll': 'ai_scroll',
+        'ai_wait_for': 'ai_wait_for',
+        'click': 'click',
+        'type': 'type',
+        'wait': 'wait',
+        'sleep': 'sleep',
+        'assert': 'assert',
+        'refresh': 'refresh',
+        'back': 'back',
+        'screenshot': 'screenshot',
+        'evaluate_javascript': 'evaluate_javascript'
+    };
+    
+    return typeMapping[stepType] || stepType;
+}
+
 // 执行单个步骤
 async function executeStep(step, page, agent, executionId, stepIndex, totalSteps) {
-    const { action, params = {}, description } = step;
+    // 支持新旧格式兼容: 新格式使用type字段，旧格式使用action字段
+    const stepType = step.type || step.action;
+    const params = step.params || {};
+    const description = step.description;
+
+    // 标准化步骤类型名称 - 将新的MidSceneJS格式映射到执行引擎识别的格式
+    const normalizedAction = normalizeStepType(stepType);
 
     // 发送步骤开始事件
     io.emit('step-start', {
         executionId,
         stepIndex,
-        action,
-        description: description || action,
+        action: normalizedAction,
+        description: description || normalizedAction,
         totalSteps: totalSteps
     });
 
     const stepStartTime = Date.now();
 
     try {
-        switch (action) {
+        switch (normalizedAction) {
             case 'navigate':
                 if (params.url) {
                     await page.goto(params.url, { waitUntil: 'networkidle', timeout: 60000 });
@@ -172,30 +214,35 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                 break;
 
             case 'click':
-                if (params.locate) {
-                    await agent.aiTap(params.locate);
+            case 'ai_tap':
+                const clickTarget = params.locate || params.selector || params.element;
+                if (clickTarget) {
+                    await agent.aiTap(clickTarget);
                     io.emit('log-message', {
                         executionId,
                         level: 'info',
-                        message: `点击: ${params.locate}`
+                        message: `点击: ${clickTarget}`
                     });
                 }
                 break;
 
             case 'type':
             case 'ai_input':
-                if (params.locate && params.text) {
-                    await agent.aiInput(params.text, params.locate);
+                const inputTarget = params.locate || params.selector || params.element;
+                const inputText = params.text || params.value;
+                if (inputTarget && inputText) {
+                    await agent.aiInput(inputText, inputTarget);
                     io.emit('log-message', {
                         executionId,
                         level: 'info',
-                        message: `输入: "${params.text}" 到 ${params.locate}`
+                        message: `输入: "${inputText}" 到 ${inputTarget}`
                     });
                 }
                 break;
 
             case 'wait':
-                const waitTime = params.time || 1000;
+            case 'sleep':
+                const waitTime = params.time || params.duration || 1000;
                 await page.waitForTimeout(waitTime);
                 io.emit('log-message', {
                     executionId,
@@ -205,19 +252,101 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                 break;
 
             case 'assert':
-                if (params.condition) {
-                    await agent.aiAssert(params.condition);
+            case 'ai_assert':
+                const assertCondition = params.condition || params.assertion || params.expected;
+                if (assertCondition) {
+                    await agent.aiAssert(assertCondition);
                     io.emit('log-message', {
                         executionId,
                         level: 'info',
-                        message: `断言: ${params.condition}`
+                        message: `断言: ${assertCondition}`
+                    });
+                }
+                break;
+
+            case 'refresh':
+                await page.reload({ waitUntil: 'networkidle', timeout: 30000 });
+                io.emit('log-message', {
+                    executionId,
+                    level: 'info',
+                    message: '刷新页面'
+                });
+                break;
+
+            case 'back':
+                await page.goBack({ waitUntil: 'networkidle', timeout: 30000 });
+                io.emit('log-message', {
+                    executionId,
+                    level: 'info',
+                    message: '返回上一页'
+                });
+                break;
+
+            case 'screenshot':
+                const screenshotPath = `./screenshots/${executionId}_step_${stepIndex}.png`;
+                await page.screenshot({ path: screenshotPath, fullPage: true });
+                io.emit('log-message', {
+                    executionId,
+                    level: 'info',
+                    message: `截图保存到: ${screenshotPath}`
+                });
+                break;
+
+            case 'ai_hover':
+                const hoverTarget = params.locate || params.selector || params.element;
+                if (hoverTarget) {
+                    await agent.aiHover(hoverTarget);
+                    io.emit('log-message', {
+                        executionId,
+                        level: 'info',
+                        message: `悬停: ${hoverTarget}`
+                    });
+                }
+                break;
+
+            case 'ai_scroll':
+                const scrollDirection = params.direction || 'down';
+                const scrollDistance = params.distance || 500;
+                if (scrollDirection === 'down') {
+                    await page.evaluate((dist) => window.scrollBy(0, dist), scrollDistance);
+                } else if (scrollDirection === 'up') {
+                    await page.evaluate((dist) => window.scrollBy(0, -dist), scrollDistance);
+                }
+                io.emit('log-message', {
+                    executionId,
+                    level: 'info',
+                    message: `滚动: ${scrollDirection} ${scrollDistance}px`
+                });
+                break;
+
+            case 'evaluate_javascript':
+                const jsCode = params.code || params.script;
+                if (jsCode) {
+                    const result = await page.evaluate(jsCode);
+                    io.emit('log-message', {
+                        executionId,
+                        level: 'info',
+                        message: `执行JavaScript: ${jsCode}, 结果: ${result}`
+                    });
+                }
+                break;
+
+            case 'ai_wait_for':
+                const waitTarget = params.locate || params.selector || params.element;
+                const waitTimeout = params.timeout || 10000;
+                if (waitTarget) {
+                    await agent.aiWaitFor(waitTarget, { timeout: waitTimeout });
+                    io.emit('log-message', {
+                        executionId,
+                        level: 'info',
+                        message: `等待元素出现: ${waitTarget}`
                     });
                 }
                 break;
 
             default:
                 // 通用AI操作
-                const instruction = description || action;
+                const instruction = description || stepType;
                 await agent.ai(instruction);
                 io.emit('log-message', {
                     executionId,
