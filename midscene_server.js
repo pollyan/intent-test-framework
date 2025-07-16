@@ -37,6 +37,41 @@ let agent = null;
 // 执行状态管理
 const executionStates = new Map();
 
+// 清理旧的执行状态 - 保留最近的50个执行记录
+function cleanupOldExecutions() {
+    const executions = Array.from(executionStates.entries());
+    if (executions.length > 50) {
+        // 按时间排序，保留最新的50个
+        executions
+            .sort((a, b) => (b[1].startTime || 0) - (a[1].startTime || 0))
+            .slice(50)
+            .forEach(([id]) => {
+                executionStates.delete(id);
+            });
+    }
+}
+
+// 统一的日志记录函数
+function logMessage(executionId, level, message) {
+    const logEntry = {
+        executionId,
+        level,
+        message,
+        timestamp: new Date().toISOString()
+    };
+    
+    // 发送WebSocket消息
+    io.emit('log-message', logEntry);
+    
+    // 记录到执行状态
+    const executionState = executionStates.get(executionId);
+    if (executionState) {
+        executionState.logs.push(logEntry);
+    }
+    
+    return logEntry;
+}
+
 // 生成执行ID
 function generateExecutionId() {
     return 'exec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -205,11 +240,7 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
             case 'navigate':
                 if (params.url) {
                     await page.goto(params.url, { waitUntil: 'networkidle', timeout: 60000 });
-                    io.emit('log-message', {
-                        executionId,
-                        level: 'info',
-                        message: `导航到: ${params.url}`
-                    });
+                    logMessage(executionId, 'info', `导航到: ${params.url}`);
                 }
                 break;
 
@@ -218,11 +249,7 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                 const clickTarget = params.locate || params.selector || params.element;
                 if (clickTarget) {
                     await agent.aiTap(clickTarget);
-                    io.emit('log-message', {
-                        executionId,
-                        level: 'info',
-                        message: `点击: ${clickTarget}`
-                    });
+                    logMessage(executionId, 'info', `点击: ${clickTarget}`);
                 }
                 break;
 
@@ -232,11 +259,7 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                 const inputText = params.text || params.value;
                 if (inputTarget && inputText) {
                     await agent.aiInput(inputText, inputTarget);
-                    io.emit('log-message', {
-                        executionId,
-                        level: 'info',
-                        message: `输入: "${inputText}" 到 ${inputTarget}`
-                    });
+                    logMessage(executionId, 'info', `输入: "${inputText}" 到 ${inputTarget}`);
                 }
                 break;
 
@@ -244,11 +267,7 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
             case 'sleep':
                 const waitTime = params.time || params.duration || 1000;
                 await page.waitForTimeout(waitTime);
-                io.emit('log-message', {
-                    executionId,
-                    level: 'info',
-                    message: `等待: ${waitTime}ms`
-                });
+                logMessage(executionId, 'info', `等待: ${waitTime}ms`);
                 break;
 
             case 'assert':
@@ -256,51 +275,31 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                 const assertCondition = params.condition || params.assertion || params.expected;
                 if (assertCondition) {
                     await agent.aiAssert(assertCondition);
-                    io.emit('log-message', {
-                        executionId,
-                        level: 'info',
-                        message: `断言: ${assertCondition}`
-                    });
+                    logMessage(executionId, 'info', `断言: ${assertCondition}`);
                 }
                 break;
 
             case 'refresh':
                 await page.reload({ waitUntil: 'networkidle', timeout: 30000 });
-                io.emit('log-message', {
-                    executionId,
-                    level: 'info',
-                    message: '刷新页面'
-                });
+                logMessage(executionId, 'info', '刷新页面');
                 break;
 
             case 'back':
                 await page.goBack({ waitUntil: 'networkidle', timeout: 30000 });
-                io.emit('log-message', {
-                    executionId,
-                    level: 'info',
-                    message: '返回上一页'
-                });
+                logMessage(executionId, 'info', '返回上一页');
                 break;
 
             case 'screenshot':
                 const screenshotPath = `./screenshots/${executionId}_step_${stepIndex}.png`;
                 await page.screenshot({ path: screenshotPath, fullPage: true });
-                io.emit('log-message', {
-                    executionId,
-                    level: 'info',
-                    message: `截图保存到: ${screenshotPath}`
-                });
+                logMessage(executionId, 'info', `截图保存到: ${screenshotPath}`);
                 break;
 
             case 'ai_hover':
                 const hoverTarget = params.locate || params.selector || params.element;
                 if (hoverTarget) {
                     await agent.aiHover(hoverTarget);
-                    io.emit('log-message', {
-                        executionId,
-                        level: 'info',
-                        message: `悬停: ${hoverTarget}`
-                    });
+                    logMessage(executionId, 'info', `悬停: ${hoverTarget}`);
                 }
                 break;
 
@@ -312,22 +311,14 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                 } else if (scrollDirection === 'up') {
                     await page.evaluate((dist) => window.scrollBy(0, -dist), scrollDistance);
                 }
-                io.emit('log-message', {
-                    executionId,
-                    level: 'info',
-                    message: `滚动: ${scrollDirection} ${scrollDistance}px`
-                });
+                logMessage(executionId, 'info', `滚动: ${scrollDirection} ${scrollDistance}px`);
                 break;
 
             case 'evaluate_javascript':
                 const jsCode = params.code || params.script;
                 if (jsCode) {
                     const result = await page.evaluate(jsCode);
-                    io.emit('log-message', {
-                        executionId,
-                        level: 'info',
-                        message: `执行JavaScript: ${jsCode}, 结果: ${result}`
-                    });
+                    logMessage(executionId, 'info', `执行JavaScript: ${jsCode}, 结果: ${result}`);
                 }
                 break;
 
@@ -336,11 +327,7 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                 const waitTimeout = params.timeout || 10000;
                 if (waitTarget) {
                     await agent.aiWaitFor(waitTarget, { timeout: waitTimeout });
-                    io.emit('log-message', {
-                        executionId,
-                        level: 'info',
-                        message: `等待元素出现: ${waitTarget}`
-                    });
+                    logMessage(executionId, 'info', `等待元素出现: ${waitTarget}`);
                 }
                 break;
 
@@ -348,11 +335,7 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                 // 通用AI操作
                 const instruction = description || stepType;
                 await agent.ai(instruction);
-                io.emit('log-message', {
-                    executionId,
-                    level: 'info',
-                    message: `AI操作: ${instruction}`
-                });
+                logMessage(executionId, 'info', `AI操作: ${instruction}`);
                 break;
         }
 
@@ -367,11 +350,7 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
             error: error.message
         });
         
-        io.emit('log-message', {
-            executionId,
-            level: 'error',
-            message: `步骤执行失败: ${error.message}`
-        });
+        logMessage(executionId, 'error', `步骤执行失败: ${error.message}`);
         throw error;
     }
 }
@@ -379,14 +358,23 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
 // 异步执行完整测试用例
 async function executeTestCaseAsync(testcase, mode, executionId) {
     try {
-        // 更新执行状态
-        executionStates.set(executionId, {
+        // 清理旧的执行状态，确保不会累积太多数据
+        cleanupOldExecutions();
+        
+        // 为每次执行创建独立的状态记录
+        const currentExecution = {
+            id: executionId,
             status: 'running',
             startTime: new Date(),
             testcase: testcase.name,
             mode,
-            steps: []  // 收集步骤执行数据
-        });
+            steps: [],  // 收集步骤执行数据
+            screenshots: [],  // 收集截图数据
+            logs: []  // 收集日志数据
+        };
+        
+        // 更新执行状态
+        executionStates.set(executionId, currentExecution);
 
         // 通知Web系统执行开始
         await notifyExecutionStart(executionId, testcase, mode);
@@ -399,11 +387,7 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
             timestamp: new Date().toISOString()
         });
 
-        io.emit('log-message', {
-            executionId,
-            level: 'info',
-            message: `开始执行测试用例: ${testcase.name}`
-        });
+        logMessage(executionId, 'info', `开始执行测试用例: ${testcase.name}`);
 
         // 解析测试步骤
         let steps;
@@ -419,19 +403,11 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
             throw new Error('测试用例没有步骤');
         }
 
-        io.emit('log-message', {
-            executionId,
-            level: 'info',
-            message: `共 ${steps.length} 个步骤`
-        });
+        logMessage(executionId, 'info', `共 ${steps.length} 个步骤`);
 
         // 初始化浏览器
         const headless = mode === 'headless';
-        io.emit('log-message', {
-            executionId,
-            level: 'info',
-            message: `初始化浏览器 (${headless ? '无头模式' : '可视模式'})`
-        });
+        logMessage(executionId, 'info', `初始化浏览器 (${headless ? '无头模式' : '可视模式'})`);
 
         const { page, agent } = await initBrowser(headless);
 
@@ -476,17 +452,30 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
                 success: true
             });
 
-            // 记录步骤执行数据
+            // 记录步骤执行数据到当前执行记录
             const executionState = executionStates.get(executionId);
             if (executionState) {
-                executionState.steps.push({
+                const stepData = {
                     index: i,
                     description: step.description || step.action,
                     status: 'success',
                     start_time: new Date(Date.now() - 500).toISOString(), // 估算开始时间
                     end_time: new Date().toISOString(),
-                    duration: 500 // 估算持续时间
-                });
+                    duration: 500, // 估算持续时间
+                    stepType: step.type || step.action,
+                    params: step.params || {}
+                };
+                
+                executionState.steps.push(stepData);
+                
+                // 记录截图数据
+                if (screenshot) {
+                    executionState.screenshots.push({
+                        stepIndex: i,
+                        timestamp: new Date().toISOString(),
+                        screenshot: screenshot.toString('base64')
+                    });
+                }
             }
 
             // 短暂延迟，让用户看到执行过程
@@ -508,11 +497,7 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
             timestamp: new Date().toISOString()
         });
 
-        io.emit('log-message', {
-            executionId,
-            level: 'success',
-            message: `测试执行完成！耗时: ${Math.round(executionState.duration / 1000)}秒`
-        });
+        logMessage(executionId, 'success', `测试执行完成！耗时: ${Math.round(executionState.duration / 1000)}秒`);
 
         // 通知Web系统执行完成
         await notifyExecutionResult(executionId, testcase, mode, 'success', executionState.steps);
@@ -536,11 +521,7 @@ async function executeTestCaseAsync(testcase, mode, executionId) {
             timestamp: new Date().toISOString()
         });
 
-        io.emit('log-message', {
-            executionId,
-            level: 'error',
-            message: `测试执行失败: ${error.message}`
-        });
+        logMessage(executionId, 'error', `测试执行失败: ${error.message}`);
 
         // 通知Web系统执行失败
         await notifyExecutionResult(executionId, testcase, mode, 'failed', executionState?.steps || [], error.message);
@@ -602,6 +583,69 @@ app.get('/api/execution-status/:executionId', (req, res) => {
     });
 });
 
+// 获取独立的执行报告
+app.get('/api/execution-report/:executionId', (req, res) => {
+    const { executionId } = req.params;
+    const executionState = executionStates.get(executionId);
+
+    if (!executionState) {
+        return res.status(404).json({
+            success: false,
+            error: '执行记录不存在'
+        });
+    }
+
+    // 生成独立的执行报告
+    const report = {
+        executionId: executionId,
+        testcase: executionState.testcase,
+        status: executionState.status,
+        mode: executionState.mode,
+        startTime: executionState.startTime,
+        endTime: executionState.endTime,
+        duration: executionState.duration,
+        summary: {
+            totalSteps: executionState.steps.length,
+            successfulSteps: executionState.steps.filter(s => s.status === 'success').length,
+            failedSteps: executionState.steps.filter(s => s.status === 'failed').length,
+            totalLogs: executionState.logs.length,
+            totalScreenshots: executionState.screenshots.length
+        },
+        steps: executionState.steps,
+        logs: executionState.logs,
+        screenshots: executionState.screenshots,
+        generatedAt: new Date().toISOString()
+    };
+
+    res.json({
+        success: true,
+        report
+    });
+});
+
+// 获取所有执行记录列表
+app.get('/api/executions', (req, res) => {
+    const executions = Array.from(executionStates.entries()).map(([id, state]) => ({
+        executionId: id,
+        testcase: state.testcase,
+        status: state.status,
+        mode: state.mode,
+        startTime: state.startTime,
+        endTime: state.endTime,
+        duration: state.duration,
+        stepsCount: state.steps.length
+    }));
+
+    // 按开始时间倒序排列
+    executions.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+
+    res.json({
+        success: true,
+        executions,
+        total: executions.length
+    });
+});
+
 // 停止执行
 app.post('/api/stop-execution/:executionId', async (req, res) => {
     const { executionId } = req.params;
@@ -632,11 +676,7 @@ app.post('/api/stop-execution/:executionId', async (req, res) => {
             timestamp: new Date().toISOString()
         });
 
-        io.emit('log-message', {
-            executionId,
-            level: 'warning',
-            message: '执行已被用户停止'
-        });
+        logMessage(executionId, 'warning', '执行已被用户停止');
 
         res.json({
             success: true,
@@ -960,6 +1000,10 @@ server.listen(port, () => {
     console.log(`服务器就绪，等待测试执行请求...`);
     console.log(`支持的API端点:`);
     console.log(`   POST /api/execute-testcase - 执行测试用例`);
+    console.log(`   GET  /api/execution-status/:id - 获取执行状态`);
+    console.log(`   GET  /api/execution-report/:id - 获取独立执行报告`);
+    console.log(`   GET  /api/executions - 获取所有执行记录`);
+    console.log(`   POST /api/stop-execution/:id - 停止执行`);
     console.log(`   GET  /api/status - 获取服务器状态`);
     console.log(`   GET  /health - 健康检查`);
 });
