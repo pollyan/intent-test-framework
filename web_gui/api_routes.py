@@ -34,6 +34,9 @@ def get_testcases():
         if category:
             query = query.filter(TestCase.category == category)
         
+        # 按时间排序，最新的在前面（优先按更新时间，其次按创建时间）
+        query = query.order_by(TestCase.updated_at.desc(), TestCase.created_at.desc())
+        
         # 分页
         pagination = query.paginate(
             page=page, per_page=size, error_out=False
