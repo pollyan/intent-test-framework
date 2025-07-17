@@ -576,8 +576,6 @@
             item.className = 'list-item';
             item.title = '点击执行收藏的测试用例';
             
-            const statusClass = testcase.last_success ? 'status-success' : 'status-error';
-            
             item.innerHTML = `
                 <div class="list-item-content">
                     <div class="list-item-title">${testcase.name}</div>
@@ -585,7 +583,6 @@
                 </div>
                 <div class="flex items-center gap-1">
                     <button class="btn btn-small btn-primary" onclick="executeTestcase(${testcase.id})">执行</button>
-                    <div class="status ${statusClass}"></div>
                 </div>
             `;
             
@@ -709,13 +706,26 @@
             const response = await axios.get(API_BASE + '/executions?status=failed&sort=start_time,desc&size=5');
             if (response.data.code === 200) {
                 // 处理实际API返回的数据结构
-                const failures = response.data.data.items.map(item => ({
-                    id: item.id,
-                    test_case_name: item.test_case_name || '未知测试',
-                    error_summary: item.error_message || '执行失败',
-                    impact: `执行时间: ${item.start_time ? new Date(item.start_time).toLocaleString() : '未知'}`,
-                    severity: 'high' // 所有失败都标记为高优先级
-                }));
+                const failures = response.data.data.items.map(item => {
+                    // 根据失败次数或其他条件判断严重程度
+                    let severity = 'high'; // 默认高优先级
+                    let impact = `执行时间: ${item.start_time ? new Date(item.start_time).toLocaleString() : '未知'}`;
+                    
+                    // 可以根据需要添加更多逻辑来判断严重程度
+                    if (item.error_message && item.error_message.includes('timeout')) {
+                        impact = '影响：元素定位超时';
+                    } else if (item.error_message && item.error_message.includes('network')) {
+                        impact = '影响：网络连接问题';
+                    }
+                    
+                    return {
+                        id: item.id,
+                        test_case_name: item.test_case_name || '未知测试',
+                        error_summary: item.error_message || '执行失败',
+                        impact: impact,
+                        severity: severity
+                    };
+                });
                 renderPendingFailures(failures);
             }
         } catch (error) {
@@ -764,8 +774,8 @@
                                failure.severity === 'medium' ? '#faad14' : '#52c41a';
             item.style.borderLeft = `4px solid ${borderColor}`;
             
-            const statusClass = failure.severity === 'high' ? 'status-error' : 
-                               failure.severity === 'medium' ? 'status-warning' : 'status-success';
+            // 待处理失败都应该显示为错误状态（红色）
+            const statusClass = 'status-error';
             
             item.innerHTML = `
                 <div class="list-item-content">
