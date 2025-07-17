@@ -760,6 +760,7 @@
             
             if (response.data.code === 200) {
                 currentExecution = response.data.data;
+                console.log('Set currentExecution from API response:', currentExecution);
                 
                 // 更新UI状态
                 document.getElementById('start-execution').disabled = true;
@@ -813,6 +814,8 @@
                             
                             // 保存本地执行ID
                             currentExecution.local_execution_id = proxyResponse.data.executionId;
+                            console.log('Set local_execution_id:', currentExecution.local_execution_id);
+                            console.log('Updated currentExecution:', currentExecution);
                         } else {
                             addLog('本地代理服务器返回错误: ' + proxyResponse.data.error, 'error');
                         }
@@ -835,17 +838,25 @@
 
     // 停止执行
     async function stopExecution() {
+        console.log('stopExecution called');
+        console.log('currentExecution:', currentExecution);
+        
         if (currentExecution && currentExecution.local_execution_id) {
             try {
+                addLog(`正在向本地代理发送停止请求: ${currentExecution.local_execution_id}`, 'info');
                 const response = await axios.post(`http://localhost:3001/api/stop-execution/${currentExecution.local_execution_id}`);
                 if (response.data.success) {
-                    addLog('执行停止成功', 'success');
+                    addLog('本地代理已确认停止执行', 'success');
                 } else {
-                    addLog('停止执行失败: ' + response.data.error, 'error');
+                    addLog('本地代理停止执行失败: ' + response.data.error, 'error');
                 }
             } catch (error) {
+                console.error('Stop execution error:', error);
                 addLog('停止执行请求失败: ' + error.message, 'error');
             }
+        } else {
+            addLog('没有正在执行的任务或缺少执行ID', 'warning');
+            console.log('No execution to stop or missing local_execution_id');
         }
         
         // 更新UI状态
