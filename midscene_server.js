@@ -633,6 +633,11 @@ async function executeTestCaseAsync(testcase, mode, executionId, timeoutConfig =
 
         // 初始化浏览器
         const headless = mode === 'headless';
+        console.log(`\n[${new Date().toISOString()}] Browser Mode Configuration`);
+        console.log(`Received mode: "${mode}"`);
+        console.log(`Headless value: ${headless}`);
+        console.log(`Will launch browser in: ${headless ? 'HEADLESS' : 'VISIBLE'} mode\n`);
+        
         logMessage(executionId, 'info', `初始化浏览器 (${headless ? '无头模式' : '可视模式'})`);
 
         const { page, agent } = await initBrowser(headless, timeoutConfig);
@@ -830,7 +835,9 @@ app.post('/api/execute-testcase', async (req, res) => {
 
         // 详细记录请求信息
         console.log(`\n[${new Date().toISOString()}] MidScene API Request - /api/execute-testcase`);
-        console.log('Request Body:', JSON.stringify({
+        console.log('Full Request Body:', JSON.stringify(req.body, null, 2));
+        console.log('Extracted mode:', mode);
+        console.log('Request Body Summary:', JSON.stringify({
             testcase: {
                 id: testcase?.id,
                 name: testcase?.name,
