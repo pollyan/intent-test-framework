@@ -196,7 +196,7 @@ async function notifyExecutionResult(executionId, testcase, mode, status, steps,
 }
 
 // 启动浏览器和页面
-async function initBrowser(headless = true, timeoutConfig = {}, enableCache = true) {
+async function initBrowser(headless = true, timeoutConfig = {}, enableCache = true, testcaseName = '') {
     if (!browser) {
         console.log(`启动浏览器 - 模式: ${headless ? '无头模式' : '浏览器模式'}`);
         browser = await chromium.launch({
@@ -253,10 +253,16 @@ async function initBrowser(headless = true, timeoutConfig = {}, enableCache = tr
         aiModel: config
     };
     
-    // 设置缓存相关的环境变量
+    // 设置缓存相关的环境变量和 cacheId
     if (enableCache) {
         process.env.MIDSCENE_CACHE = '1';
+        // 为每个测试用例生成唯一的 cacheId
+        const cacheId = testcaseName ? 
+            `playwright-${testcaseName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}` : 
+            `playwright-test-${Date.now()}`;
+        agentConfig.cacheId = cacheId;
         console.log('📦 AI缓存已启用');
+        console.log(`📦 Cache ID: ${cacheId}`);
     } else {
         delete process.env.MIDSCENE_CACHE;
         console.log('📦 AI缓存已禁用');
@@ -667,7 +673,7 @@ async function executeTestCaseAsync(testcase, mode, executionId, timeoutConfig =
         
         logMessage(executionId, 'info', `初始化浏览器 (${headless ? '无头模式' : '可视模式'})`);
 
-        const { page, agent } = await initBrowser(headless, timeoutConfig, enableCache);
+        const { page, agent } = await initBrowser(headless, timeoutConfig, enableCache, testcase.name);
 
         // 执行每个步骤
         for (let i = 0; i < steps.length; i++) {
