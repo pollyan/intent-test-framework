@@ -475,6 +475,23 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                 }
                 break;
 
+            case 'ai':
+                // AI智能操作 - 使用通用的AI方法
+                const aiPrompt = params.prompt || params.instruction || description || stepType;
+                console.log(`\n[${new Date().toISOString()}] MidScene Step Execution - ai`);
+                console.log(`Prompt: ${aiPrompt}`);
+                console.log(`Params:`, JSON.stringify(params, null, 2));
+                console.log(`Execution ID: ${executionId}`);
+                console.log(`Step ${stepIndex + 1}/${totalSteps}`);
+                
+                const aiStartTime = Date.now();
+                await agent.ai(aiPrompt);
+                const aiEndTime = Date.now();
+                
+                console.log(`MidScene ai completed in ${aiEndTime - aiStartTime}ms\n`);
+                logMessage(executionId, 'info', `AI智能操作: ${aiPrompt}`);
+                break;
+
             case 'ai_action':
                 const aiActionPrompt = params.prompt || params.instruction || description || stepType;
                 console.log(`\n[${new Date().toISOString()}] MidScene Step Execution - ai_action`);
@@ -491,11 +508,13 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                 break;
 
             default:
-                // 通用AI操作
-                const instruction = description || stepType;
+                // 通用AI操作 - 优先使用params中的prompt或instruction
+                const instruction = params.prompt || params.instruction || description || stepType;
                 console.log(`\n[${new Date().toISOString()}] MidScene Step Execution - Default Action`);
                 console.log(`Action Type: ${normalizedAction}`);
                 console.log(`Instruction: ${instruction}`);
+                console.log(`Params:`, JSON.stringify(params, null, 2));
+                console.log(`Description: ${description}`);
                 console.log(`Execution ID: ${executionId}`);
                 console.log(`Step ${stepIndex + 1}/${totalSteps}`);
                 
