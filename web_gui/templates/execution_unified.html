@@ -563,6 +563,7 @@
             });
             
             localProxySocket.on('execution-completed', function(data) {
+                console.log('Received execution-completed event:', data);
                 addLog(`执行完成: ${data.status}`, data.status === 'success' ? 'success' : 'error');
                 
                 // 确保进度条显示完成状态
@@ -575,6 +576,7 @@
             });
             
             localProxySocket.on('execution-stopped', function(data) {
+                console.log('Received execution-stopped event:', data);
                 addLog('执行已停止', 'warning');
                 onExecutionCompleted({ status: 'stopped' });
             });
@@ -903,16 +905,28 @@
 
     // 执行完成回调
     function onExecutionCompleted(data) {
+        console.log('onExecutionCompleted called with data:', data);
+        console.log('Current execution before clearing:', currentExecution);
+        
         document.getElementById('start-execution').disabled = false;
         document.getElementById('stop-execution').disabled = true;
-        document.getElementById('execution-status').textContent = data.status === 'success' ? '执行成功' : '执行失败';
         
-        addLog(`执行完成: ${data.status}`, data.status === 'success' ? 'success' : 'error');
+        // 根据状态设置不同的显示文本
+        let statusText = '执行完成';
+        if (data.status === 'success') {
+            statusText = '执行成功';
+        } else if (data.status === 'failed') {
+            statusText = '执行失败';
+        } else if (data.status === 'stopped') {
+            statusText = '已停止';
+        }
+        
+        document.getElementById('execution-status').textContent = statusText;
         
         // 确保进度条显示完成状态
         if (currentExecution && currentExecution.totalSteps) {
             const totalSteps = currentExecution.totalSteps;
-            const progressText = data.status === 'success' ? '执行完成' : '执行失败';
+            const progressText = statusText;
             updateExecutionProgress(totalSteps, totalSteps, progressText);
         }
         
@@ -922,12 +936,16 @@
             progressBar.style.width = '100%';
             if (data.status === 'success') {
                 progressBar.style.background = '#28a745'; // 成功时显示绿色
+            } else if (data.status === 'stopped') {
+                progressBar.style.background = '#ffc107'; // 停止时显示黄色
             } else {
                 progressBar.style.background = '#dc3545'; // 失败时显示红色
             }
         }
         
+        // 清空当前执行对象
         currentExecution = null;
+        console.log('Cleared currentExecution');
         
         // 刷新执行报告
         updateExecutionReportsUI();
