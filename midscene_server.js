@@ -307,6 +307,19 @@ function normalizeStepType(stepType) {
 
 // 执行单个步骤
 async function executeStep(step, page, agent, executionId, stepIndex, totalSteps, timeoutConfig = {}) {
+    // 在步骤开始时检查中断标志
+    const control = executionControls.get(executionId);
+    if (control && control.shouldStop) {
+        console.log(`Step ${stepIndex + 1} execution interrupted by user`);
+        return {
+            status: 'stopped',
+            start_time: new Date().toISOString(),
+            end_time: new Date().toISOString(),
+            duration: 0,
+            error_message: '用户中断执行'
+        };
+    }
+
     // 支持新旧格式兼容: 新格式使用type字段，旧格式使用action字段
     const stepType = step.type || step.action;
     const params = step.params || {};
@@ -646,7 +659,9 @@ async function executeTestCaseAsync(testcase, mode, executionId, timeoutConfig =
         for (let i = 0; i < steps.length; i++) {
             // 检查是否应该停止执行
             const control = executionControls.get(executionId);
+            console.log(`Checking stop flag for execution ${executionId}, step ${i + 1}:`, control);
             if (control && control.shouldStop) {
+                console.log(`Execution ${executionId} interrupted at step ${i + 1}`);
                 logMessage(executionId, 'warning', '执行被用户中断');
                 throw new Error('执行被用户中断');
             }
@@ -679,6 +694,21 @@ async function executeTestCaseAsync(testcase, mode, executionId, timeoutConfig =
                     success: true,
                     result: stepResult
                 });
+            } else if (stepResult.status === 'stopped') {
+                // 步骤被中断
+                logMessage(executionId, 'warning', `步骤 ${i + 1} 被用户中断`);
+                
+                // 发送步骤中断事件
+                io.emit('step-completed', {
+                    executionId,
+                    stepIndex: i,
+                    totalSteps: steps.length,
+                    success: false,
+                    error: '用户中断执行'
+                });
+                
+                // 立即退出执行循环
+                break;
             } else {
                 // 步骤执行失败
                 logMessage(executionId, 'error', `步骤 ${i + 1} 执行失败: ${stepResult.error_message}`);
@@ -1005,7 +1035,11 @@ app.post('/api/stop-execution/:executionId', async (req, res) => {
         const control = executionControls.get(executionId);
         if (control) {
             control.shouldStop = true;
-            console.log('Stop flag set successfully');
+            console.log(`Stop flag set successfully for execution ${executionId}`);
+            console.log('Current executionControls:', Array.from(executionControls.entries()));
+        } else {
+            console.log(`Warning: No control object found for execution ${executionId}`);
+            console.log('Available execution IDs:', Array.from(executionControls.keys()));
         }
 
         // 更新状态为已停止
