@@ -255,10 +255,10 @@ async function initBrowser(headless = true, timeoutConfig = {}, enableCache = tr
     
     // 设置缓存相关的环境变量
     if (enableCache) {
-        process.env.MIDSCENE_CACHE = 'true';
+        process.env.MIDSCENE_CACHE = '1';
         console.log('📦 AI缓存已启用');
     } else {
-        process.env.MIDSCENE_CACHE = 'false';
+        delete process.env.MIDSCENE_CACHE;
         console.log('📦 AI缓存已禁用');
     }
     
