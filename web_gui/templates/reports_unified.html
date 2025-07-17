@@ -6,34 +6,6 @@
 
 {% block extra_css %}
 <style>
-    /* 统计卡片样式 */
-    .stats-overview {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-        margin-bottom: 24px;
-    }
-
-    .stat-card {
-        text-align: center;
-        padding: 32px 24px;
-    }
-
-    .stat-number {
-        font-size: 48px;
-        font-weight: 200;
-        color: #333333;
-        margin-bottom: 8px;
-        line-height: 1;
-        letter-spacing: -2px;
-    }
-
-    .stat-label {
-        font-size: 13px;
-        color: #999999;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
 
     /* 过滤器样式 */
     .filter-bar {
@@ -255,44 +227,15 @@
 
     /* 响应式设计 */
     @media (max-width: 768px) {
-        .stats-overview {
-            grid-template-columns: repeat(2, 1fr);
-        }
-        
         .filter-bar {
             flex-direction: column;
             align-items: stretch;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .stats-overview {
-            grid-template-columns: 1fr;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- 统计概览 -->
-<div class="stats-overview mb-3">
-    <div class="card stat-card">
-        <div class="stat-number" id="total-executions">0</div>
-        <div class="stat-label">总执行次数</div>
-    </div>
-    <div class="card stat-card">
-        <div class="stat-number" id="success-executions">0</div>
-        <div class="stat-label">成功次数</div>
-    </div>
-    <div class="card stat-card">
-        <div class="stat-number" id="failed-executions">0</div>
-        <div class="stat-label">失败次数</div>
-    </div>
-    <div class="card stat-card">
-        <div class="stat-number" id="success-rate">0%</div>
-        <div class="stat-label">成功率</div>
-    </div>
-</div>
 
 <!-- 操作栏 -->
 <div class="card mb-3">
@@ -371,7 +314,6 @@
     
     // 页面初始化
     document.addEventListener('DOMContentLoaded', function() {
-        loadDashboardStats();
         loadReports();
         
         // 搜索框回车搜索
@@ -381,22 +323,6 @@
             }
         });
     });
-    
-    // 加载仪表板统计数据
-    async function loadDashboardStats() {
-        try {
-            const response = await axios.get('/api/stats/dashboard');
-            if (response.data.code === 200) {
-                const stats = response.data.data;
-                document.getElementById('total-executions').textContent = stats.total_executions || 0;
-                document.getElementById('success-executions').textContent = stats.success_executions || 0;
-                document.getElementById('failed-executions').textContent = stats.failed_executions || 0;
-                document.getElementById('success-rate').textContent = (stats.success_rate || 0) + '%';
-            }
-        } catch (error) {
-            console.error('加载统计数据失败:', error);
-        }
-    }
     
     // 加载执行报告列表
     async function loadReports(page = 1) {
