@@ -417,6 +417,36 @@
     let localProxySocket = null;
     let executionSocket = null;
 
+    // 页面关闭/重定向时停止执行
+    window.addEventListener('beforeunload', (event) => {
+        if (currentExecution && currentExecution.local_execution_id) {
+            // 尝试停止执行
+            navigator.sendBeacon(`http://localhost:3001/api/stop-execution/${currentExecution.local_execution_id}`, 
+                JSON.stringify({ reason: 'page_unload' })
+            );
+            
+            // 如果是正在执行中，提示用户
+            const executionStatus = document.getElementById('execution-status').textContent;
+            if (executionStatus === '执行中') {
+                event.preventDefault();
+                event.returnValue = '测试正在执行中，确定要离开吗？这将停止当前的测试执行。';
+                return event.returnValue;
+            }
+        }
+    });
+
+    // 页面隐藏时也停止执行（适用于移动设备或标签页切换）
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && currentExecution && currentExecution.local_execution_id) {
+            const executionStatus = document.getElementById('execution-status').textContent;
+            if (executionStatus === '执行中') {
+                // 页面被隐藏且测试正在执行，停止执行
+                console.log('页面被隐藏，停止测试执行');
+                stopExecution();
+            }
+        }
+    });
+
     // 页面初始化
     document.addEventListener('DOMContentLoaded', function() {
         loadTestCases();

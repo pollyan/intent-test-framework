@@ -37,6 +37,9 @@ let agent = null;
 // 执行状态管理
 const executionStates = new Map();
 
+// 执行控制标志 - 用于中断执行
+const executionControls = new Map();
+
 // 清理旧的执行状态 - 保留最近的50个执行记录
 function cleanupOldExecutions() {
     const executions = Array.from(executionStates.entries());
@@ -582,6 +585,9 @@ async function executeTestCaseAsync(testcase, mode, executionId, timeoutConfig =
         
         // 更新执行状态
         executionStates.set(executionId, currentExecution);
+        
+        // 设置执行控制标志
+        executionControls.set(executionId, { shouldStop: false });
 
         // 通知Web系统执行开始
         await notifyExecutionStart(executionId, testcase, mode);
@@ -633,6 +639,13 @@ async function executeTestCaseAsync(testcase, mode, executionId, timeoutConfig =
 
         // 执行每个步骤
         for (let i = 0; i < steps.length; i++) {
+            // 检查是否应该停止执行
+            const control = executionControls.get(executionId);
+            if (control && control.shouldStop) {
+                logMessage(executionId, 'warning', '执行被用户中断');
+                throw new Error('执行被用户中断');
+            }
+            
             const step = steps[i];
 
             // 发送步骤进度
@@ -789,6 +802,9 @@ async function executeTestCaseAsync(testcase, mode, executionId, timeoutConfig =
         // 通知Web系统执行失败
         await notifyExecutionResult(executionId, testcase, mode, 'failed', executionState?.steps || [], error.message);
     } finally {
+        // 清理执行控制标志
+        executionControls.delete(executionId);
+        
         // 确保每次执行完成后都关闭浏览器，避免资源泄漏和状态污染
         try {
             if (browser) {
@@ -958,7 +974,11 @@ app.post('/api/stop-execution/:executionId', async (req, res) => {
     const { executionId } = req.params;
     const executionState = executionStates.get(executionId);
 
+    console.log(`\n[${new Date().toISOString()}] Stop Execution Request`);
+    console.log(`Execution ID: ${executionId}`);
+
     if (!executionState) {
+        console.log('Execution not found');
         return res.status(404).json({
             success: false,
             error: '执行记录不存在'
@@ -966,6 +986,7 @@ app.post('/api/stop-execution/:executionId', async (req, res) => {
     }
 
     if (executionState.status !== 'running') {
+        console.log(`Execution already ${executionState.status}`);
         return res.json({
             success: true,
             message: '执行已结束'
@@ -973,9 +994,30 @@ app.post('/api/stop-execution/:executionId', async (req, res) => {
     }
 
     try {
+        // 设置中断标志
+        const control = executionControls.get(executionId);
+        if (control) {
+            control.shouldStop = true;
+            console.log('Stop flag set successfully');
+        }
+
         // 更新状态为已停止
         executionState.status = 'stopped';
         executionState.endTime = new Date();
+
+        // 立即关闭浏览器（如果存在）
+        if (browser) {
+            console.log('Closing browser immediately...');
+            try {
+                await browser.close();
+                browser = null;
+                page = null;
+                agent = null;
+                console.log('Browser closed successfully');
+            } catch (closeError) {
+                console.error('Error closing browser:', closeError.message);
+            }
+        }
 
         // 发送停止事件
         io.emit('execution-stopped', {
@@ -985,12 +1027,15 @@ app.post('/api/stop-execution/:executionId', async (req, res) => {
 
         logMessage(executionId, 'warning', '执行已被用户停止');
 
+        console.log('Execution stopped successfully\n');
+
         res.json({
             success: true,
             message: '执行已停止'
         });
 
     } catch (error) {
+        console.error('Error stopping execution:', error.message);
         res.status(500).json({
             success: false,
             error: error.message
