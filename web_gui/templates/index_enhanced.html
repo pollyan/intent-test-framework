@@ -419,10 +419,21 @@
             const response = await axios.get(API_BASE + '/stats/today');
             if (response.data.code === 200) {
                 const stats = response.data.data;
+                console.log('统计数据:', stats); // 调试信息
                 updateTodayStats(stats);
             }
         } catch (error) {
             console.error('加载统计数据失败:', error);
+            // 使用默认数据
+            updateTodayStats({
+                today_executions: 0,
+                executions_change: 0,
+                today_success_rate: 0,
+                success_rate_change: 0,
+                avg_duration: 0,
+                duration_change: 0,
+                pending_failures: 0
+            });
         }
     }
 
@@ -456,7 +467,8 @@
         }
 
         // 更新平均耗时
-        document.getElementById('avg-duration').textContent = (stats.avg_duration || 0).toFixed(1) + 's';
+        const avgDuration = stats.avg_duration || 0;
+        document.getElementById('avg-duration').textContent = avgDuration > 0 ? avgDuration.toFixed(1) + 's' : '0.0s';
         const durationChange = document.getElementById('duration-change');
         if (stats.duration_change < 0) {
             durationChange.textContent = `${stats.duration_change.toFixed(1)}s`;
@@ -604,10 +616,6 @@
     }
 
     function renderSystemStatus(status) {
-        // 更新顶部状态栏
-        document.getElementById('running-count').textContent = status.running_tests || 0;
-        document.getElementById('queue-count').textContent = status.queue_size || 0;
-        
         // 更新系统服务状态
         const container = document.getElementById('system-services');
         container.innerHTML = '';
