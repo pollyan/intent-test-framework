@@ -698,9 +698,17 @@
     // 加载待处理失败
     async function loadPendingFailures() {
         try {
-            const response = await axios.get(API_BASE + '/executions?status=failed&resolved=false&size=5');
+            const response = await axios.get(API_BASE + '/executions?status=failed&sort=start_time,desc&size=5');
             if (response.data.code === 200) {
-                renderPendingFailures(response.data.data.items);
+                // 处理实际API返回的数据结构
+                const failures = response.data.data.items.map(item => ({
+                    id: item.id,
+                    test_case_name: item.test_case_name || '未知测试',
+                    error_summary: item.error_message || '执行失败',
+                    impact: `执行时间: ${item.start_time ? new Date(item.start_time).toLocaleString() : '未知'}`,
+                    severity: 'high' // 所有失败都标记为高优先级
+                }));
+                renderPendingFailures(failures);
             }
         } catch (error) {
             console.error('加载待处理失败失败:', error);
@@ -753,9 +761,9 @@
             
             item.innerHTML = `
                 <div class="list-item-content">
-                    <div class="list-item-title">${failure.test_case_name}</div>
-                    <div class="list-item-subtitle">${failure.error_summary}</div>
-                    <div class="list-item-meta">${failure.impact}</div>
+                    <div class="list-item-title">${failure.test_case_name || '未知测试'}</div>
+                    <div class="list-item-subtitle">${failure.error_summary || '无错误信息'}</div>
+                    <div class="list-item-meta">${failure.impact || ''}</div>
                 </div>
                 <div class="flex items-center gap-1">
                     <button class="btn btn-small ${failure.severity === 'high' ? 'btn-primary' : 'btn-ghost'}" 
