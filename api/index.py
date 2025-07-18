@@ -669,9 +669,22 @@ if not exist node_modules (
     echo OK Dependencies already exist
 )
 
+REM Check Playwright browsers
+echo.
+echo [3/4] Checking Playwright browsers...
+echo This ensures browser drivers are installed...
+npx playwright install chromium --with-deps
+if %errorlevel% neq 0 (
+    echo WARNING: Could not install Playwright browsers
+    echo You may need to run: npx playwright install chromium
+    echo Continuing anyway...
+) else (
+    echo OK Playwright browsers ready
+)
+
 REM Check configuration file
 echo.
-echo [3/4] Checking configuration file...
+echo [4/5] Checking configuration file...
 if not exist .env (
     echo Creating configuration file for first run...
     copy .env.example .env >nul
@@ -692,7 +705,7 @@ echo OK Configuration file exists
 
 REM Start server
 echo.
-echo [4/4] Starting server...
+echo [5/5] Starting server...
 echo.
 echo Starting Intent Test Framework Local Proxy Server...
 echo.
@@ -802,9 +815,22 @@ else
     echo -e "${GREEN}✅ 依赖包已存在${NC}"
 fi
 
+# 检查 Playwright 浏览器
+echo ""
+echo -e "${BLUE}[3/5]${NC} 检查 Playwright 浏览器..."
+echo "确保浏览器驱动已安装..."
+npx playwright install chromium --with-deps
+if [ $? -ne 0 ]; then
+    echo -e "${YELLOW}⚠️ 警告: 无法安装 Playwright 浏览器${NC}"
+    echo "您可能需要手动运行: npx playwright install chromium"
+    echo "继续执行..."
+else
+    echo -e "${GREEN}✅ Playwright 浏览器就绪${NC}"
+fi
+
 # 检查配置文件
 echo ""
-echo -e "${BLUE}[3/4]${NC} 检查配置文件..."
+echo -e "${BLUE}[4/5]${NC} 检查配置文件..."
 if [ ! -f ".env" ]; then
     echo -e "${YELLOW}⚙️ 首次运行，创建配置文件...${NC}"
     cp .env.example .env
@@ -824,7 +850,7 @@ echo -e "${GREEN}✅ 配置文件存在${NC}"
 
 # 启动服务器
 echo ""
-echo -e "${BLUE}[4/4]${NC} 启动服务器..."
+echo -e "${BLUE}[5/5]${NC} 启动服务器..."
 echo ""
 echo -e "${GREEN}🚀 正在启动Intent Test Framework本地代理服务器...${NC}"
 echo ""
@@ -852,7 +878,16 @@ def get_readme_content():
 **Mac/Linux:**
 双击 `start.sh` 文件，或在终端中运行：
 ```bash
+chmod +x start.sh
 ./start.sh
+```
+
+### 常见问题
+
+**如果遇到 "Executable doesn't exist" 错误:**
+这表示 Playwright 浏览器未安装。请在命令行中运行：
+```bash
+npx playwright install chromium
 ```
 
 ### 2. 配置AI API密钥
