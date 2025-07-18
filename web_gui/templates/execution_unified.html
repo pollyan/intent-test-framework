@@ -167,10 +167,28 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
     
+    /* 当前截图容器固定高度 */
+    #current-screenshot-container {
+        min-height: 400px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    
+    /* 空状态样式优化 */
+    .empty-state {
+        color: #999;
+        font-size: 14px;
+        text-align: center;
+        padding: 20px;
+    }
+    
     .screenshot-history-container {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
+        min-height: 200px;  /* 改为min-height确保初始化时就有高度 */
         max-height: 200px;
         overflow-y: auto;
     }
@@ -371,9 +389,12 @@
             <h3 class="card-title">当前截图</h3>
             <p class="card-subtitle">当前执行步骤的截图</p>
             <div class="card-content">
-                <div id="screenshot-placeholder" class="empty-state" style="padding: 40px 20px;">
+                <div id="current-screenshot-container">
+                    <div id="screenshot-placeholder" class="empty-state">
+                        等待截图...
+                    </div>
+                    <img id="current-screenshot" class="screenshot-image" style="display: none;">
                 </div>
-                <img id="current-screenshot" class="screenshot-image" style="display: none;">
             </div>
         </div>
 
@@ -383,7 +404,8 @@
             <p class="card-subtitle">执行过程中的截图记录</p>
             <div class="card-content">
                 <div id="screenshot-history-container" class="screenshot-history-container">
-                    <div class="empty-state" style="padding: 30px 20px;">
+                    <div class="empty-state">
+                        暂无截图历史
                     </div>
                 </div>
             </div>
@@ -1031,7 +1053,8 @@
         screenshotHistory = [];
         const historyContainer = document.getElementById('screenshot-history-container');
         historyContainer.innerHTML = `
-            <div class="empty-state" style="padding: 30px 20px;">
+            <div class="empty-state">
+                暂无截图历史
             </div>
         `;
         document.getElementById('screenshot-placeholder').style.display = 'block';
