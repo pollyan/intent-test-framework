@@ -697,6 +697,34 @@ async function executeTestCaseAsync(testcase, mode, executionId, timeoutConfig =
             }
             
             const step = steps[i];
+            
+            // 检查步骤是否被跳过
+            if (step.skip) {
+                console.log(`Skipping step ${i + 1}: ${step.description || step.action}`);
+                logMessage(executionId, 'warning', `步骤 ${i + 1} 被跳过: ${step.description || step.action}`);
+                
+                // 发送步骤跳过事件
+                io.emit('step-skipped', {
+                    executionId,
+                    stepIndex: i,
+                    totalSteps: steps.length,
+                    description: step.description || step.action,
+                    message: '此步骤已被标记为跳过'
+                });
+                
+                // 记录跳过的步骤结果
+                stepsResult.push({
+                    step_index: i,
+                    description: step.description || step.action,
+                    status: 'skipped',
+                    start_time: new Date().toISOString(),
+                    end_time: new Date().toISOString(),
+                    duration: 0,
+                    error_message: '步骤被跳过'
+                });
+                
+                continue; // 跳过此步骤，继续下一个
+            }
 
             // 发送步骤进度
             io.emit('step-progress', {

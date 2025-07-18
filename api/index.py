@@ -627,83 +627,83 @@ def get_windows_start_script():
     """获取Windows启动脚本"""
     return '''@echo off
 chcp 65001 >nul
-title Intent Test Framework - 本地代理服务器
+title Intent Test Framework - Local Proxy Server
 
 echo.
 echo ========================================
-echo   Intent Test Framework 本地代理服务器
+echo   Intent Test Framework Local Proxy Server
 echo ========================================
 echo.
 
-REM 检查Node.js
-echo [1/4] 检查Node.js环境...
+REM Check Node.js
+echo [1/4] Checking Node.js environment...
 node --version >nul 2>&1
 if %errorlevel% neq 0 (
-    echo ❌ 错误: 未检测到Node.js
+    echo ERROR: Node.js not found
     echo.
-    echo 请先安装Node.js:
+    echo Please install Node.js first:
     echo https://nodejs.org/
     echo.
-    echo 建议安装LTS版本 ^(16.x或更高^)
+    echo Recommend LTS version ^(16.x or higher^)
     pause
     exit /b 1
 )
 
 for /f "tokens=*" %%i in ('node --version') do set NODE_VERSION=%%i
-echo ✅ Node.js版本: %NODE_VERSION%
+echo OK Node.js version: %NODE_VERSION%
 
-REM 首次运行安装依赖
+REM First run install dependencies
 echo.
-echo [2/4] 检查依赖包...
+echo [2/4] Checking dependencies...
 if not exist node_modules (
-    echo 📦 首次运行，正在安装依赖包...
-    echo 这可能需要几分钟时间，请耐心等待...
+    echo Installing dependencies for first run...
+    echo This may take a few minutes, please wait...
     npm install
     if %errorlevel% neq 0 (
-        echo ❌ 依赖安装失败
+        echo ERROR: Failed to install dependencies
         pause
         exit /b 1
     )
-    echo ✅ 依赖安装完成
+    echo OK Dependencies installed
 ) else (
-    echo ✅ 依赖包已存在
+    echo OK Dependencies already exist
 )
 
-REM 检查配置文件
+REM Check configuration file
 echo.
-echo [3/4] 检查配置文件...
+echo [3/4] Checking configuration file...
 if not exist .env (
-    echo ⚙️ 首次运行，创建配置文件...
+    echo Creating configuration file for first run...
     copy .env.example .env >nul
     echo.
-    echo ⚠️  重要: 请配置AI API密钥
+    echo IMPORTANT: Please configure AI API key
     echo.
-    echo 配置文件已创建: .env
-    echo 请编辑此文件，添加您的AI API密钥
+    echo Configuration file created: .env
+    echo Please edit this file and add your AI API key
     echo.
-    echo 配置完成后，请重新运行此脚本
+    echo After configuration, please run this script again
     echo.
     notepad .env
     pause
     exit /b 0
 )
 
-echo ✅ 配置文件存在
+echo OK Configuration file exists
 
-REM 启动服务器
+REM Start server
 echo.
-echo [4/4] 启动服务器...
+echo [4/4] Starting server...
 echo.
-echo 🚀 正在启动Intent Test Framework本地代理服务器...
+echo Starting Intent Test Framework Local Proxy Server...
 echo.
-echo 启动成功后，请返回Web界面选择"本地代理模式"
-echo 按 Ctrl+C 可停止服务器
+echo After successful startup, please return to the Web interface and select "Local Proxy Mode"
+echo Press Ctrl+C to stop the server
 echo.
 
 node midscene_server.js
 
 echo.
-echo 服务器已停止
+echo Server stopped
 pause
 '''
 
