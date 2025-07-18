@@ -575,10 +575,11 @@ def get_package_json_content():
     "install-deps": "npm install"
   },
   "dependencies": {
-    "@midscene/web": "^0.20.1",
+    "@midscene/web": "^0.22.1",
     "@playwright/test": "^1.45.0",
     "axios": "^1.10.0",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.0",
     "express": "^4.18.2",
     "playwright": "^1.45.0",
     "socket.io": "^4.7.0"
@@ -607,6 +608,12 @@ MIDSCENE_MODEL_NAME=qwen-vl-max-latest
 # OPENAI_API_KEY=sk-your-openai-api-key
 # OPENAI_BASE_URL=https://api.openai.com/v1
 # MIDSCENE_MODEL_NAME=gpt-4o
+
+# 方式3: Google Gemini
+# OPENAI_API_KEY=your-gemini-api-key
+# OPENAI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
+# MIDSCENE_MODEL_NAME=gemini-2.5-pro
+# MIDSCENE_USE_GEMINI=1
 
 # 服务器配置 (可选)
 # PORT=3001
