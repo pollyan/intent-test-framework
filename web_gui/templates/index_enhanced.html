@@ -634,7 +634,7 @@
             checkLocalProxy().then(localProxyService => {
                 renderSystemStatus({
                     services: [
-                        { name: 'AI模型服务', status: 'online', info: 'qwen-vl-max-latest' },
+                        { name: 'AI模型服务', status: 'monitoring', info: '监测中' },
                         localProxyService,
                         { name: '数据库', status: 'online', info: 'PostgreSQL • 延迟 12ms' }
                     ],
@@ -700,26 +700,37 @@
             const item = document.createElement('div');
             item.className = 'list-item';
             
-            const statusClass = service.status === 'online' ? 'status-success' : 
-                               service.status === 'offline' ? 'status-error' : 'status-warning';
-            
-            item.innerHTML = `
-                <div class="list-item-content">
-                    <div class="list-item-title">${service.name}</div>
-                    <div class="list-item-subtitle">${service.info}</div>
-                </div>
-                <div class="status ${statusClass}"></div>
-            `;
+            // AI模型服务不显示状态圆点
+            if (service.name === 'AI模型服务') {
+                item.innerHTML = `
+                    <div class="list-item-content">
+                        <div class="list-item-title">${service.name}</div>
+                        <div class="list-item-subtitle">${service.info}</div>
+                    </div>
+                `;
+            } else {
+                const statusClass = service.status === 'online' ? 'status-success' : 
+                                   service.status === 'offline' ? 'status-error' : 'status-warning';
+                
+                item.innerHTML = `
+                    <div class="list-item-content">
+                        <div class="list-item-title">${service.name}</div>
+                        <div class="list-item-subtitle">${service.info}</div>
+                    </div>
+                    <div class="status ${statusClass}"></div>
+                `;
+            }
             
             container.appendChild(item);
         });
 
-        // 更新系统总体状态
-        const allOnline = status.services.every(s => s.status === 'online');
+        // 更新系统总体状态（AI模型服务不参与整体状态判断）
+        const criticalServices = status.services.filter(s => s.name !== 'AI模型服务');
+        const allCriticalOnline = criticalServices.every(s => s.status === 'online');
         const statusEl = document.getElementById('system-status');
         const statusTextEl = document.getElementById('system-status-text');
         
-        if (allOnline) {
+        if (allCriticalOnline) {
             statusEl.className = 'status status-success';
             statusTextEl.textContent = '系统运行正常';
         } else {
