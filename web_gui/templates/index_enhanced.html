@@ -488,7 +488,7 @@
     // 加载最近执行记录
     async function loadRecentExecutions() {
         try {
-            const response = await axios.get(API_BASE + '/executions?size=3&sort=start_time,desc');
+            const response = await axios.get(API_BASE + '/executions?size=5&sort=start_time,desc');
             if (response.data.code === 200) {
                 const executions = response.data.data.items;
                 renderRecentExecutions(executions);
@@ -520,8 +520,12 @@
             
             item.innerHTML = `
                 <div class="list-item-content">
-                    <div class="list-item-title">${execution.test_case_name}</div>
-                    <div class="list-item-subtitle">${timeAgo} • ${execution.duration ? '耗时 ' + execution.duration + 's' : '执行失败'}</div>
+                    <div class="list-item-title" style="margin-bottom: 2px;">${execution.test_case_name}</div>
+                    <div class="list-item-meta" style="font-size: 12px;">
+                        <span class="text-gray-600">${timeAgo}</span>
+                        <span class="text-gray-400">•</span>
+                        <span class="text-gray-600">${execution.duration ? '耗时 ' + execution.duration + 's' : '执行失败'}</span>
+                    </div>
                 </div>
                 <div class="flex items-center gap-1">
                     <button class="btn btn-small btn-ghost" onclick="event.stopPropagation(); rerunTest(${execution.test_case_id})">重新执行</button>
@@ -569,9 +573,12 @@
             
             item.innerHTML = `
                 <div class="list-item-content">
-                    <div class="list-item-title">${testcase.name}</div>
-                    <div class="list-item-subtitle">${testcase.description || '无描述'}</div>
-                    <div class="list-item-meta">${testcase.updated_at ? formatTimeAgo(testcase.updated_at) : '未知时间'}</div>
+                    <div class="list-item-title" style="margin-bottom: 2px;">${testcase.name}</div>
+                    <div class="list-item-meta" style="font-size: 12px;">
+                        <span class="text-gray-600">${testcase.description || '无描述'}</span>
+                        <span class="text-gray-400">•</span>
+                        <span class="text-gray-600">${testcase.updated_at ? formatTimeAgo(testcase.updated_at) : '未知时间'}</span>
+                    </div>
                 </div>
                 <div class="flex items-center gap-1">
                     <button class="btn btn-small btn-primary" onclick="executeTestcase(${testcase.id})">执行</button>
