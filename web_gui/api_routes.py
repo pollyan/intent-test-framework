@@ -1648,20 +1648,24 @@ def get_system_status():
         # 检查服务状态
         services = []
         
-        # AI模型服务状态（仅显示模型名称，不进行连接测试）
-        model_name = os.getenv("MIDSCENE_MODEL_NAME")
-        if model_name:
-            services.append({
-                'name': 'AI模型服务',
-                'status': 'configured',  # 表示已配置但不显示状态圆点
-                'info': model_name
-            })
-        else:
-            services.append({
-                'name': 'AI模型服务',
-                'status': 'monitoring',  # 表示监测中
-                'info': '监测中'
-            })
+        # AI模型服务状态（从本地代理服务器获取模型名称）
+        ai_model_info = '监测中'
+        try:
+            # 尝试从本地代理服务器获取模型信息
+            proxy_response = requests.get('http://localhost:3001/health', timeout=2)
+            if proxy_response.status_code == 200:
+                health_data = proxy_response.json()
+                if health_data.get('success') and health_data.get('model'):
+                    ai_model_info = health_data['model']
+        except Exception:
+            # 如果无法获取模型信息，保持默认的"监测中"状态
+            pass
+        
+        services.append({
+            'name': 'AI模型服务',
+            'status': 'info',  # 统一状态，不显示圆点
+            'info': ai_model_info
+        })
         
         # 本地代理状态（检查midscene服务器）
         import requests

@@ -1648,9 +1648,12 @@ app.get('/page-info', async (req, res) => {
 
 // 健康检查
 app.get('/health', (req, res) => {
+    const modelName = process.env.MIDSCENE_MODEL_NAME;
+    
     res.json({ 
         success: true, 
         message: 'MidSceneJS服务器运行正常',
+        model: modelName || null,
         timestamp: new Date().toISOString()
     });
 });
