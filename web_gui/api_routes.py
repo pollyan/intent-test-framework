@@ -1658,11 +1658,30 @@ def get_system_status():
         })
         
         # 本地代理状态（检查midscene服务器）
-        local_proxy_status = 'online'  # 实际应该检查端口3001
+        import requests
+        local_proxy_status = 'offline'
+        local_proxy_info = 'localhost:3001 • 未检测到'
+        
+        try:
+            # 尝试连接本地代理服务
+            response = requests.get('http://localhost:3001/health', timeout=2)
+            if response.status_code == 200:
+                local_proxy_status = 'online'
+                local_proxy_info = 'localhost:3001 • 连接正常'
+        except requests.exceptions.ConnectionError:
+            local_proxy_status = 'offline'
+            local_proxy_info = 'localhost:3001 • 连接失败'
+        except requests.exceptions.Timeout:
+            local_proxy_status = 'warning'
+            local_proxy_info = 'localhost:3001 • 响应超时'
+        except Exception as e:
+            local_proxy_status = 'offline'
+            local_proxy_info = f'localhost:3001 • 错误: {str(e)[:20]}'
+        
         services.append({
             'name': '本地代理',
             'status': local_proxy_status,
-            'info': 'localhost:3001 • 连接正常'
+            'info': local_proxy_info
         })
         
         # 数据库状态
