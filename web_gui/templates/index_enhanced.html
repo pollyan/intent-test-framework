@@ -258,19 +258,19 @@
         <div class="card">
             <h3 class="card-title">智能搜索</h3>
             <p class="card-subtitle">快速找到并执行测试用例</p>
-            <div class="card-content">
-                <div class="form-group mb-3 search-container">
+            <div class="card-content" style="margin-bottom: 12px;">
+                <div class="form-group search-container" style="margin-bottom: 8px;">
                     <input type="text" 
                            class="form-input" 
                            id="search-input"
                            placeholder="搜索测试用例名称..." 
-                           style="width: 100%;"
+                           style="width: 100%; height: 32px; font-size: 13px;"
                            autocomplete="off">
                     <div class="search-suggestions" id="search-suggestions"></div>
                 </div>
-                <div class="flex gap-2 mb-3">
-                    <button class="btn btn-primary btn-small" onclick="performSearch()">搜索</button>
-                    <button class="btn btn-ghost btn-small" onclick="showAdvancedFilter()">高级筛选</button>
+                <div class="flex gap-2">
+                    <button class="btn btn-primary btn-small" style="padding: 4px 12px; font-size: 12px;" onclick="performSearch()">搜索</button>
+                    <button class="btn btn-ghost btn-small" style="padding: 4px 12px; font-size: 12px;" onclick="showAdvancedFilter()">高级筛选</button>
                 </div>
             </div>
 
@@ -530,7 +530,7 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-1">
-                    <button class="btn btn-small btn-primary" onclick="event.stopPropagation(); rerunTest(${execution.test_case_id})">重新执行</button>
+                    <button class="btn btn-small btn-ghost" onclick="event.stopPropagation(); rerunTest(${execution.test_case_id})">重新执行</button>
                     <div class="status ${statusClass}"></div>
                 </div>
             `;
@@ -583,7 +583,7 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-1">
-                    <button class="btn btn-small btn-primary" onclick="executeTestcase(${testcase.id})">执行</button>
+                    <button class="btn btn-small btn-ghost" onclick="executeTestcase(${testcase.id})">执行</button>
                 </div>
             `;
             
