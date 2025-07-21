@@ -386,6 +386,8 @@ class TestCaseEditor {
         this.selectedStepIndex = -1;
         this.isDirty = false;
         this.autoSaveTimer = null;
+        this.isSaving = false; // 防止重复提交
+        this.isAddingStep = false; // 防止重复添加步骤
         
         this.initializeEditor();
         this.bindEvents();
@@ -939,46 +941,74 @@ class TestCaseEditor {
     
     // 添加新步骤
     addNewStep() {
-        const newStep = {
-            action: 'goto',
-            description: '新步骤',
-            params: { url: 'https://example.com' }
-        };
+        // 防止重复添加
+        if (this.isAddingStep) {
+            this.showMessage('正在添加步骤，请稍候...', 'warning');
+            return;
+        }
         
-        this.steps.push(newStep);
-        this.isDirty = true;
-        this.renderSteps();
-        
-        // 自动进入编辑模式
-        setTimeout(() => {
-            const newStepIndex = this.steps.length - 1;
-            const stepContainers = document.querySelectorAll('.step-container');
-            if (stepContainers[newStepIndex]) {
-                this.showInlineEdit(stepContainers[newStepIndex], newStepIndex);
-            }
-        }, 100);
+        try {
+            this.isAddingStep = true;
+            
+            const newStep = {
+                action: 'goto',
+                description: '新步骤',
+                params: { url: 'https://example.com' }
+            };
+            
+            this.steps.push(newStep);
+            this.isDirty = true;
+            this.renderSteps();
+            
+            // 自动进入编辑模式
+            setTimeout(() => {
+                const newStepIndex = this.steps.length - 1;
+                const stepContainers = document.querySelectorAll('.step-container');
+                if (stepContainers[newStepIndex]) {
+                    this.showInlineEdit(stepContainers[newStepIndex], newStepIndex);
+                }
+                this.isAddingStep = false;
+            }, 100);
+        } catch (error) {
+            this.isAddingStep = false;
+            this.showMessage('添加步骤失败: ' + error.message, 'error');
+        }
     }
     
     addStepFromType(action) {
-        const defaultParams = this.getDefaultParams(action);
-        const newStep = {
-            action: action,
-            description: this.getActionDescription(action),
-            params: defaultParams
-        };
+        // 防止重复添加
+        if (this.isAddingStep) {
+            this.showMessage('正在添加步骤，请稍候...', 'warning');
+            return;
+        }
         
-        this.steps.push(newStep);
-        this.isDirty = true;
-        this.renderSteps();
-        
-        // 自动进入编辑模式
-        setTimeout(() => {
-            const newStepIndex = this.steps.length - 1;
-            const stepContainers = document.querySelectorAll('.step-container');
-            if (stepContainers[newStepIndex]) {
-                this.showInlineEdit(stepContainers[newStepIndex], newStepIndex);
-            }
-        }, 100);
+        try {
+            this.isAddingStep = true;
+            
+            const defaultParams = this.getDefaultParams(action);
+            const newStep = {
+                action: action,
+                description: this.getActionDescription(action),
+                params: defaultParams
+            };
+            
+            this.steps.push(newStep);
+            this.isDirty = true;
+            this.renderSteps();
+            
+            // 自动进入编辑模式
+            setTimeout(() => {
+                const newStepIndex = this.steps.length - 1;
+                const stepContainers = document.querySelectorAll('.step-container');
+                if (stepContainers[newStepIndex]) {
+                    this.showInlineEdit(stepContainers[newStepIndex], newStepIndex);
+                }
+                this.isAddingStep = false;
+            }, 100);
+        } catch (error) {
+            this.isAddingStep = false;
+            this.showMessage('添加步骤失败: ' + error.message, 'error');
+        }
     }
     
     getDefaultParams(action) {
@@ -1097,7 +1127,26 @@ class TestCaseEditor {
     }
     
     async saveTestCase(silent = false) {
+        // 防止重复提交
+        if (this.isSaving) {
+            if (!silent) this.showMessage('正在保存中，请稍候...', 'warning');
+            return;
+        }
+        
+        // 获取保存按钮
+        const saveBtn = document.getElementById('save-testcase');
+        const originalText = saveBtn ? saveBtn.textContent : '';
+        
         try {
+            this.isSaving = true;
+            
+            // 更新按钮状态
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.textContent = '保存中...';
+                saveBtn.classList.add('disabled');
+            }
+            
             const formData = {
                 name: document.getElementById('testcase-name').value,
                 description: document.getElementById('testcase-description').value,
@@ -1110,6 +1159,13 @@ class TestCaseEditor {
             // 验证必填字段
             if (!formData.name.trim()) {
                 if (!silent) this.showMessage('请输入用例名称', 'error');
+                // 恢复按钮状态
+                this.isSaving = false;
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = originalText;
+                    saveBtn.classList.remove('disabled');
+                }
                 return;
             }
             
@@ -1157,6 +1213,14 @@ class TestCaseEditor {
             }
         } catch (error) {
             if (!silent) this.showMessage('保存失败: ' + error.message, 'error');
+        } finally {
+            // 恢复按钮状态
+            this.isSaving = false;
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.textContent = originalText;
+                saveBtn.classList.remove('disabled');
+            }
         }
     }
     
