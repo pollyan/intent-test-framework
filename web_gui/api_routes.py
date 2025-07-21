@@ -1687,12 +1687,28 @@ def get_system_status():
         # 数据库状态
         try:
             from sqlalchemy import text
+            import time
+            
+            # 测量数据库响应时间
+            start_time = time.time()
             db.session.execute(text('SELECT 1'))
+            db.session.commit()  # 确保查询实际执行
+            response_time = int((time.time() - start_time) * 1000)  # 转换为毫秒
+            
+            # 检测数据库类型
+            db_url = os.getenv('DATABASE_URL', '')
+            if 'postgresql' in db_url or 'postgres' in db_url:
+                db_type = 'PostgreSQL'
+            elif 'sqlite' in db_url or not db_url:
+                db_type = 'SQLite'
+            else:
+                db_type = 'Database'
+            
             db_status = 'online'
-            db_info = 'PostgreSQL • 延迟 12ms'
-        except:
+            db_info = f'{db_type} • 延迟 {response_time}ms'
+        except Exception as e:
             db_status = 'offline'
-            db_info = 'PostgreSQL • 连接失败'
+            db_info = f'数据库 • 连接失败'
         
         services.append({
             'name': '数据库',
