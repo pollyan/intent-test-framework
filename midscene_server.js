@@ -403,7 +403,48 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                     console.log(`Step ${stepIndex + 1}/${totalSteps}`);
                     
                     const tapStartTime = Date.now();
-                    await agent.aiTap(clickTarget);
+                    
+                    // 添加重试机制
+                    let retryCount = 0;
+                    const maxRetries = 3;
+                    let lastError = null;
+                    
+                    while (retryCount < maxRetries) {
+                        try {
+                            await agent.aiTap(clickTarget);
+                            break; // 成功则退出循环
+                        } catch (error) {
+                            lastError = error;
+                            retryCount++;
+                            
+                            console.error(`尝试 ${retryCount}/${maxRetries} 失败:`, error.message);
+                            
+                            // 检查是否是AI模型连接错误
+                            if (error.message.includes('Connection error') || error.message.includes('AI model service')) {
+                                logMessage(executionId, 'warning', `AI模型连接失败，正在重试... (${retryCount}/${maxRetries})`);
+                                await page.waitForTimeout(2000 * retryCount); // 递增等待时间
+                            } else if (error.message.includes('Protocol error')) {
+                                // 鼠标协议错误，可能需要重新初始化
+                                logMessage(executionId, 'warning', `鼠标协议错误，尝试使用替代方法...`);
+                                // 尝试使用page.click作为备选方案
+                                try {
+                                    const element = await page.locator(`:text("${clickTarget}")`).first();
+                                    await element.click();
+                                    break;
+                                } catch (fallbackError) {
+                                    console.error('备选点击方法也失败:', fallbackError.message);
+                                }
+                            } else {
+                                // 其他错误直接抛出
+                                throw error;
+                            }
+                        }
+                    }
+                    
+                    if (retryCount >= maxRetries) {
+                        throw lastError || new Error(`点击操作失败，已重试${maxRetries}次`);
+                    }
+                    
                     const tapEndTime = Date.now();
                     
                     console.log(`MidScene aiTap completed in ${tapEndTime - tapStartTime}ms\n`);
@@ -423,7 +464,41 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                     console.log(`Step ${stepIndex + 1}/${totalSteps}`);
                     
                     const inputStartTime = Date.now();
-                    await agent.aiInput(inputText, inputTarget);
+                    
+                    // 添加重试机制
+                    let retryCount = 0;
+                    const maxRetries = 3;
+                    let lastError = null;
+                    
+                    while (retryCount < maxRetries) {
+                        try {
+                            await agent.aiInput(inputText, inputTarget);
+                            break; // 成功则退出循环
+                        } catch (error) {
+                            lastError = error;
+                            retryCount++;
+                            
+                            console.error(`输入尝试 ${retryCount}/${maxRetries} 失败:`, error.message);
+                            
+                            // 检查是否是AI模型连接错误
+                            if (error.message.includes('Connection error') || error.message.includes('AI model service')) {
+                                logMessage(executionId, 'warning', `AI模型连接失败，正在重试... (${retryCount}/${maxRetries})`);
+                                await page.waitForTimeout(2000 * retryCount); // 递增等待时间
+                            } else if (error.message.includes('empty content')) {
+                                // AI返回空内容，可能是识别失败
+                                logMessage(executionId, 'warning', `AI识别失败，等待页面加载后重试...`);
+                                await page.waitForTimeout(3000);
+                            } else {
+                                // 其他错误直接抛出
+                                throw error;
+                            }
+                        }
+                    }
+                    
+                    if (retryCount >= maxRetries) {
+                        throw lastError || new Error(`输入操作失败，已重试${maxRetries}次`);
+                    }
+                    
                     const inputEndTime = Date.now();
                     
                     console.log(`MidScene aiInput completed in ${inputEndTime - inputStartTime}ms\n`);
@@ -530,7 +605,40 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                 console.log(`Step ${stepIndex + 1}/${totalSteps}`);
                 
                 const aiStartTime = Date.now();
-                await agent.ai(aiPrompt);
+                
+                // 添加重试机制
+                let retryCount = 0;
+                const maxRetries = 3;
+                let lastError = null;
+                
+                while (retryCount < maxRetries) {
+                    try {
+                        await agent.ai(aiPrompt);
+                        break; // 成功则退出循环
+                    } catch (error) {
+                        lastError = error;
+                        retryCount++;
+                        
+                        console.error(`AI操作尝试 ${retryCount}/${maxRetries} 失败:`, error.message);
+                        
+                        // 检查是否是AI模型连接错误
+                        if (error.message.includes('Connection error') || error.message.includes('AI model service')) {
+                            logMessage(executionId, 'warning', `AI模型连接失败，正在重试... (${retryCount}/${maxRetries})`);
+                            await page.waitForTimeout(2000 * retryCount); // 递增等待时间
+                        } else if (error.message.includes('empty content')) {
+                            // AI返回空内容，可能是识别失败
+                            logMessage(executionId, 'warning', `AI识别失败，等待页面加载后重试...`);
+                            await page.waitForTimeout(3000);
+                        } else {
+                            // 其他错误直接抛出
+                            throw error;
+                        }
+                    }
+                }
+                
+                if (retryCount >= maxRetries) {
+                    throw lastError || new Error(`AI操作失败，已重试${maxRetries}次`);
+                }
                 const aiEndTime = Date.now();
                 
                 console.log(`MidScene ai completed in ${aiEndTime - aiStartTime}ms\n`);
