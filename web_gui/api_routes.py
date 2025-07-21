@@ -195,16 +195,31 @@ def update_testcase(testcase_id):
 def delete_testcase(testcase_id):
     """删除测试用例（软删除）"""
     try:
+        print(f"🗑️ 开始删除测试用例: ID={testcase_id}")
+        
         testcase = TestCase.query.get(testcase_id)
         if not testcase:
+            print(f"❌ 测试用例不存在: ID={testcase_id}")
             return jsonify({
                 'code': 404,
                 'message': '测试用例不存在'
             }), 404
         
+        print(f"📋 找到测试用例: {testcase.name}, is_active={testcase.is_active}")
+        
+        # 检查是否已经被删除
+        if not testcase.is_active:
+            print(f"⚠️ 测试用例已经被删除: ID={testcase_id}")
+            return jsonify({
+                'code': 400,
+                'message': '测试用例已经被删除'
+            }), 400
+        
         testcase.is_active = False
         testcase.updated_at = datetime.utcnow()
         db.session.commit()
+        
+        print(f"✅ 测试用例删除成功: ID={testcase_id}, name={testcase.name}")
         
         return jsonify({
             'code': 200,
@@ -212,6 +227,7 @@ def delete_testcase(testcase_id):
         })
     except Exception as e:
         db.session.rollback()
+        print(f"❌ 删除测试用例失败: ID={testcase_id}, 错误: {str(e)}")
         return jsonify({
             'code': 500,
             'message': f'删除失败: {str(e)}'
