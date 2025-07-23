@@ -144,6 +144,17 @@ def create_app():
     # 注册API蓝图
     app.register_blueprint(api_bp)
     
+    # 添加时区格式化过滤器
+    @app.template_filter('utc_to_local')
+    def utc_to_local_filter(dt):
+        """将UTC时间转换为带时区标识的ISO格式，供前端JavaScript转换为本地时间"""
+        if dt is None:
+            return ''
+        try:
+            return dt.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        except AttributeError:
+            return ''
+    
     return app
 
 # 创建应用实例
@@ -260,7 +271,7 @@ def handle_connect():
     emit('connected', {
         'message': '连接成功',
         'ai_available': AI_AVAILABLE,
-        'server_time': datetime.utcnow().isoformat()
+        'server_time': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
     })
 
 @socketio.on('disconnect')
@@ -271,7 +282,7 @@ def handle_disconnect():
 @socketio.on('ping')
 def handle_ping():
     """心跳检测"""
-    emit('pong', {'timestamp': datetime.utcnow().isoformat()})
+    emit('pong', {'timestamp': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%fZ')})
 
 @socketio.on('stop_execution')
 def handle_stop_execution(data):

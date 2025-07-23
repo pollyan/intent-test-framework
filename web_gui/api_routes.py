@@ -786,7 +786,7 @@ def get_db_status():
                     'execution_id': exec.execution_id,
                     'test_case_id': exec.test_case_id,
                     'status': exec.status,
-                    'created_at': exec.created_at.isoformat() if exec.created_at else None
+                    'created_at': exec.created_at.strftime('%Y-%m-%dT%H:%M:%S.%fZ') if exec.created_at else None
                 })
             print(f"📊 最近执行记录: {len(recent_executions)} 条")
         except Exception as exec_error:
@@ -1288,7 +1288,7 @@ def export_execution_report(execution_id):
         report_data['step_executions'] = [step.to_dict() for step in step_executions]
         
         # 添加导出时间戳
-        report_data['exported_at'] = datetime.utcnow().isoformat()
+        report_data['exported_at'] = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
         response = jsonify(report_data)
         response.headers['Content-Disposition'] = f'attachment; filename=execution_report_{execution_id}.json'
@@ -1323,7 +1323,7 @@ def export_all_execution_reports():
         
         # 构建导出数据
         export_data = {
-            'exported_at': datetime.utcnow().isoformat(),
+            'exported_at': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
             'total_reports': len(all_reports),
             'page': page,
             'size': size,

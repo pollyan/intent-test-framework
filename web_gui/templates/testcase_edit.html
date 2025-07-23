@@ -147,7 +147,7 @@
                 <span id="step-count">0</span>个步骤 • 
                 新建用例
             {% else %}
-                最后修改: <span data-time="{{ (testcase.updated_at or testcase.created_at).isoformat() if (testcase.updated_at or testcase.created_at) else '' }}">{{ '未知' if not (testcase.updated_at or testcase.created_at) else '' }}</span> • 
+                最后修改: <span data-time="{{ (testcase.updated_at or testcase.created_at) | utc_to_local }}">{{ '未知' if not (testcase.updated_at or testcase.created_at) else '' }}</span> • 
                 <span id="step-count">0</span>个步骤 • 
                 执行{{ total_executions }}次 • 
                 成功率{{ "%.1f"|format(success_rate) }}%
@@ -363,11 +363,11 @@
         </div>
         <div>
             <div class="text-sm text-gray-600 mb-1">创建时间</div>
-            <div class="text-sm font-medium" data-time="{{ testcase.created_at.isoformat() if testcase.created_at else '' }}">{{ '未知' if not testcase.created_at else '' }}</div>
+            <div class="text-sm font-medium" data-time="{{ testcase.created_at | utc_to_local }}">{{ '未知' if not testcase.created_at else '' }}</div>
         </div>
         <div>
             <div class="text-sm text-gray-600 mb-1">最后修改</div>
-            <div class="text-sm font-medium" data-time="{{ (testcase.updated_at or testcase.created_at).isoformat() if (testcase.updated_at or testcase.created_at) else '' }}">{{ '未知' if not (testcase.updated_at or testcase.created_at) else '' }}</div>
+            <div class="text-sm font-medium" data-time="{{ (testcase.updated_at or testcase.created_at) | utc_to_local }}">{{ '未知' if not (testcase.updated_at or testcase.created_at) else '' }}</div>
         </div>
         <div>
             <div class="text-sm text-gray-600 mb-1">创建者</div>

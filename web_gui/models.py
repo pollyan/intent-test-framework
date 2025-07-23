@@ -42,8 +42,8 @@ class TestCase(db.Model):
             'category': self.category,
             'priority': self.priority,
             'created_by': self.created_by,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'created_at': self.created_at.strftime('%Y-%m-%dT%H:%M:%S.%fZ') if self.created_at else None,
+            'updated_at': self.updated_at.strftime('%Y-%m-%dT%H:%M:%S.%fZ') if self.updated_at else None,
             'is_active': self.is_active,
             'execution_count': execution_count,
             'success_rate': round(success_rate, 1)
@@ -110,7 +110,7 @@ class ExecutionHistory(db.Model):
             'logs_path': self.logs_path,
             'error_message': self.error_message,
             'executed_by': self.executed_by,
-            'created_at': self.created_at.isoformat() if self.created_at else None
+            'created_at': self.created_at.strftime('%Y-%m-%dT%H:%M:%S.%fZ') if self.created_at else None
         }
 
 class StepExecution(db.Model):
@@ -176,7 +176,7 @@ class Template(db.Model):
             'parameters': json.loads(self.parameters) if self.parameters else {},
             'usage_count': self.usage_count,
             'created_by': self.created_by,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'created_at': self.created_at.strftime('%Y-%m-%dT%H:%M:%S.%fZ') if self.created_at else None,
             'is_public': self.is_public
         }
     
