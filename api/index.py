@@ -24,6 +24,17 @@ app = Flask(__name__,
 # 基本配置
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 
+# 添加时区格式化过滤器
+@app.template_filter('utc_to_local')
+def utc_to_local_filter(dt):
+    """将UTC时间转换为带时区标识的ISO格式，供前端JavaScript转换为本地时间"""
+    if dt is None:
+        return ''
+    try:
+        return dt.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+    except AttributeError:
+        return ''
+
 # 简单的HTML模板
 HTML_TEMPLATE = """
 <!DOCTYPE html>
