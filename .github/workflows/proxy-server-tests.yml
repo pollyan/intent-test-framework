@@ -154,63 +154,27 @@ jobs:
           echo "### 📈 Test Summary" >> $GITHUB_STEP_SUMMARY
           
           # 解析JUnit XML文件获取测试统计
-          if command -v python3 >/dev/null 2>&1; then
-            python3 << 'EOF' >> $GITHUB_STEP_SUMMARY
-import xml.etree.ElementTree as ET
-import sys
-
-try:
-    tree = ET.parse('test-results/proxy/junit.xml')
-    root = tree.getroot()
-    
-    # 获取测试套件信息
-    testsuite = root if root.tag == 'testsuite' else root.find('testsuite')
-    if testsuite is not None:
-        tests = testsuite.get('tests', '0')
-        failures = testsuite.get('failures', '0')
-        errors = testsuite.get('errors', '0')
-        skipped = testsuite.get('skipped', '0')
-        time = testsuite.get('time', '0')
-        
-        passed = int(tests) - int(failures) - int(errors) - int(skipped)
-        
-        print("| Metric | Value |")
-        print("|--------|-------|")
-        print(f"| Total Tests | {tests} |")
-        print(f"| ✅ Passed | {passed} |")
-        print(f"| ❌ Failed | {failures} |")
-        print(f"| 🔥 Errors | {errors} |")
-        print(f"| ⏭️ Skipped | {skipped} |")
-        print(f"| ⏱️ Duration | {time}s |")
-        
-        if int(tests) > 0:
-            pass_rate = (passed / int(tests)) * 100
-            print(f"| 📊 Pass Rate | {pass_rate:.1f}% |")
-        
-        print("")
-        
-        # 如果有失败的测试，列出失败详情
-        if int(failures) > 0 or int(errors) > 0:
-            print("### ❌ Failed Tests")
-            print("")
-            for testcase in testsuite.findall('testcase'):
-                failure = testcase.find('failure')
-                error = testcase.find('error')
-                if failure is not None or error is not None:
-                    classname = testcase.get('classname', 'Unknown')
-                    name = testcase.get('name', 'Unknown')
-                    message = failure.get('message') if failure is not None else error.get('message')
-                    print(f"- **{classname}**: {name}")
-                    if message:
-                        print(f"  - Error: {message}")
-            print("")
+          if [ -f test-results/proxy/junit.xml ] && command -v python3 >/dev/null 2>&1; then
+            echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
             
-except Exception as e:
-    print(f"无法解析测试结果: {str(e)}")
-    print("")
-EOF
+            # 使用简单的方式解析测试结果
+            TOTAL_TESTS=$(grep -o 'tests="[0-9]*"' test-results/proxy/junit.xml | grep -o '[0-9]*' || echo "0")
+            FAILURES=$(grep -o 'failures="[0-9]*"' test-results/proxy/junit.xml | grep -o '[0-9]*' || echo "0")
+            ERRORS=$(grep -o 'errors="[0-9]*"' test-results/proxy/junit.xml | grep -o '[0-9]*' || echo "0")
+            
+            PASSED=$((TOTAL_TESTS - FAILURES - ERRORS))
+            
+            echo "| Total Tests | ${TOTAL_TESTS} |" >> $GITHUB_STEP_SUMMARY
+            echo "| ✅ Passed | ${PASSED} |" >> $GITHUB_STEP_SUMMARY
+            echo "| ❌ Failed | ${FAILURES} |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🔥 Errors | ${ERRORS} |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
           else
-            echo "Python3 not available for parsing test results" >> $GITHUB_STEP_SUMMARY
+            echo "| Status | Test results processing |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Info | Test results available in artifacts |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
           fi
         else
           echo "### 📋 Test Output" >> $GITHUB_STEP_SUMMARY
