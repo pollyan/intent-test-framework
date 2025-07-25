@@ -128,6 +128,9 @@ def create_app(test_config=None):
     if test_config:
         # 如果传入测试配置，使用测试配置（用于单元测试）
         app.config.update(test_config)
+        # 确保SQLite不使用连接池参数
+        if app.config.get('SQLALCHEMY_DATABASE_URI', '').startswith('sqlite'):
+            app.config.pop('SQLALCHEMY_ENGINE_OPTIONS', None)
     else:
         # 数据库配置 - 仅支持PostgreSQL
         try:
