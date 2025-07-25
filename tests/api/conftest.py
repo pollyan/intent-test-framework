@@ -356,3 +356,184 @@ def all_supported_actions():
         'ai_scroll', 'ai_drag', 'sleep', 'screenshot', 'refresh',
         'back', 'ai_select', 'ai_upload', 'ai_check'
     ]
+
+
+# ==================== Execution 测试相关 Fixtures ====================
+
+@pytest.fixture
+def sample_execution_data():
+    """提供执行创建数据"""
+    return {
+        'testcase_id': None,  # 将在测试中设置
+        'mode': 'headless',
+        'browser': 'chrome',
+        'executed_by': 'test_user'
+    }
+
+
+@pytest.fixture
+def sample_execution_start_data():
+    """提供MidScene执行开始通知数据"""
+    return {
+        'execution_id': 'test-exec-start-001',
+        'testcase_id': 1,  # 将在测试中设置为实际的testcase_id
+        'mode': 'headless',
+        'browser': 'chrome',
+        'executed_by': 'midscene_user'
+    }
+
+
+@pytest.fixture
+def sample_execution_result_data():
+    """提供MidScene执行结果数据"""
+    from datetime import datetime
+    return {
+        'execution_id': 'test-exec-result-001',
+        'status': 'success',
+        'end_time': datetime.utcnow().isoformat(),
+        'duration': 1500,
+        'steps_total': 3,
+        'steps_passed': 3,
+        'steps_failed': 0,
+        'result_summary': {
+            'total_steps': 3,
+            'passed_steps': 3,
+            'failed_steps': 0,
+            'success_rate': 100.0
+        }
+    }
+
+
+@pytest.fixture
+def sample_execution_result_with_steps():
+    """提供包含步骤详情的MidScene执行结果数据"""
+    from datetime import datetime
+    return {
+        'execution_id': 'test-exec-with-steps-001',
+        'status': 'success',
+        'end_time': datetime.utcnow().isoformat(),
+        'duration': 2000,
+        'steps_total': 2,
+        'steps_passed': 2,
+        'steps_failed': 0,
+        'result_summary': {
+            'total_steps': 2,
+            'passed_steps': 2,
+            'failed_steps': 0
+        },
+        'steps': [
+            {
+                'index': 0,
+                'description': '访问测试网站',
+                'status': 'success',
+                'start_time': datetime.utcnow().isoformat(),
+                'end_time': datetime.utcnow().isoformat(),
+                'duration': 1000,
+                'screenshot_path': '/screenshots/step1.png',
+                'ai_confidence': 0.95
+            },
+            {
+                'index': 1,
+                'description': '点击按钮',
+                'status': 'success',
+                'start_time': datetime.utcnow().isoformat(),
+                'end_time': datetime.utcnow().isoformat(),
+                'duration': 500,
+                'screenshot_path': '/screenshots/step2.png',
+                'ai_confidence': 0.88
+            }
+        ]
+    }
+
+
+@pytest.fixture
+def create_execution_history(db_session):
+    """创建执行历史记录的工厂函数"""
+    def _create_execution_history(**kwargs):
+        from datetime import datetime
+        import uuid
+        
+        # 创建测试用例（如果没有提供test_case_id）
+        if 'test_case_id' not in kwargs:
+            testcase = TestCase(
+                name='测试用例用于执行',
+                description='用于执行测试的测试用例',
+                steps=json.dumps([
+                    {'action': 'goto', 'params': {'url': 'https://example.com'}}
+                ]),
+                created_by='test_user',
+                is_active=True
+            )
+            db_session.add(testcase)
+            db_session.commit()
+            kwargs['test_case_id'] = testcase.id
+        
+        # 设置默认值
+        defaults = {
+            'execution_id': f'test-exec-{uuid.uuid4().hex[:8]}',
+            'status': 'success',
+            'mode': 'headless',
+            'browser': 'chrome',
+            'start_time': datetime.utcnow(),
+            'end_time': datetime.utcnow(),
+            'duration': 1000,
+            'steps_total': 1,
+            'steps_passed': 1,
+            'steps_failed': 0,
+            'result_summary': json.dumps({'total': 1, 'passed': 1, 'failed': 0}),
+            'executed_by': 'test_user'
+        }
+        defaults.update(kwargs)
+        
+        execution = ExecutionHistory(**defaults)
+        db_session.add(execution)
+        db_session.commit()
+        return execution
+    
+    return _create_execution_history
+
+
+@pytest.fixture
+def create_step_execution(db_session):
+    """创建步骤执行记录的工厂函数"""
+    def _create_step_execution(**kwargs):
+        from datetime import datetime
+        
+        # 设置默认值
+        defaults = {
+            'execution_id': 'test-exec-001',
+            'step_index': 0,
+            'step_description': '测试步骤',
+            'status': 'success',
+            'start_time': datetime.utcnow(),
+            'end_time': datetime.utcnow(),
+            'duration': 500,
+            'screenshot_path': '/screenshots/step.png',
+            'ai_confidence': 0.9
+        }
+        defaults.update(kwargs)
+        
+        step_execution = StepExecution(**defaults)
+        db_session.add(step_execution)
+        db_session.commit()
+        return step_execution
+    
+    return _create_step_execution
+
+
+@pytest.fixture
+def execution_statuses():
+    """提供所有支持的执行状态列表"""
+    return ['running', 'success', 'failed', 'stopped']
+
+
+@pytest.fixture
+def browser_types():
+    """提供所有支持的浏览器类型列表"""
+    return ['chrome', 'firefox', 'safari', 'edge']
+
+
+@pytest.fixture
+def execution_modes():
+    """提供所有支持的执行模式列表"""
+    return ['headless', 'browser']
