@@ -17,9 +17,7 @@ on:
       - 'package.json'
       - 'jest.config.js'
       - '.github/workflows/proxy-server-tests.yml'
-
-# 允许手动触发
-workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
   proxy-tests:
