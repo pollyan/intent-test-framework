@@ -72,7 +72,7 @@ python -m pytest --html=report.html --self-contained-html
 本项目配置了GitHub Actions自动运行测试：
 
 - **触发条件**: 推送到master/main分支或创建Pull Request
-- **Python版本**: 3.9, 3.10, 3.11
+- **Python版本**: 3.11
 - **测试报告**: 自动生成并上传测试结果和覆盖率报告
 - **查看结果**: 在GitHub仓库的Actions标签页查看测试结果
 

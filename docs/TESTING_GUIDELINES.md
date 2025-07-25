@@ -168,7 +168,7 @@ class TestTestCaseAPI:
 
 ```yaml
 # .github/workflows/python-tests.yml
-- 支持Python 3.9, 3.10, 3.11
+- 支持Python 3.11
 - 自动安装依赖
 - 运行测试并生成报告
 - 上传测试结果和覆盖率报告

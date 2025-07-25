@@ -128,11 +128,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11']
+        python-version: ['3.11']
 ```
 
 特性：
-- 多Python版本测试
+- Python 3.11版本测试
 - 自动生成测试报告
 - 测试结果摘要展示
 - 代码覆盖率报告
