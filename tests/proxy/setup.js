@@ -14,6 +14,7 @@ jest.setTimeout(30000);
 // 全局变量
 global.testPort = 3002;
 global.testBaseUrl = `http://localhost:${global.testPort}`;
+global.isTestEnvironment = true;
 
 // 测试前的全局设置
 beforeAll(async () => {
