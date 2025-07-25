@@ -181,3 +181,178 @@ def assert_api_response():
         return data
     
     return _assert_response
+
+
+# ==================== Steps 测试相关 Fixtures ====================
+
+@pytest.fixture
+def sample_goto_step():
+    """提供goto步骤数据"""
+    return {
+        'action': 'goto',
+        'params': {
+            'url': 'https://example.com'
+        },
+        'description': '访问示例网站',
+        'required': True
+    }
+
+
+@pytest.fixture
+def sample_ai_input_step():
+    """提供ai_input步骤数据"""
+    return {
+        'action': 'ai_input',
+        'params': {
+            'locate': '搜索框',
+            'text': '测试搜索内容'
+        },
+        'description': '在搜索框输入文本',
+        'required': True
+    }
+
+
+@pytest.fixture
+def sample_ai_tap_step():
+    """提供ai_tap步骤数据"""
+    return {
+        'action': 'ai_tap',
+        'params': {
+            'locate': '提交按钮'
+        },
+        'description': '点击提交按钮',
+        'required': True
+    }
+
+
+@pytest.fixture
+def sample_ai_assert_step():
+    """提供ai_assert步骤数据"""
+    return {
+        'action': 'ai_assert',
+        'params': {
+            'prompt': '页面显示成功消息'
+        },
+        'description': '验证操作成功',
+        'required': True
+    }
+
+
+@pytest.fixture
+def sample_ai_wait_for_step():
+    """提供ai_wait_for步骤数据"""
+    return {
+        'action': 'ai_wait_for',
+        'params': {
+            'locate': '加载完成提示',
+            'timeout': 5000
+        },
+        'description': '等待页面加载完成',
+        'required': True
+    }
+
+
+@pytest.fixture
+def sample_sleep_step():
+    """提供sleep步骤数据"""
+    return {
+        'action': 'sleep',
+        'params': {
+            'duration': 2000
+        },
+        'description': '等待2秒',
+        'required': False
+    }
+
+
+@pytest.fixture
+def sample_screenshot_step():
+    """提供screenshot步骤数据"""
+    return {
+        'action': 'screenshot',
+        'params': {
+            'name': 'test_screenshot'
+        },
+        'description': '截取屏幕截图',
+        'required': False
+    }
+
+
+@pytest.fixture
+def create_testcase_with_steps(db_session):
+    """创建包含步骤的测试用例工厂函数"""
+    def _create_testcase_with_steps(step_count=2, **kwargs):
+        # 生成默认步骤
+        default_steps = [
+            {
+                'action': 'goto',
+                'params': {'url': f'https://example{i}.com'},
+                'description': f'访问网站{i+1}'
+            } for i in range(step_count)
+        ]
+        
+        # 设置默认值
+        defaults = {
+            'name': f'包含{step_count}个步骤的测试用例',
+            'description': '用于步骤API测试的测试用例',
+            'steps': json.dumps(default_steps),
+            'category': '步骤测试',
+            'priority': 2,
+            'tags': 'steps,api,test',
+            'created_by': 'test_user',
+            'is_active': True
+        }
+        defaults.update(kwargs)
+        
+        testcase = TestCase(**defaults)
+        db_session.add(testcase)
+        db_session.commit()
+        return testcase
+    
+    return _create_testcase_with_steps
+
+
+@pytest.fixture
+def invalid_step_data():
+    """提供无效的步骤数据（用于错误测试）"""
+    return [
+        # 缺少action字段
+        {
+            'params': {'url': 'https://example.com'},
+            'description': '缺少action字段的步骤'
+        },
+        # 无效的action类型
+        {
+            'action': 'invalid_action_type',
+            'params': {},
+            'description': '无效的动作类型'
+        },
+        # goto缺少url参数
+        {
+            'action': 'goto',
+            'params': {},
+            'description': 'goto动作缺少url参数'
+        },
+        # ai_input缺少必需参数
+        {
+            'action': 'ai_input',
+            'params': {},
+            'description': 'ai_input动作缺少必需参数'
+        },
+        # ai_tap缺少locate参数
+        {
+            'action': 'ai_tap',
+            'params': {},
+            'description': 'ai_tap动作缺少locate参数'
+        }
+    ]
+
+
+@pytest.fixture
+def all_supported_actions():
+    """提供所有支持的动作类型列表"""
+    return [
+        'goto', 'ai_input', 'ai_tap', 'ai_assert', 'ai_wait_for',
+        'ai_scroll', 'ai_drag', 'sleep', 'screenshot', 'refresh',
+        'back', 'ai_select', 'ai_upload', 'ai_check'
+    ]
