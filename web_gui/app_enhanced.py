@@ -165,8 +165,14 @@ def create_app(test_config=None):
     return app
 
 # 创建应用实例
-app = create_app()
-socketio = SocketIO(app, cors_allowed_origins="*")
+# 注意：如果在测试环境中，应该使用 create_app(test_config) 而不是直接导入这个模块
+if os.getenv('TESTING') != 'true':
+    app = create_app()
+    socketio = SocketIO(app, cors_allowed_origins="*")
+else:
+    # 测试环境下创建空的占位符，避免导入错误
+    app = None
+    socketio = None
 
 # 全局变量存储执行状态
 execution_manager = {}
@@ -773,6 +779,11 @@ if __name__ == '__main__':
     print("📍 后端地址: http://localhost:5001")
     print("📍 API文档: http://localhost:5001/api/v1/")
 
+    # 确保应用实例已创建
+    if app is None:
+        app = create_app()
+        socketio = SocketIO(app, cors_allowed_origins="*")
+    
     # 初始化数据库
     if init_database():
         print("✅ 数据库初始化成功")
