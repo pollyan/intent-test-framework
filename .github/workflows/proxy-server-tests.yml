@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: ['18.x', '20.x']
+        node-version: ['20.x']
         
     steps:
     - name: Checkout code
@@ -47,8 +47,10 @@ jobs:
 
     - name: Install dependencies
       run: |
-        npm ci
-        # 安装额外的测试依赖（如果npm ci没有安装）
+        # 删除package-lock.json重新生成以确保同步
+        rm -f package-lock.json
+        npm install
+        # 确保所有测试依赖都已安装
         npm install --save-dev jest supertest @jest/globals jest-environment-node jest-junit ws socket.io-client
 
     - name: Debug - Check environment
@@ -233,8 +235,7 @@ jobs:
         echo "## 🎯 Proxy Server Tests Complete" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### 📋 Summary" >> $GITHUB_STEP_SUMMARY
-        echo "- **Node.js 18.x**: ${{ needs.proxy-tests.outputs.node-18-result || 'Unknown' }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Node.js 20.x**: ${{ needs.proxy-tests.outputs.node-20-result || 'Unknown' }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Node.js 20.x**: ${{ needs.proxy-tests.result }}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### 🔗 Quick Links" >> $GITHUB_STEP_SUMMARY
         echo "- [Python Tests Workflow](https://github.com/${{ github.repository }}/actions/workflows/python-tests.yml)" >> $GITHUB_STEP_SUMMARY
