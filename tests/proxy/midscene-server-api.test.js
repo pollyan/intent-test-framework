@@ -4,19 +4,61 @@
 
 const request = require('supertest');
 const { TestDataFactory, ServerTestHelper, AssertHelper } = require('./mocks/test-helpers');
-const { createMockAgent, createMockPage, createMockBrowser } = require('./mocks/ai-mock');
 
-// Mock MidSceneJS和Playwright
+// Mock MidSceneJS和Playwright - 必须在内部定义mock函数
 jest.mock('@midscene/web', () => {
+  const mockCreateMockAgent = (behavior = 'success') => {
+    const agent = {};
+    const operations = ['aiTap', 'aiInput', 'aiAssert', 'aiWaitFor', 'aiQuery', 'aiAction', 'aiScroll', 'aiHover', 'ai'];
+    
+    operations.forEach(op => {
+      agent[op] = jest.fn().mockImplementation(async () => {
+        if (behavior === 'error') {
+          throw new Error(`Mock ${op} error`);
+        }
+        if (behavior === 'timeout') {
+          return new Promise((_, reject) => {
+            setTimeout(() => reject(new Error(`Mock ${op} timeout`)), 1000);
+          });
+        }
+        return { success: true, operation: op };
+      });
+    });
+    
+    return agent;
+  };
+  
   return {
-    PlaywrightAgent: jest.fn().mockImplementation(() => createMockAgent('success'))
+    PlaywrightAgent: jest.fn().mockImplementation(() => mockCreateMockAgent('success'))
   };
 });
 
 jest.mock('playwright', () => {
+  const mockCreateMockBrowser = (behavior = 'success') => {
+    const browser = {
+      newContext: jest.fn().mockResolvedValue({
+        newPage: jest.fn().mockResolvedValue({
+          goto: jest.fn().mockResolvedValue(undefined),
+          title: jest.fn().mockResolvedValue('Test Page'),
+          url: jest.fn().mockReturnValue('https://example.com'),
+          screenshot: jest.fn().mockResolvedValue(Buffer.from('fake-screenshot')),
+          close: jest.fn().mockResolvedValue(undefined)
+        }),
+        close: jest.fn().mockResolvedValue(undefined)
+      }),
+      close: jest.fn().mockResolvedValue(undefined)
+    };
+    
+    if (behavior === 'error') {
+      browser.newContext = jest.fn().mockRejectedValue(new Error('Mock browser error'));
+    }
+    
+    return browser;
+  };
+  
   return {
     chromium: {
-      launch: jest.fn().mockResolvedValue(createMockBrowser('success'))
+      launch: jest.fn().mockResolvedValue(mockCreateMockBrowser('success'))
     }
   };
 });
