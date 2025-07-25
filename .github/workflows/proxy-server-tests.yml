@@ -50,8 +50,12 @@ jobs:
         # 删除package-lock.json重新生成以确保同步
         rm -f package-lock.json
         npm install
-        # 确保所有测试依赖都已安装
-        npm install --save-dev jest supertest @jest/globals jest-environment-node jest-junit ws socket.io-client
+        # 确保所有测试依赖都已安装，包括Socket.IO完整生态系统
+        npm install --save-dev jest supertest @jest/globals jest-environment-node jest-junit ws
+        # 安装Socket.IO相关依赖
+        npm install socket.io socket.io-client engine.io engine.io-client
+        # 验证关键依赖安装
+        npm list socket.io socket.io-client engine.io-client || true
 
     - name: Debug - Check environment
       run: |

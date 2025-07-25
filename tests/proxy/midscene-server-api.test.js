@@ -63,15 +63,16 @@ jest.mock('playwright', () => {
   };
 });
 
-// Mock Socket.IO for server
+// Mock Socket.IO for server - 简化mock避免依赖问题
 jest.mock('socket.io', () => {
   return {
     Server: jest.fn().mockImplementation(() => ({
       emit: jest.fn(),
-      on: jest.fn()
+      on: jest.fn(),
+      close: jest.fn()
     }))
   };
-});
+}, { virtual: true });
 
 // Mock HTTP server
 jest.mock('http', () => {
