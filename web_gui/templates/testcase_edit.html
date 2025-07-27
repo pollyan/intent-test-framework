@@ -1297,61 +1297,86 @@ class TestCaseEditor {
         
         // 基础参数映射表
         const paramMappings = {
-            'locate': ['locate', 'prompt'],
-            'prompt': ['prompt', 'locate'], 
+            'locate': ['locate', 'prompt', 'assertion'],
+            'prompt': ['prompt', 'locate', 'assertion'], 
             'text': ['text'],
             'url': ['url'],
-            'timeout': ['timeout', 'duration'],
+            'timeout': ['timeout', 'duration', 'timeoutMs'],
             'duration': ['duration', 'timeout'],
-            'query': ['query'],
-            'name': ['name']
+            'timeoutMs': ['timeoutMs', 'timeout', 'duration'],
+            'query': ['query', 'schema', 'question'],
+            'question': ['question', 'query', 'prompt'],
+            'schema': ['schema', 'query'],
+            'assertion': ['assertion', 'locate', 'prompt', 'condition'],
+            'condition': ['condition', 'assertion', 'prompt'],
+            'description': ['description', 'name'],
+            'name': ['name', 'description'],
+            'keys': ['keys', 'key'],
+            'key': ['key', 'keys'],
+            'code': ['code', 'yaml'],
+            'yaml': ['yaml', 'code'],
+            'options': ['options']
         };
         
-        // 默认参数设置
+        // 默认参数设置（与新增步骤时的默认值保持一致）
         const defaultParams = {
+            // 页面导航操作
             'goto': { url: 'https://example.com' },
             'refresh': {},
             'back': {},
-            'evaluateJavaScript': { code: '' },
+            'evaluateJavaScript': { code: 'console.log("Hello World");' },
+            
+            // 智能交互操作
             'ai': { prompt: '' },
-            'aiTap': { locate: '' },
-            'aiInput': { text: '', locate: '' },  
-            'aiHover': { locate: '' },
-            'aiScroll': { direction: 'down' },
-            'aiKeyboardPress': { key: '' },
-            'aiRightClick': { locate: '' },
-            'aiQuery': { query: '' },
-            'aiAsk': { question: '' },
-            'aiBoolean': { question: '' },
-            'aiNumber': { question: '' },
-            'aiString': { question: '' },
-            'aiLocate': { description: '' },
-            'aiAssert': { condition: '' },
-            'aiWaitFor': { condition: '', timeout: 10000 },
-            'sleep': { duration: 3000 },
-            'logScreenshot': { name: '' },
-            'runYaml': { yaml: '' }
+            'aiTap': { locate: '按钮描述', options: { deepThink: false, cacheable: true } },
+            'aiInput': { text: '输入内容', locate: '输入框描述', options: { deepThink: false, cacheable: true } },
+            'aiHover': { locate: '元素描述', options: { deepThink: false, cacheable: true } },
+            'aiScroll': { locate: '滚动区域', options: { deepThink: false, cacheable: true } },
+            'aiKeyboardPress': { keys: 'Enter', options: { deepThink: false } },
+            'aiRightClick': { locate: '右键目标', options: { deepThink: false, cacheable: true } },
+            
+            // 数据提取操作
+            'aiQuery': { schema: { '字段名': '字段描述, 数据类型' } },
+            'aiAsk': { question: '询问关于页面的问题' },
+            'aiBoolean': { question: '返回布尔值的问题' },
+            'aiNumber': { question: '返回数值的问题' },
+            'aiString': { question: '返回字符串的问题' },
+            'aiLocate': { locate: '元素描述' },
+            
+            // 验证等待操作
+            'aiAssert': { assertion: '断言条件描述', errorMsg: '断言失败时的错误信息' },
+            'aiWaitFor': { assertion: '等待条件描述', options: { timeoutMs: 15000, checkIntervalMs: 3000 } },
+            
+            // 工具操作
+            'logScreenshot': { description: '截图描述' },
+            'sleep': { duration: 1000 },
+            'runYaml': { yaml: 'steps:\n  - action: aiTap\n    locate: 按钮' }
         };
         
         // 设置新动作类型的默认参数
         Object.assign(newParams, defaultParams[newAction] || {});
         
-        // 尝试保留兼容的参数
-        for (const [newParamName, possibleOldNames] of Object.entries(paramMappings)) {
-            if (newParams.hasOwnProperty(newParamName)) {
-                for (const oldParamName of possibleOldNames) {
-                    if (oldParams[oldParamName] !== undefined && oldParams[oldParamName] !== '') {
-                        newParams[newParamName] = oldParams[oldParamName];
-                        break;
-                    }
+        // 1. 保留同名参数（优先级最高）
+        for (const paramName in oldParams) {
+            if (newParams.hasOwnProperty(paramName) && oldParams[paramName] !== undefined && oldParams[paramName] !== '') {
+                // 对于 options 对象，合并而不是替换
+                if (paramName === 'options' && typeof oldParams[paramName] === 'object' && typeof newParams[paramName] === 'object') {
+                    newParams[paramName] = { ...newParams[paramName], ...oldParams[paramName] };
+                } else {
+                    newParams[paramName] = oldParams[paramName];
                 }
             }
         }
         
-        // 保留同名参数
-        for (const paramName in oldParams) {
-            if (newParams.hasOwnProperty(paramName) && oldParams[paramName] !== undefined) {
-                newParams[paramName] = oldParams[paramName];
+        // 2. 尝试保留兼容的参数（跨参数名映射）
+        for (const [newParamName, possibleOldNames] of Object.entries(paramMappings)) {
+            if (newParams.hasOwnProperty(newParamName) && (newParams[newParamName] === '' || !newParams[newParamName])) {
+                for (const oldParamName of possibleOldNames) {
+                    if (oldParams[oldParamName] !== undefined && oldParams[oldParamName] !== '' && oldParamName !== newParamName) {
+                        newParams[newParamName] = oldParams[oldParamName];
+                        break;
+                    }
+                }
             }
         }
         
