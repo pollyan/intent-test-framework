@@ -533,8 +533,91 @@
             }
         };
 
+        // 测试函数 - 验证函数是否可用
+        function testFunction() {
+            console.log('Test function works!');
+            alert('Test function works!');
+        }
+
+        // 全局测试 handleActionTypeChange 函数
+        window.handleActionTypeChange = function(index, newActionType) {
+            console.log('Global handleActionTypeChange called:', index, newActionType);
+            
+            if (!newActionType || !actionConfigs[newActionType]) {
+                console.log('Invalid action type:', newActionType);
+                return;
+            }
+
+            const currentStep = steps[index];
+            if (!currentStep) {
+                console.log('Step not found at index:', index);
+                return;
+            }
+            
+            const oldActionType = currentStep.action;
+            console.log('Action type change:', oldActionType, '->', newActionType);
+            
+            // 如果动作类型没有改变，直接返回
+            if (oldActionType === newActionType) {
+                console.log('No action type change needed');
+                return;
+            }
+
+            // 保存当前参数用于智能保留
+            const oldParams = currentStep.params || {};
+            console.log('Old params:', oldParams);
+            
+            // 更新步骤的动作类型
+            currentStep.action = newActionType;
+            
+            // 智能合并参数
+            const newParams = mergeParamsOnActionChange(oldActionType, newActionType, oldParams);
+            console.log('New params after merge:', newParams);
+            currentStep.params = newParams;
+            
+            // 重新渲染参数表单区域
+            const paramsContainer = document.getElementById(`params-container-${index}`);
+            if (!paramsContainer) {
+                console.log('Params container not found:', `params-container-${index}`);
+                return;
+            }
+            
+            const newConfig = actionConfigs[newActionType];
+            console.log('New config:', newConfig);
+            
+            const newFormFields = renderParamFields(currentStep, newConfig);
+            console.log('New form fields HTML:', newFormFields);
+            paramsContainer.innerHTML = newFormFields;
+            
+            // 确保新的表单字段正确显示参数值
+            setTimeout(() => {
+                newConfig.params.forEach(param => {
+                    const fieldElement = paramsContainer.querySelector(`[data-param="${param.name}"]`);
+                    if (fieldElement && currentStep.params[param.name] !== undefined) {
+                        const value = currentStep.params[param.name];
+                        if (fieldElement.tagName === 'SELECT') {
+                            fieldElement.value = value;
+                        } else if (fieldElement.tagName === 'TEXTAREA') {
+                            fieldElement.value = value;
+                        } else if (fieldElement.tagName === 'INPUT') {
+                            fieldElement.value = value;
+                        }
+                        console.log(`Set field ${param.name} to:`, value);
+                    }
+                });
+            }, 10);
+            
+            console.log('Final step params:', currentStep.params);
+            
+            // 显示参数更新提示
+            showActionTypeChangeNotification(oldActionType, newActionType);
+        };
+
         // 页面初始化
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, actionConfigs available:', Object.keys(actionConfigs));
+            console.log('Global handleActionTypeChange available:', typeof window.handleActionTypeChange);
+            
             const urlParams = new URLSearchParams(window.location.search);
             const testcaseId = urlParams.get('id');
             
@@ -767,79 +850,6 @@
             }
         }
 
-        // 处理动作类型切换
-        function handleActionTypeChange(index, newActionType) {
-            console.log('handleActionTypeChange called:', index, newActionType);
-            
-            if (!newActionType || !actionConfigs[newActionType]) {
-                console.log('Invalid action type:', newActionType);
-                return;
-            }
-
-            const currentStep = steps[index];
-            if (!currentStep) {
-                console.log('Step not found at index:', index);
-                return;
-            }
-            
-            const oldActionType = currentStep.action;
-            console.log('Action type change:', oldActionType, '->', newActionType);
-            
-            // 如果动作类型没有改变，直接返回
-            if (oldActionType === newActionType) {
-                console.log('No action type change needed');
-                return;
-            }
-
-            // 保存当前参数用于智能保留
-            const oldParams = currentStep.params || {};
-            console.log('Old params:', oldParams);
-            
-            // 更新步骤的动作类型
-            currentStep.action = newActionType;
-            
-            // 智能合并参数
-            const newParams = mergeParamsOnActionChange(oldActionType, newActionType, oldParams);
-            console.log('New params after merge:', newParams);
-            currentStep.params = newParams;
-            
-            // 重新渲染参数表单区域
-            const paramsContainer = document.getElementById(`params-container-${index}`);
-            if (!paramsContainer) {
-                console.log('Params container not found:', `params-container-${index}`);
-                return;
-            }
-            
-            const newConfig = actionConfigs[newActionType];
-            console.log('New config:', newConfig);
-            
-            const newFormFields = renderParamFields(currentStep, newConfig);
-            console.log('New form fields HTML:', newFormFields);
-            paramsContainer.innerHTML = newFormFields;
-            
-            // 确保新的表单字段正确显示参数值
-            setTimeout(() => {
-                newConfig.params.forEach(param => {
-                    const fieldElement = paramsContainer.querySelector(`[data-param="${param.name}"]`);
-                    if (fieldElement && currentStep.params[param.name] !== undefined) {
-                        const value = currentStep.params[param.name];
-                        if (fieldElement.tagName === 'SELECT') {
-                            fieldElement.value = value;
-                        } else if (fieldElement.tagName === 'TEXTAREA') {
-                            fieldElement.value = value;
-                        } else if (fieldElement.tagName === 'INPUT') {
-                            fieldElement.value = value;
-                        }
-                        console.log(`Set field ${param.name} to:`, value);
-                    }
-                });
-            }, 10);
-            
-            console.log('Final step params:', currentStep.params);
-            
-            // 显示参数更新提示
-            showActionTypeChangeNotification(oldActionType, newActionType);
-        }
 
         // 智能参数合并算法
         function mergeParamsOnActionChange(oldAction, newAction, oldParams) {
