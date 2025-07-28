@@ -103,32 +103,47 @@ describe('MidScene代理服务器 - HTTP API测试', () => {
     process.env.OPENAI_BASE_URL = 'https://test-api.com/v1';
     process.env.MIDSCENE_MODEL_NAME = 'test-model';
     
-    // 创建一个简单的Express应用用于测试，避免复杂的midscene_server导入
-    const express = require('express');
-    app = express();
-    app.use(express.json());
+    // 创建一个简单的HTTP服务器，不依赖Express
+    const http = require('http');
     
-    // 添加基础的测试路由
-    app.get('/health', (req, res) => {
-      res.json({
-        success: true,
-        message: 'MidSceneJS服务器运行正常',
-        model: 'test-model',
-        timestamp: new Date().toISOString()
-      });
+    server = http.createServer((req, res) => {
+      res.setHeader('Content-Type', 'application/json');
+      
+      if (req.url === '/health' && req.method === 'GET') {
+        res.writeHead(200);
+        res.end(JSON.stringify({
+          success: true,
+          message: 'MidSceneJS服务器运行正常',
+          model: 'test-model',
+          timestamp: new Date().toISOString()
+        }));
+      } else if (req.url === '/api/status' && req.method === 'GET') {
+        res.writeHead(200);
+        res.end(JSON.stringify({
+          success: true,
+          status: 'ready',
+          browserInitialized: false,
+          runningExecutions: 0,
+          totalExecutions: 0,
+          uptime: Date.now(),
+          timestamp: new Date().toISOString()
+        }));
+      } else {
+        res.writeHead(404);
+        res.end(JSON.stringify({
+          success: false,
+          error: '未找到指定的端点',
+          path: req.url
+        }));
+      }
     });
     
-    app.get('/api/status', (req, res) => {
-      res.json({
-        success: true,
-        status: 'ready',
-        browserInitialized: false,
-        runningExecutions: 0,
-        totalExecutions: 0,
-        uptime: Date.now(),
-        timestamp: new Date().toISOString()
-      });
-    });
+    // 启动测试服务器
+    server.listen(global.testPort);
+    await ServerTestHelper.waitForServer(global.testPort);
+    
+    // 设置app为请求URL，供supertest使用
+    app = `http://localhost:${global.testPort}`;
   });
   
   afterAll(async () => {
