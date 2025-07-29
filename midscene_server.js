@@ -211,7 +211,12 @@ async function initBrowser(headless = true, timeoutConfig = {}, enableCache = tr
                 '--disable-accelerated-2d-canvas',
                 '--no-first-run',
                 '--no-zygote',
-                '--disable-gpu'
+                '--disable-gpu',
+                '--disable-background-timer-throttling', // 防止后台节流
+                '--disable-backgrounding-occluded-windows', // 防止后台窗口被挂起
+                '--disable-renderer-backgrounding', // 防止渲染器后台化
+                '--disable-features=TranslateUI', // 禁用翻译UI避免干扰
+                '--disable-features=VizDisplayCompositor' // 提高稳定性
             ]
         });
     }

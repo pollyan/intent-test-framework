@@ -216,10 +216,51 @@
         margin: 16px 0;
     }
 
+    /* 两行文本截断样式 */
+    .text-truncate-2lines {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 120px; /* 缩短横向宽度 */
+        line-height: 1.3;
+        max-height: 2.6em; /* 2行的高度 */
+        word-wrap: break-word;
+    }
+
+    .text-truncate-2lines:hover {
+        position: relative;
+        z-index: 10;
+    }
+
+    .text-truncate-2lines:hover::after {
+        content: attr(title);
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        background: #333;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: normal;
+        word-wrap: break-word;
+        max-width: 250px;
+        z-index: 1000;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        pointer-events: none;
+        line-height: 1.4;
+    }
+
     /* 响应式设计 */
     @media (max-width: 1024px) {
         .grid-cols-3 {
             grid-template-columns: 1fr;
+        }
+        
+        .text-truncate-2lines {
+            max-width: 100px; /* 小屏幕时进一步减少宽度 */
         }
     }
 </style>
@@ -586,13 +627,18 @@
             item.className = 'list-item';
             item.title = '点击执行最新修改的测试用例';
             
+            // 处理描述文本，使用两行截断显示
+            const description = testcase.description || '无描述';
+            
             item.innerHTML = `
                 <div class="list-item-content">
-                    <div class="list-item-title" style="margin-bottom: 2px;">${testcase.name}</div>
-                    <div class="list-item-meta" style="font-size: 12px;">
-                        <span class="text-gray-600">${testcase.description || '无描述'}</span>
-                        <span class="text-gray-400">•</span>
-                        <span class="text-gray-600">${testcase.updated_at ? formatTimeAgo(testcase.updated_at) : '未知时间'}</span>
+                    <div class="list-item-title" style="margin-bottom: 4px;">${testcase.name}</div>
+                    <div class="list-item-meta" style="font-size: 12px; display: flex; align-items: flex-start; gap: 8px;">
+                        <div class="text-gray-600 text-truncate-2lines" title="${description}" style="flex-shrink: 0;">${description}</div>
+                        <div style="flex-shrink: 0; margin-top: 2px;">
+                            <span class="text-gray-400">•</span>
+                            <span class="text-gray-600" style="margin-left: 4px;">${testcase.updated_at ? formatTimeAgo(testcase.updated_at) : '未知时间'}</span>
+                        </div>
                     </div>
                 </div>
                 <div class="flex items-center gap-1">

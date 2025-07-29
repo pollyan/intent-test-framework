@@ -449,32 +449,52 @@
     let localProxySocket = null;
     let executionSocket = null;
 
-    // 页面关闭/重定向时停止执行
+    // 页面真正关闭时停止执行（增加确认机制）
+    let isPageActuallyUnloading = false;
+    
     window.addEventListener('beforeunload', (event) => {
         if (currentExecution && currentExecution.local_execution_id) {
-            // 尝试停止执行
-            navigator.sendBeacon(`http://localhost:3001/api/stop-execution/${currentExecution.local_execution_id}`, 
-                JSON.stringify({ reason: 'page_unload' })
-            );
-            
-            // 如果是正在执行中，提示用户
             const executionStatus = document.getElementById('execution-status').textContent;
+            
+            // 只有在确实要关闭页面时才停止执行
             if (executionStatus === '执行中') {
+                // 设置一个短暂的延迟，确认用户真的要离开
+                setTimeout(() => {
+                    if (isPageActuallyUnloading) {
+                        // 用户确认要离开，停止执行
+                        navigator.sendBeacon(`http://localhost:3001/api/stop-execution/${currentExecution.local_execution_id}`, 
+                            JSON.stringify({ reason: 'page_unload' })
+                        );
+                    }
+                }, 100);
+                
+                // 提示用户
                 event.preventDefault();
-                event.returnValue = '测试正在执行中，确定要离开吗？这将停止当前的测试执行。';
+                event.returnValue = '测试正在执行中，确定要离开页面吗？这将停止当前的测试执行。';
                 return event.returnValue;
             }
         }
     });
+    
+    // 监听实际的页面卸载
+    window.addEventListener('unload', () => {
+        isPageActuallyUnloading = true;
+    });
 
-    // 页面隐藏时也停止执行（适用于移动设备或标签页切换）
+    // 页面可见性变化时的处理（仅用于状态更新，不停止执行）
     document.addEventListener('visibilitychange', () => {
-        if (document.hidden && currentExecution && currentExecution.local_execution_id) {
-            const executionStatus = document.getElementById('execution-status').textContent;
-            if (executionStatus === '执行中') {
-                // 页面被隐藏且测试正在执行，停止执行
-                console.log('页面被隐藏，停止测试执行');
-                stopExecution();
+        if (document.hidden) {
+            console.log('页面被隐藏，测试继续在后台执行');
+            // 仅记录日志，不停止执行
+            if (currentExecution && currentExecution.local_execution_id) {
+                console.log('当前测试将继续在后台执行:', currentExecution.local_execution_id);
+            }
+        } else {
+            console.log('页面重新可见，恢复实时状态更新');
+            // 页面重新可见时，刷新执行状态
+            if (currentExecution && currentExecution.local_execution_id) {
+                // 重新连接WebSocket或刷新状态
+                refreshExecutionStatus();
             }
         }
     });
@@ -911,6 +931,42 @@
         
         addLog('执行已停止', 'warning');
         currentExecution = null;
+    }
+
+    // 刷新执行状态（页面重新可见时调用）
+    async function refreshExecutionStatus() {
+        if (!currentExecution || !currentExecution.local_execution_id) {
+            return;
+        }
+        
+        try {
+            // 检查本地代理执行状态
+            const response = await axios.get(`http://localhost:3001/api/execution-status/${currentExecution.local_execution_id}`);
+            if (response.data && response.data.success) {
+                const status = response.data;
+                console.log('刷新执行状态:', status);
+                
+                // 更新UI状态
+                if (status.isRunning) {
+                    document.getElementById('execution-status').textContent = '执行中';
+                    document.getElementById('start-execution').disabled = true;
+                    document.getElementById('stop-execution').disabled = false;
+                } else {
+                    const statusText = status.status || '已完成';
+                    document.getElementById('execution-status').textContent = statusText;
+                    document.getElementById('start-execution').disabled = false;
+                    document.getElementById('stop-execution').disabled = true;
+                }
+                
+                // 更新进度
+                if (status.currentStep !== undefined && status.totalSteps !== undefined) {
+                    updateExecutionProgress(status.currentStep, status.totalSteps);
+                }
+            }
+        } catch (error) {
+            console.log('刷新执行状态失败:', error);
+            // 如果无法获取状态，可能执行已经完成，不做任何操作
+        }
     }
 
     // 更新执行进度
