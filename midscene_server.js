@@ -360,6 +360,9 @@ function normalizeStepType(stepType) {
         'aiInput': 'ai_input',
         'aiAssert': 'ai_assert',
         'aiQuery': 'ai_query',
+        'aiString': 'ai_string',
+        'aiNumber': 'ai_number',
+        'aiBoolean': 'ai_boolean',
         'aiHover': 'ai_hover',
         'aiScroll': 'ai_scroll',
         'aiWaitFor': 'ai_wait_for',
@@ -678,6 +681,243 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                         const stepVariableName = `step_${stepIndex + 1}_result`;
                         context[stepVariableName] = queryResult;
                         logMessage(executionId, 'info', `变量已存储（兼容模式）: ${stepVariableName} = ${resultStr}`);
+                    }
+                }
+                break;
+
+            case 'ai_string':
+                const stringQuery = params.query;
+                const stringOutputVariable = step.output_variable;
+                
+                if (stringQuery) {
+                    console.log(`\n[${new Date().toISOString()}] MidScene Step Execution - aiString`);
+                    console.log(`Query: ${stringQuery}`);
+                    console.log(`Output Variable: ${stringOutputVariable || 'None'}`);
+                    console.log(`Execution ID: ${executionId}`);
+                    console.log(`Step ${stepIndex + 1}/${totalSteps}`);
+                    
+                    const stringStartTime = Date.now();
+                    
+                    // 添加重试机制
+                    let retryCount = 0;
+                    const maxRetries = 3;
+                    let lastError = null;
+                    let stringResult = null;
+                    
+                    while (retryCount < maxRetries) {
+                        try {
+                            // 使用MidSceneJS的aiString方法
+                            stringResult = await agent.aiString(stringQuery);
+                            break; // 成功则退出循环
+                        } catch (error) {
+                            lastError = error;
+                            retryCount++;
+                            
+                            console.error(`aiString尝试 ${retryCount}/${maxRetries} 失败:`, error.message);
+                            
+                            // 检查是否是AI模型连接错误
+                            if (error.message.includes('Connection error') || error.message.includes('AI model service')) {
+                                logMessage(executionId, 'warning', `AI模型连接失败，正在重试... (${retryCount}/${maxRetries})`);
+                                await page.waitForTimeout(2000 * retryCount); // 递增等待时间
+                            } else {
+                                // 其他错误直接抛出
+                                throw error;
+                            }
+                        }
+                    }
+                    
+                    if (retryCount >= maxRetries) {
+                        throw lastError || new Error(`aiString操作失败，已重试${maxRetries}次`);
+                    }
+                    
+                    const stringEndTime = Date.now();
+                    
+                    console.log(`MidScene aiString completed in ${stringEndTime - stringStartTime}ms`);
+                    console.log(`String Result: "${stringResult}"`);
+                    
+                    // 在日志中显示提取到的字符串值
+                    logMessage(executionId, 'info', `AI字符串提取完成，提取结果: "${stringResult}"`);
+                    
+                    // 存储变量（如果指定了output_variable）
+                    if (stringOutputVariable) {
+                        let context = variableContexts.get(executionId);
+                        if (!context) {
+                            context = {};
+                            variableContexts.set(executionId, context);
+                        }
+                        
+                        // 使用用户指定的变量名存储结果
+                        context[stringOutputVariable] = stringResult;
+                        logMessage(executionId, 'info', `变量已存储: ${stringOutputVariable} = "${stringResult}"`);
+                    } else {
+                        // 兼容性：如果没有指定output_variable，使用step_X_result格式
+                        let context = variableContexts.get(executionId);
+                        if (!context) {
+                            context = {};
+                            variableContexts.set(executionId, context);
+                        }
+                        
+                        const stepVariableName = `step_${stepIndex + 1}_result`;
+                        context[stepVariableName] = stringResult;
+                        logMessage(executionId, 'info', `变量已存储（兼容模式）: ${stepVariableName} = "${stringResult}"`);
+                    }
+                }
+                break;
+
+            case 'ai_number':
+                const numberQuery = params.query;
+                const numberOutputVariable = step.output_variable;
+                
+                if (numberQuery) {
+                    console.log(`\n[${new Date().toISOString()}] MidScene Step Execution - aiNumber`);
+                    console.log(`Query: ${numberQuery}`);
+                    console.log(`Output Variable: ${numberOutputVariable || 'None'}`);
+                    console.log(`Execution ID: ${executionId}`);
+                    console.log(`Step ${stepIndex + 1}/${totalSteps}`);
+                    
+                    const numberStartTime = Date.now();
+                    
+                    // 添加重试机制
+                    let retryCount = 0;
+                    const maxRetries = 3;
+                    let lastError = null;
+                    let numberResult = null;
+                    
+                    while (retryCount < maxRetries) {
+                        try {
+                            // 使用MidSceneJS的aiNumber方法
+                            numberResult = await agent.aiNumber(numberQuery);
+                            break; // 成功则退出循环
+                        } catch (error) {
+                            lastError = error;
+                            retryCount++;
+                            
+                            console.error(`aiNumber尝试 ${retryCount}/${maxRetries} 失败:`, error.message);
+                            
+                            // 检查是否是AI模型连接错误
+                            if (error.message.includes('Connection error') || error.message.includes('AI model service')) {
+                                logMessage(executionId, 'warning', `AI模型连接失败，正在重试... (${retryCount}/${maxRetries})`);
+                                await page.waitForTimeout(2000 * retryCount); // 递增等待时间
+                            } else {
+                                // 其他错误直接抛出
+                                throw error;
+                            }
+                        }
+                    }
+                    
+                    if (retryCount >= maxRetries) {
+                        throw lastError || new Error(`aiNumber操作失败，已重试${maxRetries}次`);
+                    }
+                    
+                    const numberEndTime = Date.now();
+                    
+                    console.log(`MidScene aiNumber completed in ${numberEndTime - numberStartTime}ms`);
+                    console.log(`Number Result: ${numberResult}`);
+                    
+                    // 在日志中显示提取到的数字值
+                    logMessage(executionId, 'info', `AI数字提取完成，提取结果: ${numberResult}`);
+                    
+                    // 存储变量（如果指定了output_variable）
+                    if (numberOutputVariable) {
+                        let context = variableContexts.get(executionId);
+                        if (!context) {
+                            context = {};
+                            variableContexts.set(executionId, context);
+                        }
+                        
+                        // 使用用户指定的变量名存储结果
+                        context[numberOutputVariable] = numberResult;
+                        logMessage(executionId, 'info', `变量已存储: ${numberOutputVariable} = ${numberResult}`);
+                    } else {
+                        // 兼容性：如果没有指定output_variable，使用step_X_result格式
+                        let context = variableContexts.get(executionId);
+                        if (!context) {
+                            context = {};
+                            variableContexts.set(executionId, context);
+                        }
+                        
+                        const stepVariableName = `step_${stepIndex + 1}_result`;
+                        context[stepVariableName] = numberResult;
+                        logMessage(executionId, 'info', `变量已存储（兼容模式）: ${stepVariableName} = ${numberResult}`);
+                    }
+                }
+                break;
+
+            case 'ai_boolean':
+                const booleanQuery = params.query;
+                const booleanOutputVariable = step.output_variable;
+                
+                if (booleanQuery) {
+                    console.log(`\n[${new Date().toISOString()}] MidScene Step Execution - aiBoolean`);
+                    console.log(`Query: ${booleanQuery}`);
+                    console.log(`Output Variable: ${booleanOutputVariable || 'None'}`);
+                    console.log(`Execution ID: ${executionId}`);
+                    console.log(`Step ${stepIndex + 1}/${totalSteps}`);
+                    
+                    const booleanStartTime = Date.now();
+                    
+                    // 添加重试机制
+                    let retryCount = 0;
+                    const maxRetries = 3;
+                    let lastError = null;
+                    let booleanResult = null;
+                    
+                    while (retryCount < maxRetries) {
+                        try {
+                            // 使用MidSceneJS的aiBoolean方法
+                            booleanResult = await agent.aiBoolean(booleanQuery);
+                            break; // 成功则退出循环
+                        } catch (error) {
+                            lastError = error;
+                            retryCount++;
+                            
+                            console.error(`aiBoolean尝试 ${retryCount}/${maxRetries} 失败:`, error.message);
+                            
+                            // 检查是否是AI模型连接错误
+                            if (error.message.includes('Connection error') || error.message.includes('AI model service')) {
+                                logMessage(executionId, 'warning', `AI模型连接失败，正在重试... (${retryCount}/${maxRetries})`);
+                                await page.waitForTimeout(2000 * retryCount); // 递增等待时间
+                            } else {
+                                // 其他错误直接抛出
+                                throw error;
+                            }
+                        }
+                    }
+                    
+                    if (retryCount >= maxRetries) {
+                        throw lastError || new Error(`aiBoolean操作失败，已重试${maxRetries}次`);
+                    }
+                    
+                    const booleanEndTime = Date.now();
+                    
+                    console.log(`MidScene aiBoolean completed in ${booleanEndTime - booleanStartTime}ms`);
+                    console.log(`Boolean Result: ${booleanResult}`);
+                    
+                    // 在日志中显示提取到的布尔值
+                    logMessage(executionId, 'info', `AI布尔值提取完成，提取结果: ${booleanResult}`);
+                    
+                    // 存储变量（如果指定了output_variable）
+                    if (booleanOutputVariable) {
+                        let context = variableContexts.get(executionId);
+                        if (!context) {
+                            context = {};
+                            variableContexts.set(executionId, context);
+                        }
+                        
+                        // 使用用户指定的变量名存储结果
+                        context[booleanOutputVariable] = booleanResult;
+                        logMessage(executionId, 'info', `变量已存储: ${booleanOutputVariable} = ${booleanResult}`);
+                    } else {
+                        // 兼容性：如果没有指定output_variable，使用step_X_result格式
+                        let context = variableContexts.get(executionId);
+                        if (!context) {
+                            context = {};
+                            variableContexts.set(executionId, context);
+                        }
+                        
+                        const stepVariableName = `step_${stepIndex + 1}_result`;
+                        context[stepVariableName] = booleanResult;
+                        logMessage(executionId, 'info', `变量已存储（兼容模式）: ${stepVariableName} = ${booleanResult}`);
                     }
                 }
                 break;
