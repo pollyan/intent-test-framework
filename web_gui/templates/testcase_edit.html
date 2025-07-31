@@ -57,6 +57,24 @@
     user-select: none;
 }
 
+/* 输出变量区域样式 */
+.output-variable-section {
+    transition: opacity 0.3s ease, max-height 0.3s ease;
+    overflow: hidden;
+}
+
+.output-variable-section[style*="display: none"] {
+    max-height: 0;
+    opacity: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.output-variable-section[style*="display: block"] {
+    max-height: 200px;
+    opacity: 1;
+}
+
 /* 步骤类型库网格布局 */
 .grid {
     display: grid;
@@ -917,6 +935,13 @@ class TestCaseEditor {
                 </div>
             </div>
 
+            <!-- 输出变量配置（仅对数据提取类步骤显示） -->
+            <div id="output-variable-section-${index}" class="output-variable-section" style="margin-bottom: 12px;">
+                <label class="form-label" style="margin-bottom: 4px;">输出变量名</label>
+                <input type="text" class="form-input" id="edit-output-variable-${index}" value="${step.output_variable || ''}" placeholder="例如: product_info (可选，用于存储AI方法的返回结果)">
+                <div style="font-size: 12px; color: #6b7280; margin-top: 2px;">设置变量名后，可在后续步骤中通过 \${变量名} 或 \${变量名.属性} 的方式引用数据</div>
+            </div>
+
             <div style="margin-bottom: 16px;">
                 <div class="enhanced-parameter-container" id="enhanced-params-${index}" style="display: none;">
                     <!-- 增强参数编辑器将在这里生成 -->
@@ -947,6 +972,9 @@ class TestCaseEditor {
         const cancelBtn = editForm.querySelector('.cancel-edit-inline');
         const deleteBtn = editForm.querySelector('.delete-step-inline');
         
+        // 初始化输出变量字段的显示状态
+        this.initializeOutputVariableDisplay(stepIndex);
+        
         // 初始化增强参数编辑器
         this.initializeEnhancedParameterEditor(editForm, stepIndex);
         
@@ -956,14 +984,26 @@ class TestCaseEditor {
             
             try {
                 const params = JSON.parse(editForm.querySelector(`#edit-params-${stepIndex}`).value);
+                const outputVariableInput = editForm.querySelector(`#edit-output-variable-${stepIndex}`);
+                const outputVariable = outputVariableInput ? outputVariableInput.value.trim() : '';
                 
                 // 更新步骤数据
-                this.steps[stepIndex] = {
+                const updatedStep = {
                     ...this.steps[stepIndex],
                     action,
                     description: title,
                     params
                 };
+                
+                // 如果有输出变量，添加到步骤数据中
+                if (outputVariable) {
+                    updatedStep.output_variable = outputVariable;
+                } else {
+                    // 如果没有输出变量，删除该字段
+                    delete updatedStep.output_variable;
+                }
+                
+                this.steps[stepIndex] = updatedStep;
                 
                 this.isDirty = true;
                 this.renderSteps();
@@ -989,6 +1029,27 @@ class TestCaseEditor {
                 this.editingStep = null;
             }
         });
+    }
+    
+    // 初始化输出变量字段的显示状态
+    initializeOutputVariableDisplay(stepIndex) {
+        const currentStep = this.steps[stepIndex];
+        if (!currentStep) return;
+        
+        const outputVariableSection = document.getElementById(`output-variable-section-${stepIndex}`);
+        const dataExtractionActions = ['aiQuery', 'aiAsk', 'aiBoolean', 'aiNumber', 'aiString', 'aiLocate'];
+        
+        if (outputVariableSection) {
+            if (dataExtractionActions.includes(currentStep.action)) {
+                outputVariableSection.style.display = 'block';
+                console.log(`显示输出变量字段，步骤类型: ${currentStep.action}`);
+            } else {
+                outputVariableSection.style.display = 'none';
+                console.log(`隐藏输出变量字段，步骤类型: ${currentStep.action}`);
+            }
+        } else {
+            console.log(`未找到输出变量区域: output-variable-section-${stepIndex}`);
+        }
     }
     
     // 隐藏所有行内编辑器
@@ -1052,6 +1113,11 @@ class TestCaseEditor {
                 params: defaultParams
             };
             
+            // 为特定步骤类型添加额外字段
+            if (action === 'aiQuery') {
+                newStep.output_variable = 'product_info';
+            }
+            
             this.steps.push(newStep);
             this.isDirty = true;
             this.renderSteps();
@@ -1092,13 +1158,8 @@ class TestCaseEditor {
             
             // 数据提取操作
             'aiQuery': { 
-                schema: { 
-                    '商品名称': '商品的名称, string',
-                    '价格': '商品价格, number', 
-                    '库存': '库存数量, number',
-                    '是否促销': '是否在促销, boolean',
-                    '标签': '商品标签列表, array'
-                } 
+                query: '提取商品价格和库存信息',
+                dataDemand: '{name: string, price: number, stock: number, category: string}'
             },
             'aiAsk': { query: '这个商品适合什么用户群体？请分析其特点和适用场景' },
             'aiBoolean': { query: '当前页面是否显示了商品详情信息？' },
@@ -1357,6 +1418,27 @@ class TestCaseEditor {
             console.log('Params textarea not found:', `edit-params-${index}`);
         }
         
+        // 控制输出变量字段的显示/隐藏
+        const outputVariableSection = document.getElementById(`output-variable-section-${index}`);
+        const dataExtractionActions = ['aiQuery', 'aiAsk', 'aiBoolean', 'aiNumber', 'aiString', 'aiLocate'];
+        if (outputVariableSection) {
+            if (dataExtractionActions.includes(newActionType)) {
+                outputVariableSection.style.display = 'block';
+                // 为aiQuery设置默认的output_variable值
+                if (newActionType === 'aiQuery' && !currentStep.output_variable) {
+                    const outputVariableInput = document.getElementById(`edit-output-variable-${index}`);
+                    if (outputVariableInput && !outputVariableInput.value) {
+                        outputVariableInput.value = 'product_info';
+                        currentStep.output_variable = 'product_info';
+                    }
+                }
+            } else {
+                outputVariableSection.style.display = 'none';
+                // 清除output_variable
+                delete currentStep.output_variable;
+            }
+        }
+        
         // 标记为已修改
         this.isDirty = true;
         
@@ -1414,13 +1496,8 @@ class TestCaseEditor {
             
             // 数据提取操作
             'aiQuery': { 
-                schema: { 
-                    '商品名称': '商品的名称, string',
-                    '价格': '商品价格, number', 
-                    '库存': '库存数量, number',
-                    '是否促销': '是否在促销, boolean',
-                    '标签': '商品标签列表, array'
-                } 
+                query: '提取商品价格和库存信息',
+                dataDemand: '{name: string, price: number, stock: number, category: string}'
             },
             'aiAsk': { query: '这个商品适合什么用户群体？请分析其特点和适用场景' },
             'aiBoolean': { query: '当前页面是否显示了商品详情信息？' },
