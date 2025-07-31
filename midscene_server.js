@@ -363,6 +363,7 @@ function normalizeStepType(stepType) {
         'aiString': 'ai_string',
         'aiNumber': 'ai_number',
         'aiBoolean': 'ai_boolean',
+        'aiLocate': 'ai_locate',
         'aiHover': 'ai_hover',
         'aiScroll': 'ai_scroll',
         'aiWaitFor': 'ai_wait_for',
@@ -918,6 +919,88 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                         const stepVariableName = `step_${stepIndex + 1}_result`;
                         context[stepVariableName] = booleanResult;
                         logMessage(executionId, 'info', `变量已存储（兼容模式）: ${stepVariableName} = ${booleanResult}`);
+                    }
+                }
+                break;
+
+            case 'ai_locate':
+                const locateQuery = params.locate;
+                const locateOutputVariable = step.output_variable;
+                
+                if (locateQuery) {
+                    console.log(`\n[${new Date().toISOString()}] MidScene Step Execution - aiLocate`);
+                    console.log(`Locate: ${locateQuery}`);
+                    console.log(`Output Variable: ${locateOutputVariable || 'None'}`);
+                    console.log(`Execution ID: ${executionId}`);
+                    console.log(`Step ${stepIndex + 1}/${totalSteps}`);
+                    
+                    const locateStartTime = Date.now();
+                    
+                    // 添加重试机制
+                    let retryCount = 0;
+                    const maxRetries = 3;
+                    let lastError = null;
+                    let locateResult = null;
+                    
+                    while (retryCount < maxRetries) {
+                        try {
+                            // 使用MidSceneJS的aiLocate方法
+                            locateResult = await agent.aiLocate(locateQuery);
+                            break; // 成功则退出循环
+                        } catch (error) {
+                            lastError = error;
+                            retryCount++;
+                            
+                            console.error(`aiLocate尝试 ${retryCount}/${maxRetries} 失败:`, error.message);
+                            
+                            // 检查是否是AI模型连接错误
+                            if (error.message.includes('Connection error') || error.message.includes('AI model service')) {
+                                logMessage(executionId, 'warning', `AI模型连接失败，正在重试... (${retryCount}/${maxRetries})`);
+                                await page.waitForTimeout(2000 * retryCount); // 递增等待时间
+                            } else {
+                                // 其他错误直接抛出
+                                throw error;
+                            }
+                        }
+                    }
+                    
+                    if (retryCount >= maxRetries) {
+                        throw lastError || new Error(`aiLocate操作失败，已重试${maxRetries}次`);
+                    }
+                    
+                    const locateEndTime = Date.now();
+                    
+                    console.log(`MidScene aiLocate completed in ${locateEndTime - locateStartTime}ms`);
+                    console.log(`Locate Result:`, locateResult);
+                    
+                    // 在日志中显示定位到的坐标
+                    const locateDisplay = locateResult ? 
+                        `坐标: (${locateResult.x}, ${locateResult.y})` : 
+                        '未找到元素';
+                    logMessage(executionId, 'info', `AI元素定位完成，${locateDisplay}`);
+                    
+                    // 存储变量（如果指定了output_variable）
+                    if (locateOutputVariable) {
+                        let context = variableContexts.get(executionId);
+                        if (!context) {
+                            context = {};
+                            variableContexts.set(executionId, context);
+                        }
+                        
+                        // 使用用户指定的变量名存储结果
+                        context[locateOutputVariable] = locateResult;
+                        logMessage(executionId, 'info', `变量已存储: ${locateOutputVariable} = ${JSON.stringify(locateResult)}`);
+                    } else {
+                        // 兼容性：如果没有指定output_variable，使用step_X_result格式
+                        let context = variableContexts.get(executionId);
+                        if (!context) {
+                            context = {};
+                            variableContexts.set(executionId, context);
+                        }
+                        
+                        const stepVariableName = `step_${stepIndex + 1}_result`;
+                        context[stepVariableName] = locateResult;
+                        logMessage(executionId, 'info', `变量已存储（兼容模式）: ${stepVariableName} = ${JSON.stringify(locateResult)}`);
                     }
                 }
                 break;
