@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 title Intent Test Framework - Local Proxy Server
-setlocal
+setlocal enabledelayedexpansion
 
 echo.
 echo ========================================
@@ -10,9 +10,9 @@ echo ========================================
 echo.
 
 REM Check Node.js
-echo [1/4] Checking Node.js environment...
-where node >nul
-if %errorlevel% neq 0 (
+echo [1/5] Checking Node.js environment...
+node --version >nul 2>&1
+if !errorlevel! neq 0 (
     echo X Error: Node.js not detected
     echo.
     echo Please install Node.js first:
@@ -24,20 +24,24 @@ if %errorlevel% neq 0 (
 )
 
 for /f "tokens=*" %%i in ('node --version') do set NODE_VERSION=%%i
-echo + Node.js version: %NODE_VERSION%
+echo + Node.js version: !NODE_VERSION!
 
-REM Check npm  
-echo [2/4] Checking npm...
-where npm >nul
-if %errorlevel% neq 0 (
+REM Check npm
+echo.
+echo [2/5] Checking npm...
+npm --version >nul 2>&1
+if !errorlevel! neq 0 (
     echo X Error: npm not found
     pause
     exit /b 1
 )
 
+for /f "tokens=*" %%i in ('npm --version') do set NPM_VERSION=%%i
+echo + npm version: !NPM_VERSION!
+
 REM Check and install dependencies
 echo.
-echo [3/4] Checking dependencies...
+echo [3/5] Checking dependencies...
 
 REM Check key dependencies
 set PLAYWRIGHT_TEST_MISSING=false
@@ -51,19 +55,19 @@ if not exist "node_modules\axios" (
     set AXIOS_MISSING=true
 )
 
-REM Install dependencies if missing or node_modules doesn't exist  
+REM Install dependencies if missing or node_modules doesn't exist
 if not exist "node_modules" (
     goto install_deps
 )
-if "%PLAYWRIGHT_TEST_MISSING%"=="true" (
+if "!PLAYWRIGHT_TEST_MISSING!"=="true" (
     goto install_deps
 )
-if "%AXIOS_MISSING%"=="true" (
+if "!AXIOS_MISSING!"=="true" (
     goto install_deps
 )
 
 echo + Dependencies already exist
-goto check_config
+goto check_playwright
 
 :install_deps
 echo ^ Installing/updating dependencies...
@@ -72,21 +76,23 @@ echo This may take several minutes, please wait...
 REM Clean old dependencies
 if exist "node_modules" (
     echo ^ Cleaning old dependencies...
-    rmdir /s /q "node_modules"
+    rmdir /s /q "node_modules" 2>nul
     if exist "package-lock.json" (
-        del "package-lock.json"
+        del "package-lock.json" 2>nul
     )
 )
 
-REM Install dependencies
-npm install
-if %errorlevel% neq 0 (
+REM Install dependencies with verbose output for debugging
+echo ^ Running: npm install
+npm install --progress=true
+if !errorlevel! neq 0 (
     echo X Dependencies installation failed
     echo.
     echo Possible solutions:
     echo 1. Check network connection
     echo 2. Clean npm cache: npm cache clean --force
     echo 3. Use China mirror: npm config set registry https://registry.npmmirror.com
+    echo 4. Try running as administrator
     pause
     exit /b 1
 )
@@ -94,26 +100,54 @@ if %errorlevel% neq 0 (
 REM Verify key dependencies
 if not exist "node_modules\@playwright\test" (
     echo X @playwright/test dependency installation failed
+    echo   Checking node_modules directory...
+    dir node_modules 2>nul | findstr /i playwright
     pause
     exit /b 1
 )
 
 if not exist "node_modules\axios" (
     echo X axios dependency installation failed
+    echo   Checking node_modules directory...
+    dir node_modules 2>nul | findstr /i axios
     pause
     exit /b 1
 )
 
 echo + Dependencies installation completed
 
+:check_playwright
+
+REM Check Playwright browsers
+echo.
+echo [4/5] Checking Playwright browsers...
+echo ^ Installing/updating Playwright browsers...
+echo This step is necessary for web automation to work properly.
+
+npx playwright install chromium --with-deps
+if !errorlevel! neq 0 (
+    echo ^ Warning: Playwright browser installation had issues
+    echo   This might cause "Executable doesn't exist" errors during testing
+    echo   You can manually install later with: npx playwright install chromium
+    echo   Continuing with server startup...
+) else (
+    echo + Playwright browsers ready
+)
+
 :check_config
 
 REM Check configuration file
 echo.
-echo [4/4] Checking configuration file...
+echo [5/5] Checking configuration file...
 if not exist ".env" (
     echo ^ First run, creating configuration file...
-    copy ".env.example" ".env" >nul
+    copy ".env.example" ".env" >nul 2>&1
+    if !errorlevel! neq 0 (
+        echo X Failed to copy .env.example to .env
+        echo   Please manually create .env file or check file permissions
+        pause
+        exit /b 1
+    )
     echo.
     echo ! Important: Please configure AI API key
     echo.
@@ -122,26 +156,51 @@ if not exist ".env" (
     echo.
     echo After configuration, please run this script again
     echo.
-    start notepad ".env"
+    if exist "notepad.exe" (
+        start notepad ".env"
+    ) else (
+        echo Please manually edit the .env file
+    )
     pause
     exit /b 0
 )
 
 echo + Configuration file exists
 
-REM Start server
+REM Final check - verify all is ready
 echo.
-echo [5/5] Starting server...
-echo.
+echo ========================================
+echo   Starting Server
+echo ========================================
+
 echo ^ Starting Intent Test Framework Local Proxy Server...
 echo.
-echo After successful startup, please return to the Web interface
-echo and select "Local Proxy Mode"
+echo After successful startup, you should see:
+echo   - Server listening messages
+echo   - WebSocket server ready
+echo   - AI model configuration
+echo.
+echo Then return to the Web interface and select "Local Proxy Mode"
 echo Press Ctrl+C to stop the server
 echo.
 
+REM Start the server with error handling
 node midscene_server.js
+set SERVER_EXIT_CODE=!errorlevel!
 
 echo.
-echo Server stopped
+if !SERVER_EXIT_CODE! neq 0 (
+    echo X Server exited with error code: !SERVER_EXIT_CODE!
+    echo.
+    echo Common issues:
+    echo 1. Port 3001 is already in use
+    echo 2. Missing AI API key in .env file
+    echo 3. Node.js version compatibility
+    echo 4. Missing dependencies
+    echo.
+    echo Please check the error messages above
+) else (
+    echo ^ Server stopped normally
+)
+
 pause
