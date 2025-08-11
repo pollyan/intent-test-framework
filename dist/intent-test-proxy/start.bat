@@ -77,65 +77,30 @@ if exist "package-lock.json" (
     del "package-lock.json" 2>nul
 )
 
-REM Install dependencies with progress monitoring
-echo ^ Starting npm install...
-echo   This may take 5-15 minutes on first run...
-echo   Progress: npm install is running in background
+REM Install dependencies - simplified approach
+echo ^ Running npm install...
+echo   This may take several minutes, please be patient...
+echo   You will see package installation messages below:
 echo.
 
-REM Create monitoring script for long-running npm install
-echo @echo off > install_monitor.bat
-echo setlocal enabledelayedexpansion >> install_monitor.bat
-echo set counter=0 >> install_monitor.bat
-echo :monitor_loop >> install_monitor.bat
-echo timeout /t 30 /nobreak ^>nul >> install_monitor.bat
-echo set /a counter+=30 >> install_monitor.bat
-echo echo [!counter!s] npm install is still running... >> install_monitor.bat
-echo if !counter! geq 900 ( >> install_monitor.bat
-echo   echo [15min] This is taking longer than usual >> install_monitor.bat
-echo   echo [15min] Check network connection or consider Ctrl+C and retry >> install_monitor.bat
-echo ^) >> install_monitor.bat
-echo tasklist /fi "imagename eq npm.exe" ^>nul 2^>^&1 >> install_monitor.bat
-echo if !errorlevel! equ 0 goto monitor_loop >> install_monitor.bat
-echo echo + npm install process completed >> install_monitor.bat
-echo del install_monitor.bat >> install_monitor.bat
-
-REM Run npm install with monitoring
-start /b install_monitor.bat
-
-REM Try the actual npm install
 npm install --no-audit --no-fund
 
-set INSTALL_RESULT=!errorlevel!
-
-REM Stop monitoring
-taskkill /f /im timeout.exe >nul 2>&1
-
-if !INSTALL_RESULT! neq 0 (
+if !errorlevel! neq 0 (
     echo.
-    echo X npm install failed ^(exit code: !INSTALL_RESULT!^)
+    echo X npm install failed ^(exit code: !errorlevel!^)
     echo.
-    echo Most common solutions:
-    echo.
-    echo 1. Network/Registry Issues:
-    echo    npm config set registry https://registry.npmmirror.com
-    echo    npm cache clean --force
-    echo.
-    echo 2. Permission Issues:
-    echo    Close this window and "Run as administrator"
-    echo.
-    echo 3. Proxy/Firewall:
-    echo    Check your corporate proxy settings
-    echo    Temporarily disable antivirus/firewall
-    echo.
-    echo 4. Manual Installation:
-    echo    Run these commands manually:
-    echo    npm install --verbose
-    echo    npm install @playwright/test axios
+    echo Common solutions:
+    echo 1. Network issues: npm config set registry https://registry.npmmirror.com
+    echo 2. Permission issues: Run as administrator
+    echo 3. Clear cache: npm cache clean --force
+    echo 4. Manual install: npm install @playwright/test axios express socket.io
     echo.
     pause
     exit /b 1
 )
+
+echo.
+echo + npm install completed successfully!
 
 REM Verify key dependencies
 if not exist "node_modules\@playwright\test" (
@@ -161,65 +126,59 @@ echo + Dependencies installation completed
 
 :check_playwright
 echo.
-echo [4/5] Checking Playwright browsers...
-echo ^ Installing Playwright browsers (required for automation)...
+echo [4/5] Installing Playwright browsers...
+echo ^ Installing Chromium browser for web automation...
+echo   This step may take 2-5 minutes...
+echo.
 
-REM Try to install Playwright browsers with error handling
-npx playwright install chromium >playwright_install.log 2>&1
+npx playwright install chromium
 if !errorlevel! neq 0 (
+    echo.
     echo ^ Warning: Playwright browser installation had issues
     echo   This might cause "Executable doesn't exist" errors during testing
-    if exist playwright_install.log (
-        echo.
-        echo Installation details:
-        type playwright_install.log
-    )
-    echo.
     echo   You can manually install later with: npx playwright install chromium
     echo   Continuing with server startup...
 ) else (
-    echo + Playwright browsers ready
+    echo + Playwright browsers installed successfully
 )
-
-if exist playwright_install.log del playwright_install.log
 
 :check_config
 echo.
-echo [5/5] Checking configuration file...
+echo [5/5] Configuration setup...
+
 if not exist ".env" (
-    echo ^ First run, creating configuration file...
+    echo ^ Creating configuration file...
     
     if exist ".env.example" (
         copy ".env.example" ".env" >nul 2>&1
-        if !errorlevel! neq 0 (
-            echo ^ Warning: Could not copy .env.example, creating basic .env
+        if !errorlevel! equ 0 (
+            echo + Configuration created from template
+        ) else (
             goto create_basic_env
         )
-        echo + Configuration file created from template
     ) else (
         :create_basic_env
-        echo # Intent Test Framework - Local Proxy Configuration > .env
+        echo # Intent Test Framework - Local Proxy Server > .env
         echo. >> .env
-        echo # AI API Configuration ^(Required^) >> .env
+        echo # AI API Configuration ^(REQUIRED^) >> .env
         echo OPENAI_API_KEY=your-api-key-here >> .env
         echo OPENAI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1 >> .env
         echo MIDSCENE_MODEL_NAME=qwen-vl-max-latest >> .env
         echo. >> .env
         echo # Server Configuration >> .env
         echo PORT=3001 >> .env
-        echo + Basic configuration file created
+        echo + Basic configuration created
     )
     
     echo.
-    echo ! IMPORTANT: Please configure your AI API key
+    echo ========================================
+    echo   CONFIGURATION REQUIRED
+    echo ========================================
     echo.
-    echo Configuration file: .env
-    echo Please edit this file and add your AI API key
-    echo.
-    echo After configuration, run this script again
+    echo Please edit the .env file and replace 'your-api-key-here'
+    echo with your actual AI API key, then run this script again.
     echo.
     
-    REM Try to open notepad, but don't fail if it doesn't work
     start notepad .env 2>nul
     pause
     exit /b 0
@@ -227,45 +186,44 @@ if not exist ".env" (
 
 echo + Configuration file exists
 
-REM Final startup
-echo.
-echo ========================================
-echo   Starting Server
-echo ========================================
-echo.
-echo ^ Starting Intent Test Framework Local Proxy Server...
-echo.
-echo Server startup messages:
-echo - If you see "Server listening" - SUCCESS!
-echo - If you see error messages - check configuration
-echo.
-echo After successful startup:
-echo 1. Return to the Web interface
-echo 2. Select "Local Proxy Mode"
-echo 3. Start running your tests
-echo.
-echo Press Ctrl+C to stop the server
-echo.
-
-REM Start the server with comprehensive error handling
-node midscene_server.js 2>&1
-set SERVER_EXIT_CODE=!errorlevel!
-
-echo.
-echo ========================================
-if !SERVER_EXIT_CODE! equ 0 (
-    echo ^ Server stopped normally
-) else (
-    echo X Server exited with error code: !SERVER_EXIT_CODE!
+REM Check if API key is configured
+findstr /c:"your-api-key-here" .env >nul
+if !errorlevel! equ 0 (
     echo.
-    echo Common issues and solutions:
-    echo 1. Port 3001 in use - Close other applications using this port
-    echo 2. Missing API key - Edit .env file and add valid OPENAI_API_KEY
-    echo 3. Network issues - Check internet connection
-    echo 4. Permission issues - Try running as administrator
-    echo 5. Node.js issues - Reinstall Node.js from https://nodejs.org/
+    echo X Please edit .env file and set your actual API key
+    echo   Current placeholder: 'your-api-key-here'
     echo.
-    echo Check the error messages above for specific details
+    start notepad .env 2>nul
+    pause
+    exit /b 0
 )
 
+echo + API key appears to be configured
+
+REM Start server
+echo.
+echo ========================================
+echo   STARTING SERVER
+echo ========================================
+echo.
+echo + Starting Intent Test Framework Local Proxy Server...
+echo.
+
+node midscene_server.js
+
+set SERVER_CODE=!errorlevel!
+echo.
+echo ========================================
+echo Server stopped with exit code: !SERVER_CODE!
+
+if !SERVER_CODE! neq 0 (
+    echo.
+    echo Common solutions:
+    echo 1. Check API key in .env file
+    echo 2. Ensure port 3001 is available
+    echo 3. Check internet connection
+    echo 4. Try running as administrator
+)
+
+echo.
 pause
