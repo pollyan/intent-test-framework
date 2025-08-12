@@ -1,18 +1,17 @@
 {
   "name": "intent-test-proxy",
   "version": "1.0.0",
-  "description": "Intent Test Framework Local Proxy Server",
+  "description": "Intent Test Framework 本地代理服务器",
   "main": "midscene_server.js",
   "scripts": {
     "start": "node midscene_server.js",
     "install-deps": "npm install"
   },
   "dependencies": {
-    "@midscene/web": "^0.23.4",
+    "@midscene/web": "^0.20.1",
     "@playwright/test": "^1.45.0",
     "axios": "^1.10.0",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.0",
     "express": "^4.18.2",
     "playwright": "^1.45.0",
     "socket.io": "^4.7.0"

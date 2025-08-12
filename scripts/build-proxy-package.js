@@ -88,151 +88,155 @@ MIDSCENE_MODEL_NAME=qwen-vl-max-latest
 
 fs.writeFileSync(path.join(BUILD_DIR, '.env.example'), envTemplate);
 
-// 创建Windows启动脚本
+// 创建Windows启动脚本 (使用修复后的版本)
 console.log('🖥️ 创建启动脚本...');
 const windowsScript = `@echo off
 chcp 65001 >nul
-title Intent Test Framework - 本地代理服务器
+title Intent Test Framework - Local Proxy Server [FIXED VERSION]
+setlocal enabledelayedexpansion
 
 echo.
 echo ========================================
-echo   Intent Test Framework 本地代理服务器
+echo   Intent Test Framework Local Proxy
+echo   [FINAL FIXED VERSION - No Interruption]
 echo ========================================
 echo.
 
-REM 检查Node.js
-echo [1/4] 检查Node.js环境...
-node --version >nul 2>&1
-if %errorlevel% neq 0 (
-    echo ❌ 错误: 未检测到Node.js
-    echo.
-    echo 请先安装Node.js:
-    echo https://nodejs.org/
-    echo.
-    echo 建议安装LTS版本 ^(16.x或更高^)
+REM Step 1: Check Node.js
+echo [1/5] Checking Node.js environment...
+for /f "tokens=*" %%i in ('node --version 2^>nul') do set NODE_VERSION=%%i
+if "!NODE_VERSION!"=="" (
+    echo X Error: Node.js not detected
+    echo Please install Node.js from https://nodejs.org/
     pause
     exit /b 1
 )
+echo + Node.js version: !NODE_VERSION!
 
-for /f "tokens=*" %%i in ('node --version') do set NODE_VERSION=%%i
-echo ✅ Node.js版本: %NODE_VERSION%
-
-REM 检查npm
-npm --version >nul 2>&1
-if %errorlevel% neq 0 (
-    echo ❌ 错误: npm未找到
-    pause
-    exit /b 1
-)
-
-REM 检查和安装依赖
+REM Step 2: Skip npm check (causes issues)
 echo.
-echo [2/4] 检查依赖包...
+echo [2/5] npm check...
+echo + npm: Will be tested during installation
 
-REM 检查关键依赖是否存在
-set PLAYWRIGHT_TEST_MISSING=false
-set AXIOS_MISSING=false
+REM Step 3: Dependencies
+echo.
+echo [3/5] Installing dependencies...
 
-if not exist "node_modules\\@playwright\\test" (
-    set PLAYWRIGHT_TEST_MISSING=true
-)
-
-if not exist "node_modules\\axios" (
-    set AXIOS_MISSING=true
-)
-
-REM 如果关键依赖缺失或node_modules不存在，则重新安装
-if not exist node_modules (
-    goto install_deps
-)
-if "%PLAYWRIGHT_TEST_MISSING%"=="true" (
-    goto install_deps
-)
-if "%AXIOS_MISSING%"=="true" (
-    goto install_deps
-)
-
-echo ✅ 依赖包已存在
-goto check_config
-
-:install_deps
-echo 📦 安装/更新依赖包...
-echo 这可能需要几分钟时间，请耐心等待...
-
-REM 清理旧的依赖
-if exist node_modules (
-    echo 🧹 清理旧依赖...
-    rmdir /s /q node_modules
-    if exist package-lock.json (
-        del package-lock.json
+if exist "node_modules\\@playwright\\test" (
+    if exist "node_modules\\axios" (
+        echo + Dependencies already exist, skipping installation
+        goto step4_playwright
     )
 )
 
-REM 安装依赖
-npm install
-if %errorlevel% neq 0 (
-    echo ❌ 依赖安装失败
-    echo.
-    echo 可能的解决方案:
-    echo 1. 检查网络连接
-    echo 2. 清理npm缓存: npm cache clean --force
-    echo 3. 使用国内镜像: npm config set registry https://registry.npmmirror.com
-    pause
-    exit /b 1
-)
-
-REM 验证关键依赖
-if not exist "node_modules\\@playwright\\test" (
-    echo ❌ @playwright/test 依赖安装失败
-    pause
-    exit /b 1
-)
-
-if not exist "node_modules\\axios" (
-    echo ❌ axios 依赖安装失败
-    pause
-    exit /b 1
-)
-
-echo ✅ 依赖安装完成
-
-:check_config
-
-REM 检查配置文件
+echo ^ node_modules missing or incomplete
+echo ^ Running npm install...
+echo   Please wait, this may take several minutes...
 echo.
-echo [3/4] 检查配置文件...
-if not exist .env (
-    echo ⚙️ 首次运行，创建配置文件...
-    copy .env.example .env >nul
+
+npm install --no-audit --no-fund
+
+if !errorlevel! neq 0 (
     echo.
-    echo ⚠️  重要: 请配置AI API密钥
+    echo X npm install failed
+    echo Try: 1^) Run as administrator 2^) npm cache clean --force
+    pause
+    exit /b 1
+)
+
+echo + npm install completed successfully!
+
+:step4_playwright
+REM Step 4: Playwright browsers
+echo.
+echo [4/5] Installing Playwright browsers...
+echo ^ Installing Chromium browser...
+
+npx playwright install chromium
+
+if !errorlevel! neq 0 (
+    echo ^ Warning: Playwright browser installation failed
+    echo   You can install manually: npx playwright install chromium
+    echo   Continuing anyway...
+) else (
+    echo + Playwright browsers ready
+)
+
+REM Step 5: Configuration and startup
+echo.
+echo [5/5] Configuration and server startup...
+
+if not exist ".env" (
+    echo ^ Creating configuration file...
+    if exist ".env.example" (
+        copy ".env.example" ".env" >nul
+    ) else (
+        echo OPENAI_API_KEY=your-api-key-here > .env
+        echo OPENAI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1 >> .env
+        echo MIDSCENE_MODEL_NAME=qwen-vl-max-latest >> .env
+        echo PORT=3001 >> .env
+    )
+    echo + Configuration file created
     echo.
-    echo 配置文件已创建: .env
-    echo 请编辑此文件，添加您的AI API密钥
+    echo ========================================
+    echo   CONFIGURATION REQUIRED
+    echo ========================================
     echo.
-    echo 配置完成后，请重新运行此脚本
+    echo Please edit .env file and set your API key
+    echo Current placeholder: 'your-api-key-here'
     echo.
-    notepad .env
+    start notepad .env 2>nul
+    echo After editing, run this script again.
     pause
     exit /b 0
 )
 
-echo ✅ 配置文件存在
+echo + Configuration file exists
 
-REM 启动服务器
+REM Check API key
+findstr /c:"your-api-key-here" .env >nul
+if !errorlevel! equ 0 (
+    echo X Please set your actual API key in .env file
+    start notepad .env 2>nul
+    pause
+    exit /b 0
+)
+
+echo + API key configured
+
 echo.
-echo [4/4] 启动服务器...
+echo ========================================
+echo   ALL STEPS COMPLETED - STARTING SERVER
+echo ========================================
 echo.
-echo 🚀 正在启动Intent Test Framework本地代理服务器...
+echo ^ Starting Intent Test Framework Local Proxy Server...
 echo.
-echo 启动成功后，请返回Web界面选择"本地代理模式"
-echo 按 Ctrl+C 可停止服务器
+echo What to expect:
+echo - Server will show startup messages
+echo - Look for "Server listening on port 3001"
+echo - Then go to Web interface and select "Local Proxy Mode"
+echo.
+echo Press Ctrl+C to stop the server
 echo.
 
 node midscene_server.js
 
+set EXIT_CODE=!errorlevel!
 echo.
-echo 服务器已停止
+echo ========================================
+echo Server stopped ^(exit code: !EXIT_CODE!^)
+
+if !EXIT_CODE! neq 0 (
+    echo.
+    echo Possible issues:
+    echo 1. API key invalid or missing
+    echo 2. Port 3001 already in use
+    echo 3. Network connectivity issues
+    echo 4. Missing dependencies
+)
+
+echo.
+echo Script execution completed.
 pause
 `;
 
