@@ -23,10 +23,10 @@ const io = new Server(server, {
     }
 });
 
-const port = 3001;
+const port = process.env.PORT || 3001;
 
-// 数据库配置
-const API_BASE_URL = 'http://localhost:5001/api';
+// 数据库配置 - 注意：如果需要连接到主Web应用，请确保端口正确
+const API_BASE_URL = process.env.MAIN_APP_URL || 'http://localhost:5001/api';
 
 // 中间件
 app.use(cors());

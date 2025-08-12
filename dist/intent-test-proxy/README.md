@@ -5,13 +5,19 @@
 ### 1. 启动服务器
 
 **Windows:**
-双击 `start.bat` 文件
+- **推荐**: 双击 `start.bat` 文件（完整安装和检查）
+- **快速模式**: 双击 `quick_start.bat` 文件（跳过依赖检查，适合重复启动）
 
 **Mac/Linux:**
 双击 `start.sh` 文件，或在终端中运行：
 ```bash
+chmod +x start.sh
 ./start.sh
 ```
+
+#### 脚本说明
+- `start.bat`: 完整版启动脚本，包含依赖检查、安装和配置向导
+- `quick_start.bat`: 快速启动脚本，跳过依赖检查，适合已安装过的用户
 
 ### 2. 配置AI API密钥
 
