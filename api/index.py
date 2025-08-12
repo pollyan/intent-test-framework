@@ -168,7 +168,7 @@ def local_proxy_page():
     try:
         from flask import render_template
         from datetime import datetime
-        return render_template('local_proxy.html', current_date=datetime.utcnow().strftime('%Y-%m-%d'))
+        return render_template('local_proxy.html', current_date=datetime.utcnow().strftime('%Y-%m-%d'), build_time=datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC'))
     except Exception as e:
         return jsonify({'error': f'无法加载本地代理页面: {str(e)}'}), 500
 

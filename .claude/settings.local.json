@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm:*)",
+      "Bash(ssh:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(dir:*)",
+      "Bash(cmd //c:*)",
+      "Bash(echo:*)",
+      "Bash([ -f package.json ])",
+      "Bash([ -f .env.example ])",
+      "Bash([ -f midscene_server.js ])",
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(start.bat)",
+      "Bash(cmd:*)",
+      "Bash(test.bat)",
+      "Bash(copy start_final.bat start.bat)",
+      "Bash(node:*)",
+      "Bash(copy:*)",
+      "Bash(npx playwright install:*)",
+      "WebFetch(domain:intent-test-framework.vercel.app)",
+      "Bash(git commit:*)"
+    ],
+    "deny": []
+  }
+}
