@@ -585,11 +585,12 @@ def execute_testcase_async(execution_id, testcase, mode, client_sid):
         }, room=client_sid)
 
 def execute_single_step(ai, step, mode, execution_id, step_index=0):
-    """执行单个测试步骤"""
+    """执行单个测试步骤 - 支持变量解析和输出捕获"""
     try:
         action = step.get('action')
         params = step.get('params', {})
         description = step.get('description', action)
+        output_variable = step.get('output_variable')  # 新增：输出变量名
 
         result = {
             'success': False,
@@ -597,23 +598,39 @@ def execute_single_step(ai, step, mode, execution_id, step_index=0):
             'confidence': 0.8 if AI_AVAILABLE else 0.5,
             'execution_details': {},
             'step_index': step_index,
-            'step_name': description
+            'step_name': description,
+            'output_data': None  # 新增：存储输出数据
         }
 
         print(f"[执行] {description}")
 
+        # 创建变量解析器
+        try:
+            from web_gui.services.variable_resolver import VariableResolverService
+            resolver = VariableResolverService(execution_id)
+            
+            # 解析步骤参数中的变量引用
+            resolved_params = resolver.resolve_step_parameters(params, step_index)
+            print(f"[变量解析] 原始参数: {params}")
+            print(f"[变量解析] 解析后参数: {resolved_params}")
+            
+        except Exception as e:
+            print(f"[警告] 变量解析失败，使用原始参数: {e}")
+            resolved_params = params
+            resolver = None
+
         # 根据不同的操作类型执行相应的AI操作
-        if action == 'goto':
-            url = params.get('url')
+        if action == 'goto' or action == 'navigate':
+            url = resolved_params.get('url')
             if not url:
                 raise ValueError("goto操作缺少url参数")
             ai.goto(url)
             result['success'] = True
             result['execution_details']['url'] = url
 
-        elif action == 'ai_input':
-            text = params.get('text')
-            locate = params.get('locate')
+        elif action == 'ai_input' or action == 'aiInput':
+            text = resolved_params.get('text')
+            locate = resolved_params.get('locate')
             if not text or not locate:
                 raise ValueError("ai_input操作缺少text或locate参数")
             ai.ai_input(text, locate)
@@ -621,25 +638,25 @@ def execute_single_step(ai, step, mode, execution_id, step_index=0):
             result['execution_details']['text'] = text
             result['execution_details']['locate'] = locate
 
-        elif action == 'ai_tap':
-            prompt = params.get('prompt')
+        elif action == 'ai_tap' or action == 'aiTap':
+            prompt = resolved_params.get('prompt') or resolved_params.get('locate')
             if not prompt:
-                raise ValueError("ai_tap操作缺少prompt参数")
+                raise ValueError("ai_tap操作缺少prompt或locate参数")
             ai.ai_tap(prompt)
             result['success'] = True
             result['execution_details']['prompt'] = prompt
 
-        elif action == 'ai_assert':
-            prompt = params.get('prompt')
+        elif action == 'ai_assert' or action == 'aiAssert':
+            prompt = resolved_params.get('prompt') or resolved_params.get('condition')
             if not prompt:
-                raise ValueError("ai_assert操作缺少prompt参数")
+                raise ValueError("ai_assert操作缺少prompt或condition参数")
             ai.ai_assert(prompt)
             result['success'] = True
             result['execution_details']['assertion'] = prompt
 
-        elif action == 'ai_wait_for':
-            prompt = params.get('prompt')
-            timeout = params.get('timeout', 10000)
+        elif action == 'ai_wait_for' or action == 'aiWaitFor':
+            prompt = resolved_params.get('prompt')
+            timeout = resolved_params.get('timeout', 10000)
             if not prompt:
                 raise ValueError("ai_wait_for操作缺少prompt参数")
             ai.ai_wait_for(prompt, timeout)
@@ -648,13 +665,133 @@ def execute_single_step(ai, step, mode, execution_id, step_index=0):
             result['execution_details']['timeout'] = timeout
 
         elif action == 'ai_scroll':
-            direction = params.get('direction', 'down')
-            scroll_type = params.get('scroll_type', 'once')
-            locate_prompt = params.get('locate_prompt')
+            direction = resolved_params.get('direction', 'down')
+            scroll_type = resolved_params.get('scroll_type', 'once')
+            locate_prompt = resolved_params.get('locate_prompt')
             ai.ai_scroll(direction, scroll_type, locate_prompt)
             result['success'] = True
             result['execution_details']['direction'] = direction
             result['execution_details']['scroll_type'] = scroll_type
+
+        # 新增：支持AI查询操作并捕获返回值
+        elif action == 'aiQuery':
+            # 支持两种参数格式：
+            # 1. 新格式：schema = {"字段名": "字段描述, 数据类型"}
+            # 2. 旧格式：query + dataDemand（向后兼容）
+            schema = resolved_params.get('schema')
+            query = resolved_params.get('query')
+            data_demand = resolved_params.get('dataDemand')
+            
+            if not schema and not query:
+                raise ValueError("aiQuery操作缺少schema或query参数")
+            
+            # 模拟aiQuery返回值（实际应调用AI引擎）
+            if hasattr(ai, 'ai_query'):
+                if schema:
+                    output_data = ai.ai_query(schema=schema)
+                else:
+                    output_data = ai.ai_query(query, data_demand)
+            else:
+                # 模拟返回数据
+                if schema:
+                    output_data = _mock_ai_query_result_from_schema(schema)
+                else:
+                    output_data = _mock_ai_query_result(query, data_demand)
+            
+            result['success'] = True
+            result['output_data'] = output_data
+            result['execution_details']['schema'] = schema
+            result['execution_details']['query'] = query
+            result['execution_details']['data_demand'] = data_demand
+            
+            # 如果指定了输出变量，存储结果
+            if output_variable and resolver:
+                resolver.store_step_output(
+                    variable_name=output_variable,
+                    value=output_data,
+                    step_index=step_index,
+                    api_method='aiQuery',
+                    api_params=resolved_params
+                )
+                print(f"[变量存储] {output_variable} = {output_data}")
+
+        elif action == 'aiString':
+            query = resolved_params.get('query')
+            if not query:
+                raise ValueError("aiString操作缺少query参数")
+            
+            # 模拟aiString返回值
+            if hasattr(ai, 'ai_string'):
+                output_data = ai.ai_string(query)
+            else:
+                output_data = _mock_ai_string_result(query)
+            
+            result['success'] = True
+            result['output_data'] = output_data
+            result['execution_details']['query'] = query
+            
+            # 存储输出变量
+            if output_variable and resolver:
+                resolver.store_step_output(
+                    variable_name=output_variable,
+                    value=output_data,
+                    step_index=step_index,
+                    api_method='aiString',
+                    api_params=resolved_params
+                )
+                print(f"[变量存储] {output_variable} = {output_data}")
+
+        elif action == 'aiAsk':
+            query = resolved_params.get('query')
+            if not query:
+                raise ValueError("aiAsk操作缺少query参数")
+            
+            # 模拟aiAsk返回值
+            if hasattr(ai, 'ai_ask'):
+                output_data = ai.ai_ask(query)
+            else:
+                output_data = _mock_ai_ask_result(query)
+            
+            result['success'] = True
+            result['output_data'] = output_data
+            result['execution_details']['query'] = query
+            
+            # 存储输出变量
+            if output_variable and resolver:
+                resolver.store_step_output(
+                    variable_name=output_variable,
+                    value=output_data,
+                    step_index=step_index,
+                    api_method='aiAsk',
+                    api_params=resolved_params
+                )
+                print(f"[变量存储] {output_variable} = {output_data}")
+
+        elif action == 'evaluateJavaScript':
+            script = resolved_params.get('script')
+            if not script:
+                raise ValueError("evaluateJavaScript操作缺少script参数")
+            
+            # 模拟JavaScript执行结果
+            if hasattr(ai, 'evaluate_javascript'):
+                output_data = ai.evaluate_javascript(script)
+            else:
+                output_data = _mock_javascript_result(script)
+            
+            result['success'] = True
+            result['output_data'] = output_data
+            result['execution_details']['script'] = script
+            
+            # 存储输出变量
+            if output_variable and resolver:
+                resolver.store_step_output(
+                    variable_name=output_variable,
+                    value=output_data,
+                    step_index=step_index,
+                    api_method='evaluateJavaScript',
+                    api_params=resolved_params
+                )
+                print(f"[变量存储] {output_variable} = {output_data}")
 
         else:
             raise ValueError(f'不支持的操作类型: {action}')
@@ -698,6 +835,119 @@ def execute_single_step(ai, step, mode, execution_id, step_index=0):
             'confidence': 0.0,
             'execution_details': {}
         }
+
+def _mock_ai_query_result(query: str, data_demand: str = None) -> dict:
+    """模拟aiQuery返回结果（旧格式）"""
+    import json
+    import re
+    
+    # 尝试解析dataDemand结构
+    if data_demand:
+        try:
+            # 简单解析dataDemand格式，如 "{name: string, price: number}"
+            if 'name' in data_demand and 'price' in data_demand:
+                return {
+                    'name': f'模拟商品名_{hash(query) % 100}',
+                    'price': abs(hash(query) % 1000) + 99.99
+                }
+            elif 'title' in data_demand:
+                return {'title': f'模拟标题_{hash(query) % 100}'}
+            elif 'count' in data_demand:
+                return {'count': abs(hash(query) % 50) + 1}
+        except:
+            pass
+    
+    # 默认返回结构
+    return {
+        'result': f'模拟查询结果: {query}',
+        'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
+        'confidence': 0.85
+    }
+
+def _mock_ai_query_result_from_schema(schema: dict) -> dict:
+    """根据schema格式模拟aiQuery返回结果"""
+    result = {}
+    
+    for field_name, field_desc in schema.items():
+        # 根据字段描述生成模拟数据
+        field_desc_lower = field_desc.lower()
+        
+        if 'string' in field_desc_lower or '字符串' in field_desc_lower:
+            if 'name' in field_name.lower() or '名称' in field_name or '姓名' in field_name:
+                result[field_name] = f'模拟名称_{hash(field_name) % 100}'
+            elif 'title' in field_name.lower() or '标题' in field_name:
+                result[field_name] = f'模拟标题_{hash(field_name) % 100}'
+            elif 'url' in field_name.lower() or '链接' in field_name:
+                result[field_name] = f'https://example.com/page_{hash(field_name) % 100}'
+            elif 'id' in field_name.lower():
+                result[field_name] = f'id_{abs(hash(field_name) % 10000)}'
+            else:
+                result[field_name] = f'模拟文本_{hash(field_name) % 100}'
+                
+        elif 'number' in field_desc_lower or '数字' in field_desc_lower or 'int' in field_desc_lower:
+            if 'price' in field_name.lower() or '价格' in field_name:
+                result[field_name] = abs(hash(field_name) % 1000) + 99.99
+            elif 'count' in field_name.lower() or '数量' in field_name:
+                result[field_name] = abs(hash(field_name) % 100) + 1
+            elif 'age' in field_name.lower() or '年龄' in field_name:
+                result[field_name] = abs(hash(field_name) % 50) + 18
+            else:
+                result[field_name] = abs(hash(field_name) % 1000)
+                
+        elif 'boolean' in field_desc_lower or '布尔' in field_desc_lower or 'bool' in field_desc_lower:
+            result[field_name] = hash(field_name) % 2 == 0
+            
+        elif 'array' in field_desc_lower or '数组' in field_desc_lower or 'list' in field_desc_lower:
+            result[field_name] = [f'项目{i}_{hash(field_name) % 100}' for i in range(3)]
+            
+        else:
+            # 默认返回字符串
+            result[field_name] = f'模拟数据_{hash(field_name) % 100}'
+    
+    return result
+
+def _mock_ai_string_result(query: str) -> str:
+    """模拟aiString返回结果"""
+    # 根据查询内容返回不同的模拟结果
+    if '价格' in query or 'price' in query.lower():
+        return f'¥{abs(hash(query) % 1000) + 99}'
+    elif '标题' in query or 'title' in query.lower():
+        return f'模拟页面标题_{hash(query) % 100}'
+    elif '时间' in query or 'time' in query.lower():
+        return time.strftime('%Y-%m-%d %H:%M:%S')
+    else:
+        return f'模拟字符串结果: {query}'
+
+def _mock_ai_ask_result(query: str) -> str:
+    """模拟aiAsk返回结果"""
+    # 模拟AI分析结果
+    responses = [
+        f'根据当前页面内容，{query}的答案是：这是一个模拟的AI分析结果。',
+        f'基于页面信息分析，{query}的结论是：模拟的智能回答内容。',
+        f'通过AI理解，{query}的回应是：这是模拟生成的智能答案。'
+    ]
+    return responses[hash(query) % len(responses)]
+
+def _mock_javascript_result(script: str) -> any:
+    """模拟JavaScript执行结果"""
+    # 根据脚本内容返回不同的模拟结果
+    if 'window.location' in script:
+        return {
+            'url': 'https://example.com/current-page',
+            'title': '模拟页面标题',
+            'timestamp': time.strftime('%Y-%m-%d %H:%M:%S')
+        }
+    elif 'document.title' in script:
+        return '模拟页面标题'
+    elif 'return' in script and '{' in script:
+        # 返回对象的脚本
+        return {
+            'result': '模拟JavaScript执行结果',
+            'script': script[:50] + '...' if len(script) > 50 else script,
+            'timestamp': time.time()
+        }
+    else:
+        return f'模拟脚本执行结果: {script[:30]}...'
 
 # ==================== 初始化数据库 ====================
 

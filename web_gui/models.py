@@ -192,3 +192,147 @@ class Template(db.Model):
             created_by=data.get('created_by', 'system'),
             is_public=data.get('is_public', False)
         )
+
+class ExecutionVariable(db.Model):
+    """执行变量模型 - 存储测试执行过程中的变量数据"""
+    __tablename__ = 'execution_variables'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    execution_id = db.Column(db.String(50), db.ForeignKey('execution_history.execution_id'), nullable=False)
+    variable_name = db.Column(db.String(255), nullable=False)
+    variable_value = db.Column(db.Text)  # JSON string存储变量值
+    data_type = db.Column(db.String(50), nullable=False)  # string, number, boolean, object, array
+    source_step_index = db.Column(db.Integer, nullable=False)  # 来源步骤索引
+    source_api_method = db.Column(db.String(100))  # 来源API方法(aiQuery, aiString等)
+    source_api_params = db.Column(db.Text)  # JSON string存储API参数
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_encrypted = db.Column(db.Boolean, default=False)  # 是否加密存储
+    
+    # 复合索引优化查询性能和唯一约束
+    __table_args__ = (
+        db.Index('idx_execution_variable', 'execution_id', 'variable_name'),
+        db.Index('idx_execution_step', 'execution_id', 'source_step_index'),
+        db.Index('idx_variable_type', 'execution_id', 'data_type'),
+        db.UniqueConstraint('execution_id', 'variable_name', name='uk_execution_variable_name'),
+    )
+    
+    # 关系
+    execution = db.relationship('ExecutionHistory', backref=db.backref('variables', lazy=True))
+    
+    def to_dict(self):
+        """转换为字典"""
+        return {
+            'id': self.id,
+            'execution_id': self.execution_id,
+            'variable_name': self.variable_name,
+            'variable_value': json.loads(self.variable_value) if self.variable_value else None,
+            'data_type': self.data_type,
+            'source_step_index': self.source_step_index,
+            'source_api_method': self.source_api_method,
+            'source_api_params': json.loads(self.source_api_params) if self.source_api_params else {},
+            'created_at': self.created_at.strftime('%Y-%m-%dT%H:%M:%S.%fZ') if self.created_at else None,
+            'is_encrypted': self.is_encrypted
+        }
+    
+    @classmethod
+    def from_dict(cls, data):
+        """从字典创建实例"""
+        return cls(
+            execution_id=data.get('execution_id'),
+            variable_name=data.get('variable_name'),
+            variable_value=json.dumps(data.get('variable_value')),
+            data_type=data.get('data_type', 'string'),
+            source_step_index=data.get('source_step_index', 0),
+            source_api_method=data.get('source_api_method'),
+            source_api_params=json.dumps(data.get('source_api_params', {})),
+            is_encrypted=data.get('is_encrypted', False)
+        )
+    
+    def get_typed_value(self):
+        """根据数据类型返回正确类型的值"""
+        if not self.variable_value:
+            return None
+            
+        value = json.loads(self.variable_value)
+        
+        if self.data_type == 'number':
+            return float(value) if isinstance(value, (int, float)) else value
+        elif self.data_type == 'boolean':
+            return bool(value) if isinstance(value, bool) else value
+        elif self.data_type in ['object', 'array']:
+            return value  # 已经是解析后的Python对象
+        else:
+            return str(value)  # string类型或其他
+    
+    def validate(self):
+        """验证数据完整性"""
+        errors = []
+        
+        if not self.execution_id:
+            errors.append("execution_id是必需的")
+        
+        if not self.variable_name:
+            errors.append("variable_name是必需的")
+        
+        if not self.data_type:
+            errors.append("data_type是必需的")
+        
+        if self.data_type not in ['string', 'number', 'boolean', 'object', 'array']:
+            errors.append(f"不支持的数据类型: {self.data_type}")
+        
+        if self.source_step_index < 0:
+            errors.append("source_step_index必须是非负整数")
+        
+        return errors
+    
+    @classmethod
+    def get_by_execution(cls, execution_id: str):
+        """获取指定执行的所有变量"""
+        return cls.query.filter_by(execution_id=execution_id).order_by(cls.source_step_index).all()
+    
+    @classmethod
+    def get_variable(cls, execution_id: str, variable_name: str):
+        """获取指定变量"""
+        return cls.query.filter_by(execution_id=execution_id, variable_name=variable_name).first()
+
+class VariableReference(db.Model):
+    """变量引用模型 - 跟踪变量在测试步骤中的使用情况"""
+    __tablename__ = 'variable_references'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    execution_id = db.Column(db.String(50), db.ForeignKey('execution_history.execution_id'), nullable=False)
+    step_index = db.Column(db.Integer, nullable=False)  # 使用变量的步骤
+    variable_name = db.Column(db.String(255), nullable=False)  # 引用的变量名
+    reference_path = db.Column(db.String(500))  # 引用路径，如 product_info.price
+    parameter_name = db.Column(db.String(255))  # 使用变量的参数名
+    original_expression = db.Column(db.String(500))  # 原始引用表达式 ${product_info.price}
+    resolved_value = db.Column(db.Text)  # 解析后的值
+    resolution_status = db.Column(db.String(20), default='success')  # success, failed, pending
+    error_message = db.Column(db.Text)  # 解析错误信息
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # 复合索引
+    __table_args__ = (
+        db.Index('idx_reference_execution_step', 'execution_id', 'step_index'),
+        db.Index('idx_reference_variable', 'execution_id', 'variable_name'),
+        db.Index('idx_reference_status', 'execution_id', 'resolution_status'),
+    )
+    
+    # 关系
+    execution = db.relationship('ExecutionHistory', backref=db.backref('variable_references', lazy=True))
+    
+    def to_dict(self):
+        """转换为字典"""
+        return {
+            'id': self.id,
+            'execution_id': self.execution_id,
+            'step_index': self.step_index,
+            'variable_name': self.variable_name,
+            'reference_path': self.reference_path,
+            'parameter_name': self.parameter_name,
+            'original_expression': self.original_expression,
+            'resolved_value': self.resolved_value,
+            'resolution_status': self.resolution_status,
+            'error_message': self.error_message,
+            'created_at': self.created_at.strftime('%Y-%m-%dT%H:%M:%S.%fZ') if self.created_at else None
+        }

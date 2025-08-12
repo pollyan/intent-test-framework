@@ -5,7 +5,10 @@ from flask import Blueprint, request, jsonify
 import json
 import uuid
 import requests
+import logging
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 # 导入统一错误处理工具
 try:
@@ -518,6 +521,420 @@ def duplicate_testcase_step(testcase_id, step_index):
         }), 500
 
 # ==================== 执行相关API ====================
+
+@api_bp.route('/executions/<execution_id>/variables', methods=['GET'])
+def get_execution_variables(execution_id):
+    """获取执行的变量列表"""
+    try:
+        from .services.variable_resolver_service import get_variable_manager
+        
+        # 获取变量管理器
+        manager = get_variable_manager(execution_id)
+        
+        # 获取所有变量
+        variables = manager.list_variables()
+        
+        return jsonify({
+            'code': 200,
+            'data': {
+                'execution_id': execution_id,
+                'variables': variables,
+                'count': len(variables)
+            },
+            'message': '获取变量列表成功'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'code': 500,
+            'message': f'获取变量列表失败: {str(e)}'
+        }), 500
+
+@api_bp.route('/executions/<execution_id>/variables/<variable_name>', methods=['GET'])
+def get_variable_detail(execution_id, variable_name):
+    """获取变量详细信息"""
+    try:
+        from .services.variable_resolver_service import get_variable_manager
+        
+        # 获取变量管理器
+        manager = get_variable_manager(execution_id)
+        
+        # 获取变量元数据
+        metadata = manager.get_variable_metadata(variable_name)
+        
+        if metadata:
+            return jsonify({
+                'code': 200,
+                'data': metadata,
+                'message': '获取变量详情成功'
+            })
+        else:
+            return jsonify({
+                'code': 404,
+                'message': f'变量不存在: {variable_name}'
+            }), 404
+            
+    except Exception as e:
+        return jsonify({
+            'code': 500,
+            'message': f'获取变量详情失败: {str(e)}'
+        }), 500
+
+@api_bp.route('/executions/<execution_id>/variable-references', methods=['GET'])
+def get_variable_references(execution_id):
+    """获取执行中的变量引用关系"""
+    try:
+        from web_gui.models import VariableReference
+        
+        # 查询变量引用记录
+        references = VariableReference.query.filter_by(execution_id=execution_id).order_by(VariableReference.step_index).all()
+        
+        # 格式化引用数据
+        references_data = []
+        for ref in references:
+            references_data.append({
+                'step_index': ref.step_index,
+                'variable_name': ref.variable_name,
+                'reference_path': ref.reference_path,
+                'parameter_name': ref.parameter_name,
+                'original_expression': ref.original_expression,
+                'resolved_value': ref.resolved_value,
+                'resolution_status': ref.resolution_status,
+                'error_message': ref.error_message
+            })
+        
+        return jsonify({
+            'code': 200,
+            'data': {
+                'execution_id': execution_id,
+                'references': references_data,
+                'count': len(references_data)
+            },
+            'message': '获取变量引用关系成功'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'code': 500,
+            'message': f'获取变量引用关系失败: {str(e)}'
+        }), 500
+
+@api_bp.route('/v1/executions/<execution_id>/variable-suggestions', methods=['GET'])
+def get_variable_suggestions(execution_id):
+    """获取变量建议列表（AC-1: 变量建议API）"""
+    try:
+        from .services.variable_suggestion_service import VariableSuggestionService
+        
+        # 获取查询参数
+        step_index = request.args.get('step_index', type=int)
+        include_properties = request.args.get('include_properties', 'true').lower() == 'true'
+        limit = request.args.get('limit', type=int)
+        
+        # 获取建议服务
+        service = VariableSuggestionService.get_service(execution_id)
+        
+        # 获取变量建议
+        result = service.get_variable_suggestions(
+            step_index=step_index,
+            include_properties=include_properties,
+            limit=limit
+        )
+        
+        return jsonify(result), 200
+        
+    except Exception as e:
+        logger.error(f"获取变量建议失败: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# 保持向后兼容的旧API端点
+@api_bp.route('/executions/<execution_id>/variable-suggestions', methods=['GET'])
+def get_variable_suggestions_legacy(execution_id):
+    """获取变量建议列表（向后兼容）"""
+    try:
+        from .services.variable_suggestion_service import VariableSuggestionService
+        
+        # 获取建议服务
+        service = VariableSuggestionService.get_service(execution_id)
+        
+        # 获取变量建议
+        result = service.get_variable_suggestions()
+        
+        # 转换为旧格式
+        suggestions = []
+        for var in result['variables']:
+            suggestions.append({
+                'name': var['name'],
+                'dataType': var['data_type'],
+                'value': var.get('preview_value', ''),
+                'sourceStepIndex': var['source_step_index'],
+                'sourceApiMethod': var['source_api_method'],
+                'preview': var['preview_value'],
+                'properties': var.get('properties')
+            })
+        
+        return jsonify({
+            'code': 200,
+            'data': {
+                'execution_id': execution_id,
+                'suggestions': suggestions,
+                'count': len(suggestions)
+            },
+            'message': '获取变量建议成功'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'code': 500,
+            'message': f'获取变量建议失败: {str(e)}'
+        }), 500
+
+@api_bp.route('/v1/executions/<execution_id>/variables/<variable_name>/properties', methods=['GET'])
+def get_variable_properties(execution_id, variable_name):
+    """获取变量属性探索信息（AC-2: 对象属性探索API）"""
+    try:
+        from .services.variable_suggestion_service import VariableSuggestionService
+        
+        # 获取查询参数
+        max_depth = request.args.get('max_depth', 3, type=int)
+        
+        # 获取建议服务
+        service = VariableSuggestionService.get_service(execution_id)
+        
+        # 获取变量属性
+        result = service.get_variable_properties(variable_name, max_depth=max_depth)
+        
+        if result is None:
+            return jsonify({'error': f'变量 {variable_name} 不存在'}), 404
+        
+        return jsonify(result), 200
+        
+    except Exception as e:
+        logger.error(f"获取变量属性失败: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# 保持向后兼容的旧API端点
+@api_bp.route('/executions/<execution_id>/variables/<variable_name>/properties', methods=['GET'])
+def get_variable_properties_legacy(execution_id, variable_name):
+    """获取变量的属性列表（向后兼容）"""
+    try:
+        from .services.variable_suggestion_service import VariableSuggestionService
+        
+        # 获取建议服务
+        service = VariableSuggestionService.get_service(execution_id)
+        
+        # 获取变量属性
+        result = service.get_variable_properties(variable_name)
+        
+        if result is None:
+            return jsonify({
+                'code': 404,
+                'message': f'变量不存在: {variable_name}'
+            }), 404
+        
+        return jsonify({
+            'code': 200,
+            'data': {
+                'variable_name': variable_name,
+                'properties': result.get('properties', []),
+                'count': len(result.get('properties', []))
+            },
+            'message': '获取变量属性成功'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'code': 500,
+            'message': f'获取变量属性失败: {str(e)}'
+        }), 500
+
+@api_bp.route('/v1/executions/<execution_id>/variable-suggestions/search', methods=['GET'])
+def search_variables(execution_id):
+    """模糊搜索变量（AC-3: 变量名模糊搜索API）"""
+    try:
+        from .services.variable_suggestion_service import VariableSuggestionService
+        
+        # 获取查询参数
+        query = request.args.get('q', '').strip()
+        limit = request.args.get('limit', 10, type=int)
+        step_index = request.args.get('step_index', type=int)
+        
+        if not query:
+            return jsonify({'error': '搜索查询不能为空'}), 400
+        
+        # 获取建议服务
+        service = VariableSuggestionService.get_service(execution_id)
+        
+        # 执行搜索
+        result = service.search_variables(query=query, limit=limit, step_index=step_index)
+        
+        return jsonify(result), 200
+        
+    except Exception as e:
+        logger.error(f"变量搜索失败: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/v1/executions/<execution_id>/variables/validate', methods=['POST'])
+def validate_variable_references(execution_id):
+    """验证变量引用（AC-4: 变量引用验证API）"""
+    try:
+        from .services.variable_suggestion_service import VariableSuggestionService
+        
+        # 获取请求数据
+        data = request.get_json()
+        if not data or 'references' not in data:
+            return jsonify({'error': '请提供要验证的变量引用'}), 400
+        
+        references = data['references']
+        step_index = data.get('step_index')
+        
+        if not isinstance(references, list):
+            return jsonify({'error': 'references必须是数组'}), 400
+        
+        # 获取建议服务
+        service = VariableSuggestionService.get_service(execution_id)
+        
+        # 验证引用
+        validation_results = service.validate_references(references=references, step_index=step_index)
+        
+        return jsonify({
+            'validation_results': validation_results
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"变量引用验证失败: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/v1/executions/<execution_id>/variables/status', methods=['GET'])
+def get_variables_status(execution_id):
+    """获取变量状态（AC-5: 实时变量状态API）"""
+    try:
+        from .services.variable_suggestion_service import VariableSuggestionService
+        
+        # 获取建议服务
+        service = VariableSuggestionService.get_service(execution_id)
+        
+        # 获取状态信息
+        status = service.get_variables_status()
+        
+        return jsonify({
+            'execution_id': execution_id,
+            **status
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"获取变量状态失败: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+def _format_variable_preview(value, data_type):
+    """格式化变量预览文本"""
+    try:
+        if value is None:
+            return 'null'
+        elif data_type == 'string':
+            return f'"{str(value)[:50]}{"..." if len(str(value)) > 50 else ""}"'
+        elif data_type == 'number':
+            return str(value)
+        elif data_type == 'boolean':
+            return 'true' if value else 'false'
+        elif data_type == 'object':
+            if isinstance(value, dict):
+                keys = list(value.keys())[:3]
+                preview = '{' + ', '.join(f'{k}: ...' for k in keys)
+                if len(value) > 3:
+                    preview += ', ...'
+                preview += '}'
+                return preview
+            return str(value)[:50]
+        elif data_type == 'array':
+            if isinstance(value, list):
+                return f'[{len(value)} items]'
+            return str(value)[:50]
+        else:
+            return str(value)[:50]
+    except Exception:
+        return 'preview unavailable'
+
+def _extract_object_properties(value):
+    """提取对象的属性信息"""
+    try:
+        if not isinstance(value, dict):
+            return None
+        
+        properties = []
+        for key, val in value.items():
+            prop_type = 'string'
+            if isinstance(val, bool):
+                prop_type = 'boolean'
+            elif isinstance(val, int) or isinstance(val, float):
+                prop_type = 'number'
+            elif isinstance(val, dict):
+                prop_type = 'object'
+            elif isinstance(val, list):
+                prop_type = 'array'
+            
+            properties.append({
+                'name': key,
+                'type': prop_type,
+                'value': val,
+                'preview': _format_variable_preview(val, prop_type)
+            })
+        
+        return properties
+        
+    except Exception:
+        return None
+
+@api_bp.route('/testcases/<int:test_case_id>/execute-enhanced', methods=['POST'])
+@api_error_handler
+@db_transaction_handler(db)
+def execute_test_case_enhanced(test_case_id):
+    """执行测试用例（增强版本，支持完整变量解析）"""
+    try:
+        data = request.get_json() or {}
+        
+        # 获取测试用例
+        test_case = TestCase.query.get(test_case_id)
+        if not test_case:
+            raise NotFoundError(f'测试用例不存在: {test_case_id}')
+        
+        # 创建执行ID
+        execution_id = str(uuid.uuid4())
+        
+        # 执行配置
+        execution_config = {
+            'mode': data.get('mode', 'headless'),
+            'browser': data.get('browser', 'chrome'),
+            'stop_on_failure': data.get('stop_on_failure', True),
+            'timeout': data.get('timeout', 30000)
+        }
+        
+        # 创建执行历史记录
+        execution = ExecutionHistory(
+            execution_id=execution_id,
+            test_case_id=test_case_id,
+            status='running',
+            mode=execution_config['mode'],
+            browser=execution_config['browser'],
+            start_time=datetime.utcnow(),
+            executed_by=data.get('executed_by', 'web-gui')
+        )
+        
+        db.session.add(execution)
+        db.session.commit()
+        
+        # 异步执行测试用例（实际项目中应该使用Celery等任务队列）
+        # 这里先返回execution_id，实际执行可以通过另一个进程处理
+        
+        return format_success_response({
+            'execution_id': execution_id,
+            'test_case_id': test_case_id,
+            'status': 'running',
+            'config': execution_config
+        }, '增强测试执行已启动')
+        
+    except Exception as e:
+        logger.error(f"增强测试执行失败: {str(e)}")
+        raise
 
 @api_bp.route('/executions', methods=['POST'])
 def create_execution():

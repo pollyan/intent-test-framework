@@ -174,3 +174,65 @@ Thumbs.db
 # Test results and screenshots
 test_results/
 screenshots/
+
+# === 新增清理规则 ===
+
+# Process ID files
+*.pid
+
+# Application logs (增强日志规则)
+*.log
+web_gui/*.log
+startup.log
+midscene_server.log
+web_server.log
+new_flask.log
+flask.log
+
+# Local development databases
+local_test.db
+*.db
+!web_gui/instance/.gitkeep
+
+# Web bundles (无关项目内容)
+web-bundles/
+
+# POC and demo files pattern
+poc_*.py
+demo_*.py
+*_poc.py
+*_demo.py
+poc_*.json
+demo_*.json
+
+# Test temporary files
+test_*.json
+test_report_generation.js
+
+# Runtime directories
+midscene_run/
+tmp/
+temp/
+
+# Development scripts pattern (可选)
+quick_start.py
+start_local_dev.py
+test_local.py
+test_server_status.py
+
+# Integration examples
+integration_example.py
+*_example.py
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Archive files
+*.zip.backup
+*.tar.backup
+
+# 注意：保留开发工具目录
+# .bmad-core/ - 保留BMad工具配置
+# .claude/ - 保留Claude工具配置

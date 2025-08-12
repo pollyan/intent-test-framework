@@ -59,21 +59,28 @@ def midscene_config():
 
 
 @pytest.fixture(scope="function")
-def db_session():
+def app():
+    """Flask应用fixture"""
+    from web_gui.app_enhanced import create_app
+    
+    test_config = {
+        'TESTING': True,
+        'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
+        'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+        'WTF_CSRF_ENABLED': False
+    }
+    app = create_app(test_config=test_config)
+    
+    yield app
+
+
+@pytest.fixture(scope="function")
+def db_session(app):
     """
     创建测试数据库会话
     每个测试函数都会获得一个独立的数据库会话，测试结束后自动回滚
     """
     from web_gui.models import db
-    from web_gui.app_enhanced import create_app
-    
-    # 创建测试应用
-    test_config = {
-        'TESTING': True,
-        'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
-        'SQLALCHEMY_TRACK_MODIFICATIONS': False
-    }
-    app = create_app(test_config=test_config)
     
     with app.app_context():
         # 启用外键约束（SQLite默认关闭）
@@ -94,5 +101,5 @@ def db_session():
         # 清理 - 回滚任何未提交的事务
         db.session.rollback()
         
-        # 删除所有表（可选）
+        # 删除所有表
         db.drop_all()

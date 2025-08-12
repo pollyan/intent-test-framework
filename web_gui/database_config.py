@@ -59,12 +59,25 @@ class DatabaseConfig:
         if supabase_url:
             return supabase_url
 
-        # 如果没有配置PostgreSQL，使用默认的云端数据库
-        return "postgresql://postgres.jzmqsuxphksbulrbhebp:Shunlian04@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres"
+        # 使用线上PostgreSQL数据库，增加连接稳定性参数
+        return "postgresql://postgres.jzmqsuxphksbulrbhebp:Shunlian04@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?sslmode=require&connect_timeout=15&application_name=local-dev"
     
     def _is_production(self) -> bool:
         """判断是否为生产环境"""
         return os.getenv('VERCEL') == '1' or os.getenv('RAILWAY_ENVIRONMENT') == 'production'
+    
+    def _test_postgres_connection(self, url: str) -> bool:
+        """测试PostgreSQL连接是否可用"""
+        try:
+            if not is_postgres_available():
+                return False
+            
+            engine = create_engine(url, pool_pre_ping=True, connect_args={'connect_timeout': 5})
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+            return True
+        except Exception:
+            return False
     
     def get_sqlalchemy_config(self) -> dict:
         """获取SQLAlchemy配置"""
@@ -94,9 +107,14 @@ class DatabaseConfig:
                 })
             else:
                 engine_options.update({
-                    'pool_size': 10,
-                    'pool_timeout': 30,
-                    'max_overflow': 20,
+                    'pool_size': 5,
+                    'pool_timeout': 60,
+                    'max_overflow': 10,
+                    'connect_args': {
+                        'connect_timeout': 15,
+                        'sslmode': 'require',
+                        'application_name': 'local-dev'
+                    }
                 })
 
             config.update({

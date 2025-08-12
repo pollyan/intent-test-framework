@@ -152,21 +152,77 @@ class MidSceneAI:
         print(f"✅ AI动作执行成功")
         return result.get("result", result)
     
-    def ai_query(self, prompt: str) -> Any:
+    def ai_query(self, data_demand: str, options: Dict = None) -> Any:
         """
-        执行AI查询，提取页面数据 - 纯AI驱动
+        执行AI查询，提取结构化数据 - 根据MidSceneJS API规范
         
         Args:
-            prompt: 查询描述
+            data_demand: 期望返回值格式描述
+            options: 可选配置参数
             
         Returns:
-            查询结果
+            结构化查询结果
         """
-        print(f"🔍 AI查询: {prompt}")
-        result = self._make_request("/ai-query", data={"prompt": prompt})
+        options = options or {}
+        print(f"🔍 aiQuery: {data_demand}")
+        result = self._make_request("/ai-query", data={"dataDemand": data_demand, "options": options})
         query_result = result.get("result", result)
-        print(f"✅ AI查询完成，结果: {query_result}")
+        print(f"✅ aiQuery完成，结果: {query_result}")
         return query_result
+    
+    def ai_string(self, query: str, options: Dict = None) -> str:
+        """
+        执行AI字符串提取 - 根据MidSceneJS API规范
+        
+        Args:
+            query: 查询描述
+            options: 可选配置参数
+            
+        Returns:
+            提取的字符串
+        """
+        options = options or {}
+        print(f"🔍 aiString: {query}")
+        result = self._make_request("/ai-string", data={"query": query, "options": options})
+        string_result = result.get("result", "")
+        print(f"✅ aiString完成，结果: {string_result}")
+        return string_result
+    
+    def ai_number(self, query: str, options: Dict = None) -> float:
+        """
+        执行AI数字提取 - 根据MidSceneJS API规范
+        
+        Args:
+            query: 查询描述
+            options: 可选配置参数
+            
+        Returns:
+            提取的数字
+        """
+        options = options or {}
+        print(f"🔍 aiNumber: {query}")
+        result = self._make_request("/ai-number", data={"query": query, "options": options})
+        number_result = result.get("result", 0)
+        print(f"✅ aiNumber完成，结果: {number_result}")
+        return float(number_result)
+    
+    def ai_boolean(self, query: str, options: Dict = None) -> bool:
+        """
+        执行AI布尔值提取 - 根据MidSceneJS API规范
+        
+        Args:
+            query: 查询描述
+            options: 可选配置参数
+            
+        Returns:
+            提取的布尔值
+        """
+        options = options or {}
+        print(f"🔍 aiBoolean: {query}")
+        result = self._make_request("/ai-boolean", data={"query": query, "options": options})
+        boolean_result = result.get("result", False)
+        print(f"✅ aiBoolean完成，结果: {boolean_result}")
+        return bool(boolean_result)
     
     def ai_assert(self, prompt: str) -> bool:
         """
