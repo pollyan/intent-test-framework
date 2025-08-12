@@ -653,7 +653,7 @@ def get_package_json_content():
     "install-deps": "npm install"
   },
   "dependencies": {
-    "@midscene/web": "^0.23.4",
+    "@midscene/web": "^0.22.1",
     "@playwright/test": "^1.45.0",
     "axios": "^1.10.0",
     "cors": "^2.8.5",
@@ -705,233 +705,206 @@ def get_windows_start_script():
     """获取Windows启动脚本"""
     return '''@echo off
 chcp 65001 >nul
-title Intent Test Framework - Local Proxy Server
+title Intent Test Framework - Local Proxy Server [FINAL]
 setlocal enabledelayedexpansion
 
 echo.
 echo ========================================
 echo   Intent Test Framework Local Proxy
+echo   [FINAL VERSION - Complete Setup]
 echo ========================================
 echo.
 
-REM Check Node.js
+REM Step 1: Check Node.js
 echo [1/5] Checking Node.js environment...
-node --version >node_check.tmp 2>&1
-if !errorlevel! neq 0 (
+for /f "tokens=*" %%i in ('node --version 2^>nul') do set NODE_VERSION=%%i
+if "!NODE_VERSION!"=="" (
     echo X Error: Node.js not detected
-    echo.
-    echo Please install Node.js first:
-    echo https://nodejs.org/
-    echo.
-    echo Recommend LTS version ^(16.x or higher^)
-    if exist node_check.tmp del node_check.tmp
+    echo Please install Node.js from https://nodejs.org/
     pause
     exit /b 1
-)
-
-set NODE_VERSION=Unknown
-if exist node_check.tmp (
-    for /f "tokens=*" %%i in (node_check.tmp) do set NODE_VERSION=%%i
-    del node_check.tmp
 )
 echo + Node.js version: !NODE_VERSION!
 
-REM Check npm - skip version check if problematic
+REM Step 2: Skip npm version check
 echo.
-echo [2/5] Checking npm...
-echo ^ Skipping npm version check to avoid script termination
+echo [2/5] npm check...
 echo + npm: Will be verified during dependency installation
 
-REM Check and install dependencies
+REM Step 3: Install dependencies
 echo.
-echo [3/5] Checking dependencies...
+echo [3/5] Installing dependencies...
 
-REM Check key dependencies
-set NEED_INSTALL=false
-
-if not exist "node_modules" (
-    set NEED_INSTALL=true
-    echo ^ node_modules folder not found
-)
-if not exist "node_modules\@playwright\test" (
-    set NEED_INSTALL=true
-    echo ^ @playwright/test missing
-)
-if not exist "node_modules\axios" (
-    set NEED_INSTALL=true
-    echo ^ axios missing
-)
-
-if "!NEED_INSTALL!"=="false" (
-    echo + Dependencies already exist
-    goto check_playwright
-)
-
-:install_deps
-echo.
-echo ^ Installing dependencies...
-echo This may take several minutes, please wait...
-echo.
-
-REM Clean old dependencies if they exist
-if exist "node_modules" (
-    echo ^ Cleaning old dependencies...
-    rmdir /s /q "node_modules" 2>nul
-)
-if exist "package-lock.json" (
-    del "package-lock.json" 2>nul
-)
-
-REM Install dependencies - simplified approach
-echo ^ Running npm install...
-echo   This may take several minutes, please be patient...
-echo   You will see package installation messages below:
-echo.
-
-npm install --no-audit --no-fund
-
-if !errorlevel! neq 0 (
-    echo.
-    echo X npm install failed ^(exit code: !errorlevel!^)
-    echo.
-    echo Common solutions:
-    echo 1. Network issues: npm config set registry https://registry.npmmirror.com
-    echo 2. Permission issues: Run as administrator
-    echo 3. Clear cache: npm cache clean --force
-    echo 4. Manual install: npm install @playwright/test axios express socket.io
-    echo.
-    pause
-    exit /b 1
-)
-
-echo.
-echo + npm install completed successfully!
-
-REM Verify key dependencies
-if not exist "node_modules\@playwright\test" (
-    echo X @playwright/test dependency missing after installation
-    echo.
-    if exist npm_install.log (
-        echo Installation log:
-        type npm_install.log
-        del npm_install.log
+if exist "node_modules\@playwright\test" (
+    if exist "node_modules\axios" (
+        echo + Dependencies already exist, skipping installation
+        goto step4_playwright
     )
+)
+
+echo ^ Installing npm dependencies...
+echo   This may take several minutes, please wait...
+echo   Note: Warnings are normal and will not stop installation
+echo.
+
+REM Use call to ensure npm doesn't terminate the script
+call npm install --no-audit --no-fund --silent
+set NPM_CODE=!errorlevel!
+
+if !NPM_CODE! neq 0 (
+    echo.
+    echo X npm install failed ^(exit code: !NPM_CODE!^)
+    echo Try running as administrator or check network connection
     pause
     exit /b 1
 )
 
-if not exist "node_modules\axios" (
-    echo X axios dependency missing after installation
-    pause
-    exit /b 1
-)
+echo + npm dependencies installed successfully!
 
-if exist npm_install.log del npm_install.log
-echo + Dependencies installation completed
-
-:check_playwright
+:step4_playwright
+REM Step 4: Install Playwright browsers - Enhanced version
 echo.
 echo [4/5] Installing Playwright browsers...
-echo ^ Installing Chromium browser for web automation...
-echo   This step may take 2-5 minutes...
+echo ^ Installing Chromium browser for web automation
+echo   This step may take 2-10 minutes depending on your network
+echo   Please be patient, download progress will be shown
 echo.
 
-npx playwright install chromium
-if !errorlevel! neq 0 (
-    echo.
-    echo ^ Warning: Playwright browser installation had issues
-    echo   This might cause "Executable doesn't exist" errors during testing
-    echo   You can manually install later with: npx playwright install chromium
-    echo   Continuing with server startup...
-) else (
-    echo + Playwright browsers installed successfully
+REM Try installation with different approaches
+set PLAYWRIGHT_SUCCESS=false
+
+REM Method 1: Standard installation
+echo + Attempting standard installation...
+call npx playwright install chromium --with-deps 2>nul
+if !errorlevel! equ 0 (
+    set PLAYWRIGHT_SUCCESS=true
+    echo + Playwright browsers installed successfully!
+    goto step5_config
 )
 
-:check_config
+echo ^ Standard installation failed, trying alternative method...
+
+REM Method 2: Without deps
+call npx playwright install chromium 2>nul  
+if !errorlevel! equ 0 (
+    set PLAYWRIGHT_SUCCESS=true
+    echo + Playwright browsers installed successfully ^(without system deps^)!
+    goto step5_config
+)
+
+echo ^ Alternative method failed, trying forced installation...
+
+REM Method 3: Force installation with timeout
+timeout /t 2 /nobreak >nul
+call npx playwright install --force chromium 2>nul
+if !errorlevel! equ 0 (
+    set PLAYWRIGHT_SUCCESS=true
+    echo + Playwright browsers force-installed successfully!
+    goto step5_config
+)
+
+REM If all methods fail, continue but warn user
 echo.
-echo [5/5] Configuration setup...
+echo ^ Warning: Playwright browser installation encountered issues
+echo   This might be due to network connectivity or firewall settings
+echo   The server will start, but browser will download during first test
+echo   You can manually install later with: npx playwright install chromium
+echo.
+echo + Continuing with server startup...
+
+:step5_config
+REM Step 5: Configuration and startup
+echo.
+echo [5/5] Configuration and server startup...
 
 if not exist ".env" (
     echo ^ Creating configuration file...
-    
     if exist ".env.example" (
-        copy ".env.example" ".env" >nul 2>&1
-        if !errorlevel! equ 0 (
-            echo + Configuration created from template
-        ) else (
-            goto create_basic_env
-        )
+        copy ".env.example" ".env" >nul
     ) else (
-        :create_basic_env
-        echo # Intent Test Framework - Local Proxy Server > .env
-        echo. >> .env
-        echo # AI API Configuration ^(REQUIRED^) >> .env
-        echo OPENAI_API_KEY=your-api-key-here >> .env
+        echo OPENAI_API_KEY=your-api-key-here > .env
         echo OPENAI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1 >> .env
         echo MIDSCENE_MODEL_NAME=qwen-vl-max-latest >> .env
-        echo. >> .env
-        echo # Server Configuration >> .env
         echo PORT=3001 >> .env
-        echo + Basic configuration created
     )
-    
+    echo + Configuration file created
     echo.
     echo ========================================
     echo   CONFIGURATION REQUIRED
     echo ========================================
     echo.
-    echo Please edit the .env file and replace 'your-api-key-here'
+    echo Please edit .env file and replace 'your-api-key-here'
     echo with your actual AI API key, then run this script again.
     echo.
-    
     start notepad .env 2>nul
+    echo Press any key after editing the .env file...
     pause
     exit /b 0
 )
 
 echo + Configuration file exists
 
-REM Check if API key is configured
+REM Check API key configuration
 findstr /c:"your-api-key-here" .env >nul
 if !errorlevel! equ 0 (
     echo.
     echo X Please edit .env file and set your actual API key
-    echo   Current placeholder: 'your-api-key-here'
+    echo   Current value is still the placeholder
     echo.
     start notepad .env 2>nul
+    echo Press any key after setting your API key...
     pause
     exit /b 0
 )
 
 echo + API key appears to be configured
 
-REM Start server
 echo.
 echo ========================================
-echo   STARTING SERVER
+echo   ALL SETUP COMPLETED - STARTING SERVER
 echo ========================================
 echo.
 echo + Starting Intent Test Framework Local Proxy Server...
 echo.
+echo Expected startup sequence:
+echo   1. Environment variables loading
+echo   2. Express server initialization
+echo   3. WebSocket server startup
+echo   4. "Server listening on port 3001" message
+echo.
+echo After successful startup:
+echo   - Go to the web interface
+echo   - Select "Local Proxy Mode"
+echo   - Start creating and running tests
+echo.
+echo Press Ctrl+C to stop the server
+echo ========================================
+echo.
 
+REM Start the server
 node midscene_server.js
 
-set SERVER_CODE=!errorlevel!
+REM Server stopped
+set SERVER_EXIT_CODE=!errorlevel!
 echo.
 echo ========================================
-echo Server stopped with exit code: !SERVER_CODE!
+echo Server stopped ^(exit code: !SERVER_EXIT_CODE!^)
 
-if !SERVER_CODE! neq 0 (
+if !SERVER_EXIT_CODE! neq 0 (
     echo.
-    echo Common solutions:
-    echo 1. Check API key in .env file
-    echo 2. Ensure port 3001 is available
-    echo 3. Check internet connection
-    echo 4. Try running as administrator
+    echo Troubleshooting guide:
+    echo 1. API key issues: Check .env file configuration
+    echo 2. Port conflict: Port 3001 may be in use by another application  
+    echo 3. Network issues: Check internet connection for AI API calls
+    echo 4. Dependency issues: Try deleting node_modules and running again
+    echo 5. Permission issues: Try running as administrator
+    echo.
 )
 
 echo.
-pause'''
+echo Script execution completed. Press any key to exit.
+pause
+exit /b !SERVER_EXIT_CODE!'''
 
 def get_unix_start_script():
     """获取Unix启动脚本"""
