@@ -88,17 +88,17 @@ MIDSCENE_MODEL_NAME=qwen-vl-max-latest
 
 fs.writeFileSync(path.join(BUILD_DIR, '.env.example'), envTemplate);
 
-// 创建Windows启动脚本 (使用修复后的版本)
+// 创建Windows启动脚本 (无标签版本)
 console.log('🖥️ 创建启动脚本...');
 const windowsScript = `@echo off
 chcp 65001 >nul
-title Intent Test Framework - Local Proxy Server [FIXED VERSION]
+title Intent Test Framework - Local Proxy Server [FINAL]
 setlocal enabledelayedexpansion
 
 echo.
 echo ========================================
 echo   Intent Test Framework Local Proxy
-echo   [FINAL FIXED VERSION - No Interruption]
+echo   [FINAL VERSION - Complete Setup]
 echo ========================================
 echo.
 
@@ -113,84 +113,96 @@ if "!NODE_VERSION!"=="" (
 )
 echo + Node.js version: !NODE_VERSION!
 
-REM Step 2: Skip npm check (causes issues)
+REM Step 2: Skip npm version check
 echo.
 echo [2/5] npm check...
-echo + npm: Will be tested during installation
+echo + npm: Will be verified during dependency installation
 
-REM Step 3: Dependencies
+REM Step 3: Install dependencies
 echo.
 echo [3/5] Installing dependencies...
 
 if exist "node_modules\\@playwright\\test" (
     if exist "node_modules\\axios" (
         echo + Dependencies already exist, skipping installation
-        goto step4_playwright
+    ) else (
+        echo ^ Installing npm dependencies...
+        echo   This may take several minutes, please wait...
+        echo   Note: Warnings are normal and will not stop installation
+        echo.
+        call npm install --no-audit --no-fund --silent
+        set NPM_CODE=!errorlevel!
+        if !NPM_CODE! neq 0 (
+            echo.
+            echo X npm install failed ^(exit code: !NPM_CODE!^)
+            echo Try running as administrator or check network connection
+            pause
+            exit /b 1
+        )
+        echo + npm dependencies installed successfully!
     )
-)
-
-echo ^ node_modules missing or incomplete
-echo ^ Running npm install...
-echo   Please wait, this may take several minutes...
-echo   Note: npm warnings are normal and will not interrupt installation
-echo.
-
-REM Redirect stderr to capture warnings but continue on success
-npm install --no-audit --no-fund 2>npm_install.log
-set NPM_EXIT_CODE=!errorlevel!
-
-REM Show any warnings/errors from log, but only fail on actual errors
-if exist npm_install.log (
-    findstr /i "warn" npm_install.log >nul && (
-        echo ^ npm warnings detected ^(normal, continuing...^)
-    )
-    findstr /i "error" npm_install.log >nul && (
-        echo ^ npm errors detected:
-        type npm_install.log
-    )
-    del npm_install.log
-)
-
-if !NPM_EXIT_CODE! neq 0 (
+) else (
+    echo ^ Installing npm dependencies...
+    echo   This may take several minutes, please wait...
+    echo   Note: Warnings are normal and will not stop installation
     echo.
-    echo X npm install failed ^(exit code: !NPM_EXIT_CODE!^)
-    echo Try: 1^) Run as administrator 2^) npm cache clean --force 3^) npm config set registry https://registry.npmmirror.com
-    pause
-    exit /b 1
+    call npm install --no-audit --no-fund --silent
+    set NPM_CODE=!errorlevel!
+    if !NPM_CODE! neq 0 (
+        echo.
+        echo X npm install failed ^(exit code: !NPM_CODE!^)
+        echo Try running as administrator or check network connection
+        pause
+        exit /b 1
+    )
+    echo + npm dependencies installed successfully!
 )
 
-echo + npm install completed successfully!
-
-:step4_playwright
-REM Step 4: Playwright browsers
+REM Step 4: Install Playwright browsers
 echo.
 echo [4/5] Installing Playwright browsers...
-echo ^ Installing Chromium browser...
-echo   This may take 2-5 minutes and show download progress...
+echo ^ Installing Chromium browser for web automation
+echo   This step may take 2-10 minutes depending on your network
+echo   Please be patient, download progress will be shown
 echo.
 
-REM Redirect stderr to handle warnings gracefully  
-npx playwright install chromium 2>playwright_install.log
-set PLAYWRIGHT_EXIT_CODE=!errorlevel!
+REM Try installation with different approaches
+set PLAYWRIGHT_SUCCESS=false
 
-REM Show log content but don't fail on warnings
-if exist playwright_install.log (
-    findstr /i "warn" playwright_install.log >nul && (
-        echo ^ Playwright installation warnings ^(normal^)
-    )
-    findstr /i "error" playwright_install.log >nul && (
-        echo ^ Playwright installation errors:
-        type playwright_install.log
-    )
-    del playwright_install.log
-)
-
-if !PLAYWRIGHT_EXIT_CODE! neq 0 (
-    echo ^ Warning: Playwright browser installation had issues ^(exit code: !PLAYWRIGHT_EXIT_CODE!^)
-    echo   You can install manually later: npx playwright install chromium
-    echo   Continuing with server startup...
+REM Method 1: Standard installation
+echo + Attempting standard installation...
+call npx playwright install chromium --with-deps 2>nul
+if !errorlevel! equ 0 (
+    set PLAYWRIGHT_SUCCESS=true
+    echo + Playwright browsers installed successfully!
 ) else (
-    echo + Playwright browsers installed successfully
+    echo ^ Standard installation failed, trying alternative method...
+    
+    REM Method 2: Without deps
+    call npx playwright install chromium 2>nul  
+    if !errorlevel! equ 0 (
+        set PLAYWRIGHT_SUCCESS=true
+        echo + Playwright browsers installed successfully ^(without system deps^)!
+    ) else (
+        echo ^ Alternative method failed, trying forced installation...
+        
+        REM Method 3: Force installation with timeout
+        timeout /t 2 /nobreak >nul
+        call npx playwright install --force chromium 2>nul
+        if !errorlevel! equ 0 (
+            set PLAYWRIGHT_SUCCESS=true
+            echo + Playwright browsers force-installed successfully!
+        ) else (
+            REM If all methods fail, continue but warn user
+            echo.
+            echo ^ Warning: Playwright browser installation encountered issues
+            echo   This might be due to network connectivity or firewall settings
+            echo   The server will start, but browser will download during first test
+            echo   You can manually install later with: npx playwright install chromium
+            echo.
+            echo + Continuing with server startup...
+        )
+    )
 )
 
 REM Step 5: Configuration and startup
@@ -213,62 +225,78 @@ if not exist ".env" (
     echo   CONFIGURATION REQUIRED
     echo ========================================
     echo.
-    echo Please edit .env file and set your API key
-    echo Current placeholder: 'your-api-key-here'
+    echo Please edit .env file and replace 'your-api-key-here'
+    echo with your actual AI API key, then run this script again.
     echo.
     start notepad .env 2>nul
-    echo After editing, run this script again.
+    echo Press any key after editing the .env file...
     pause
     exit /b 0
 )
 
 echo + Configuration file exists
 
-REM Check API key
+REM Check API key configuration
 findstr /c:"your-api-key-here" .env >nul
 if !errorlevel! equ 0 (
-    echo X Please set your actual API key in .env file
+    echo.
+    echo X Please edit .env file and set your actual API key
+    echo   Current value is still the placeholder
+    echo.
     start notepad .env 2>nul
+    echo Press any key after setting your API key...
     pause
     exit /b 0
 )
 
-echo + API key configured
+echo + API key appears to be configured
 
 echo.
 echo ========================================
-echo   ALL STEPS COMPLETED - STARTING SERVER
+echo   ALL SETUP COMPLETED - STARTING SERVER
 echo ========================================
 echo.
-echo ^ Starting Intent Test Framework Local Proxy Server...
+echo + Starting Intent Test Framework Local Proxy Server...
 echo.
-echo What to expect:
-echo - Server will show startup messages
-echo - Look for "Server listening on port 3001"
-echo - Then go to Web interface and select "Local Proxy Mode"
+echo Expected startup sequence:
+echo   1. Environment variables loading
+echo   2. Express server initialization
+echo   3. WebSocket server startup
+echo   4. "Server listening on port 3001" message
+echo.
+echo After successful startup:
+echo   - Go to the web interface
+echo   - Select "Local Proxy Mode"
+echo   - Start creating and running tests
 echo.
 echo Press Ctrl+C to stop the server
+echo ========================================
 echo.
 
+REM Start the server
 node midscene_server.js
 
-set EXIT_CODE=!errorlevel!
+REM Server stopped
+set SERVER_EXIT_CODE=!errorlevel!
 echo.
 echo ========================================
-echo Server stopped ^(exit code: !EXIT_CODE!^)
+echo Server stopped ^(exit code: !SERVER_EXIT_CODE!^)
 
-if !EXIT_CODE! neq 0 (
+if !SERVER_EXIT_CODE! neq 0 (
     echo.
-    echo Possible issues:
-    echo 1. API key invalid or missing
-    echo 2. Port 3001 already in use
-    echo 3. Network connectivity issues
-    echo 4. Missing dependencies
+    echo Troubleshooting guide:
+    echo 1. API key issues: Check .env file configuration
+    echo 2. Port conflict: Port 3001 may be in use by another application  
+    echo 3. Network issues: Check internet connection for AI API calls
+    echo 4. Dependency issues: Try deleting node_modules and running again
+    echo 5. Permission issues: Try running as administrator
+    echo.
 )
 
 echo.
-echo Script execution completed.
+echo Script execution completed. Press any key to exit.
 pause
+exit /b !SERVER_EXIT_CODE!
 `;
 
 fs.writeFileSync(path.join(BUILD_DIR, 'start.bat'), windowsScript);

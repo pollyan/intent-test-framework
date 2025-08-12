@@ -702,7 +702,7 @@ MIDSCENE_MODEL_NAME=qwen-vl-max-latest
 '''
 
 def get_windows_start_script():
-    """获取Windows启动脚本"""
+    """获取Windows启动脚本 - 无标签版本"""
     return '''@echo off
 chcp 65001 >nul
 title Intent Test Framework - Local Proxy Server [FINAL]
@@ -738,31 +738,40 @@ echo [3/5] Installing dependencies...
 if exist "node_modules\@playwright\test" (
     if exist "node_modules\axios" (
         echo + Dependencies already exist, skipping installation
-        goto step4_playwright
+    ) else (
+        echo ^ Installing npm dependencies...
+        echo   This may take several minutes, please wait...
+        echo   Note: Warnings are normal and will not stop installation
+        echo.
+        call npm install --no-audit --no-fund --silent
+        set NPM_CODE=!errorlevel!
+        if !NPM_CODE! neq 0 (
+            echo.
+            echo X npm install failed ^(exit code: !NPM_CODE!^)
+            echo Try running as administrator or check network connection
+            pause
+            exit /b 1
+        )
+        echo + npm dependencies installed successfully!
     )
-)
-
-echo ^ Installing npm dependencies...
-echo   This may take several minutes, please wait...
-echo   Note: Warnings are normal and will not stop installation
-echo.
-
-REM Use call to ensure npm doesn't terminate the script
-call npm install --no-audit --no-fund --silent
-set NPM_CODE=!errorlevel!
-
-if !NPM_CODE! neq 0 (
+) else (
+    echo ^ Installing npm dependencies...
+    echo   This may take several minutes, please wait...
+    echo   Note: Warnings are normal and will not stop installation
     echo.
-    echo X npm install failed ^(exit code: !NPM_CODE!^)
-    echo Try running as administrator or check network connection
-    pause
-    exit /b 1
+    call npm install --no-audit --no-fund --silent
+    set NPM_CODE=!errorlevel!
+    if !NPM_CODE! neq 0 (
+        echo.
+        echo X npm install failed ^(exit code: !NPM_CODE!^)
+        echo Try running as administrator or check network connection
+        pause
+        exit /b 1
+    )
+    echo + npm dependencies installed successfully!
 )
 
-echo + npm dependencies installed successfully!
-
-:step4_playwright
-REM Step 4: Install Playwright browsers - Enhanced version
+REM Step 4: Install Playwright browsers
 echo.
 echo [4/5] Installing Playwright browsers...
 echo ^ Installing Chromium browser for web automation
@@ -779,40 +788,36 @@ call npx playwright install chromium --with-deps 2>nul
 if !errorlevel! equ 0 (
     set PLAYWRIGHT_SUCCESS=true
     echo + Playwright browsers installed successfully!
-    goto step5_config
+) else (
+    echo ^ Standard installation failed, trying alternative method...
+    
+    REM Method 2: Without deps
+    call npx playwright install chromium 2>nul  
+    if !errorlevel! equ 0 (
+        set PLAYWRIGHT_SUCCESS=true
+        echo + Playwright browsers installed successfully ^(without system deps^)!
+    ) else (
+        echo ^ Alternative method failed, trying forced installation...
+        
+        REM Method 3: Force installation with timeout
+        timeout /t 2 /nobreak >nul
+        call npx playwright install --force chromium 2>nul
+        if !errorlevel! equ 0 (
+            set PLAYWRIGHT_SUCCESS=true
+            echo + Playwright browsers force-installed successfully!
+        ) else (
+            REM If all methods fail, continue but warn user
+            echo.
+            echo ^ Warning: Playwright browser installation encountered issues
+            echo   This might be due to network connectivity or firewall settings
+            echo   The server will start, but browser will download during first test
+            echo   You can manually install later with: npx playwright install chromium
+            echo.
+            echo + Continuing with server startup...
+        )
+    )
 )
 
-echo ^ Standard installation failed, trying alternative method...
-
-REM Method 2: Without deps
-call npx playwright install chromium 2>nul  
-if !errorlevel! equ 0 (
-    set PLAYWRIGHT_SUCCESS=true
-    echo + Playwright browsers installed successfully ^(without system deps^)!
-    goto step5_config
-)
-
-echo ^ Alternative method failed, trying forced installation...
-
-REM Method 3: Force installation with timeout
-timeout /t 2 /nobreak >nul
-call npx playwright install --force chromium 2>nul
-if !errorlevel! equ 0 (
-    set PLAYWRIGHT_SUCCESS=true
-    echo + Playwright browsers force-installed successfully!
-    goto step5_config
-)
-
-REM If all methods fail, continue but warn user
-echo.
-echo ^ Warning: Playwright browser installation encountered issues
-echo   This might be due to network connectivity or firewall settings
-echo   The server will start, but browser will download during first test
-echo   You can manually install later with: npx playwright install chromium
-echo.
-echo + Continuing with server startup...
-
-:step5_config
 REM Step 5: Configuration and startup
 echo.
 echo [5/5] Configuration and server startup...
