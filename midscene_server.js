@@ -1226,32 +1226,71 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                     }
                     
                     // 设置Cookie
-                    console.log('🍪 设置金山云Cookie');
+                    console.log('🍪 开始设置金山云Cookie到浏览器...');
+                    console.log('🍪 原始Cookie数据:', JSON.stringify(ksyunCookies, null, 4));
+                    
                     const cookiesToSet = [];
                     for (const [name, value] of Object.entries(ksyunCookies)) {
-                        cookiesToSet.push({
+                        const cookieObj = {
                             name: name,
                             value: String(value),
                             domain: '.ksyun.com',
                             path: '/',
                             httpOnly: false,
                             secure: false
-                        });
+                        };
+                        cookiesToSet.push(cookieObj);
+                        console.log(`🍪 准备设置Cookie: ${name} = ${String(value)} (domain: .ksyun.com)`);
                     }
                     
+                    console.log(`🍪 即将设置${cookiesToSet.length}个Cookie到浏览器:`);
+                    cookiesToSet.forEach((cookie, index) => {
+                        console.log(`  Cookie[${index}]:`, JSON.stringify(cookie, null, 4));
+                    });
+                    
+                    console.log('🔄 调用 page.context().addCookies()...');
                     await page.context().addCookies(cookiesToSet);
-                    console.log(`✅ 已设置${cookiesToSet.length}个金山云Cookie`);
+                    console.log(`✅ 成功设置${cookiesToSet.length}个金山云Cookie到浏览器`);
+                    
+                    // 验证Cookie是否设置成功
+                    console.log('🔍 验证Cookie设置结果...');
+                    try {
+                        const currentCookies = await page.context().cookies();
+                        const ksyunCookiesSet = currentCookies.filter(cookie => cookie.domain.includes('ksyun.com'));
+                        console.log(`📊 当前浏览器中金山云相关Cookie数量: ${ksyunCookiesSet.length}`);
+                        ksyunCookiesSet.forEach((cookie, index) => {
+                            console.log(`  已设置Cookie[${index}]: ${cookie.name} = ${cookie.value} (domain: ${cookie.domain})`);
+                        });
+                    } catch (verifyError) {
+                        console.log('⚠️  Cookie验证失败:', verifyError.message);
+                    }
                     
                     // 如果指定了目标URL，跳转到目标页面
                     if (target_url) {
                         console.log(`🎯 跳转到目标页面: ${target_url}`);
+                        console.log('🔄 开始页面导航...');
                         await page.goto(target_url);
                         await page.waitForTimeout(3000);
-                        console.log('✅ 目标页面加载完成');
+                        
+                        // 记录最终页面信息
+                        const finalUrl = page.url();
+                        const pageTitle = await page.title();
+                        console.log(`📍 页面导航完成:`);
+                        console.log(`  最终URL: ${finalUrl}`);
+                        console.log(`  页面标题: ${pageTitle}`);
+                        
+                        // 检查是否成功避免了登录页面
+                        if (finalUrl.includes('passport.ksyun.com/login')) {
+                            console.log('⚠️  警告: 页面仍然在登录页面，Cookie可能无效');
+                        } else if (finalUrl.includes('console.ksyun.com')) {
+                            console.log('✅ 成功进入金山云控制台，Cookie认证有效');
+                        } else {
+                            console.log('🤔 页面导航到了意外的地址，需要检查');
+                        }
                     }
                     
                     const ksyunEndTime = Date.now();
-                    console.log(`金山云Cookie设置完成，耗时: ${ksyunEndTime - ksyunStartTime}ms`);
+                    console.log(`金山云Cookie设置完成，总耗时: ${ksyunEndTime - ksyunStartTime}ms`);
                     logMessage(executionId, 'info', `金山云Cookie设置成功 - 区域: ${region}`);
                     
                 } catch (cookieError) {
@@ -2649,6 +2688,17 @@ async function get_cookie_from_iam(accessKey, secretKey, region = 'cn-beijing-6'
             .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
             .join('&');
         
+        // 详细记录请求信息
+        console.log('📤 IAM接口请求详情:');
+        console.log(`  方法: POST`);
+        console.log(`  URL: ${iamEndpoint}`);
+        console.log(`  请求参数:`, JSON.stringify(params, null, 4));
+        console.log(`  请求体: ${postData}`);
+        console.log(`  请求头:`);
+        console.log(`    Content-Type: application/x-www-form-urlencoded`);
+        console.log(`    User-Agent: KsyunAutoTest/1.0`);
+        console.log(`  超时设置: 30000ms`);
+        
         // 调用IAM接口
         const response = await axios.post(iamEndpoint, postData, {
             timeout: 30000,
@@ -2658,42 +2708,71 @@ async function get_cookie_from_iam(accessKey, secretKey, region = 'cn-beijing-6'
             }
         });
         
+        // 详细记录响应信息
+        console.log('📥 IAM接口响应详情:');
+        console.log(`  状态码: ${response.status}`);
+        console.log(`  状态文本: ${response.statusText}`);
+        console.log(`  响应头:`, JSON.stringify(response.headers, null, 4));
+        console.log(`  响应体:`, JSON.stringify(response.data, null, 4));
+        
         console.log('✅ IAM接口调用成功');
-        console.log('IAM响应:', JSON.stringify(response.data, null, 2));
         
         // 解析响应获取session URL或临时凭证
+        console.log('🔍 开始解析IAM接口响应...');
+        
         if (response.data && response.data.GetFederationTokenResult) {
             const result = response.data.GetFederationTokenResult;
+            console.log('✅ 找到GetFederationTokenResult字段');
+            console.log('🔍 分析响应结构:', JSON.stringify(result, null, 4));
             
             // 检查是否有临时凭证
             if (result.Credentials) {
                 const credentials = result.Credentials;
                 console.log('🎫 获取到临时凭证');
+                console.log('🔑 临时凭证详情:', JSON.stringify(credentials, null, 4));
                 
                 // 使用临时凭证生成控制台登录URL
+                console.log('🚀 开始使用临时凭证生成控制台登录URL...');
                 const consoleLoginUrl = await generateConsoleLoginUrl(credentials, region);
                 if (consoleLoginUrl) {
-                    console.log('🎯 生成控制台登录URL成功');
+                    console.log('🎯 生成控制台登录URL成功:', consoleLoginUrl);
                     
                     // 访问控制台URL获取Cookie
+                    console.log('🍪 开始从控制台URL提取Cookie...');
                     const cookies = await extractCookiesFromUrl(consoleLoginUrl);
                     if (cookies && Object.keys(cookies).length > 0) {
                         console.log(`✅ 成功提取${Object.keys(cookies).length}个认证Cookie`);
+                        console.log('🍪 Cookie详情:', JSON.stringify(cookies, null, 4));
                         console.log('🍪 Cookie列表:', Object.keys(cookies).join(', '));
                         return cookies;
+                    } else {
+                        console.log('❌ 未能从控制台URL提取到有效Cookie');
                     }
+                } else {
+                    console.log('❌ 生成控制台登录URL失败');
                 }
+            } else {
+                console.log('⚠️  响应中没有找到Credentials字段');
             }
             
             // 检查是否直接返回了SigninToken URL
             if (result.SigninToken) {
-                console.log('🎫 获取到signin token URL');
+                console.log('🎫 获取到signin token URL:', result.SigninToken);
+                console.log('🍪 开始从SigninToken URL提取Cookie...');
                 const cookies = await extractCookiesFromUrl(result.SigninToken);
                 if (cookies && Object.keys(cookies).length > 0) {
                     console.log(`✅ 成功提取${Object.keys(cookies).length}个认证Cookie`);
+                    console.log('🍪 Cookie详情:', JSON.stringify(cookies, null, 4));
                     return cookies;
+                } else {
+                    console.log('❌ 未能从SigninToken URL提取到有效Cookie');
                 }
+            } else {
+                console.log('⚠️  响应中没有找到SigninToken字段');
             }
+        } else {
+            console.log('❌ 响应中没有找到GetFederationTokenResult字段');
+            console.log('🔍 完整响应结构分析:', JSON.stringify(response.data, null, 4));
         }
         
         console.log('⚠️  未能从IAM响应中获取有效的认证信息');
@@ -2740,39 +2819,73 @@ async function generateConsoleLoginUrl(credentials, region) {
         const crypto = require('crypto');
         const axios = require('axios');
         
+        console.log('🔗 开始生成控制台登录URL...');
+        console.log('🔑 使用的临时凭证:', JSON.stringify(credentials, null, 4));
+        
         // 构建Federation URL参数
+        const sessionData = {
+            sessionId: credentials.AccessKeyId,
+            sessionKey: credentials.SecretAccessKey,
+            sessionToken: credentials.SessionToken
+        };
+        
         const federationParams = {
             'Action': 'GetSigninToken',
             'SessionDuration': 3600,
-            'Session': JSON.stringify({
-                sessionId: credentials.AccessKeyId,
-                sessionKey: credentials.SecretAccessKey,
-                sessionToken: credentials.SessionToken
-            })
+            'Session': JSON.stringify(sessionData)
         };
+        
+        console.log('📋 Federation请求参数:');
+        console.log(`  Action: ${federationParams.Action}`);
+        console.log(`  SessionDuration: ${federationParams.SessionDuration}`);
+        console.log(`  Session数据:`, JSON.stringify(sessionData, null, 4));
         
         // 调用Federation服务获取SigninToken
         const federationUrl = `https://signin.${region}.ksyun.com/federation`;
+        console.log(`🌐 调用Federation接口: ${federationUrl}`);
         
         const federationResponse = await axios.get(federationUrl, {
             params: federationParams,
             timeout: 30000
         });
         
+        console.log('📥 Federation接口响应:');
+        console.log(`  状态码: ${federationResponse.status}`);
+        console.log(`  响应数据:`, JSON.stringify(federationResponse.data, null, 4));
+        
         if (federationResponse.data && federationResponse.data.SigninToken) {
             const signinToken = federationResponse.data.SigninToken;
+            console.log(`🎫 获取到SigninToken: ${signinToken}`);
             
             // 构建最终的控制台登录URL
+            const destination = 'https://console.ksyun.com/';
             const loginUrl = `https://signin.${region}.ksyun.com/federation?` +
-                `Action=login&Issuer=AutoTest&Destination=${encodeURIComponent('https://console.ksyun.com/')}&SigninToken=${signinToken}`;
+                `Action=login&Issuer=AutoTest&Destination=${encodeURIComponent(destination)}&SigninToken=${signinToken}`;
+            
+            console.log('🔗 构建最终登录URL:');
+            console.log(`  基础URL: https://signin.${region}.ksyun.com/federation`);
+            console.log(`  Action: login`);
+            console.log(`  Issuer: AutoTest`);
+            console.log(`  Destination: ${destination}`);
+            console.log(`  SigninToken: ${signinToken}`);
+            console.log(`  完整URL: ${loginUrl}`);
             
             return loginUrl;
+        } else {
+            console.log('❌ Federation响应中没有SigninToken');
+            return null;
         }
         
-        return null;
-        
     } catch (error) {
-        console.error('生成控制台登录URL失败:', error.message);
+        console.error('❌ 生成控制台登录URL失败:', error.message);
+        if (error.response) {
+            console.error('Federation接口响应状态码:', error.response.status);
+            console.error('Federation接口响应数据:', JSON.stringify(error.response.data, null, 4));
+        }
+        if (error.code) {
+            console.error('错误代码:', error.code);
+        }
+        console.error('错误堆栈:', error.stack);
         return null;
     }
 }
@@ -2782,38 +2895,76 @@ async function extractCookiesFromUrl(url) {
     try {
         const axios = require('axios');
         
-        console.log('🍪 访问URL提取Cookie:', url);
+        console.log('🍪 开始访问URL提取Cookie...');
+        console.log(`  目标URL: ${url}`);
         
-        // 访问URL获取Set-Cookie响应头
-        const response = await axios.get(url, {
+        const requestConfig = {
             timeout: 30000,
             maxRedirects: 5,
             validateStatus: (status) => status >= 200 && status < 400,
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
             }
-        });
+        };
+        
+        console.log('📤 Cookie提取请求配置:');
+        console.log(`  超时: ${requestConfig.timeout}ms`);
+        console.log(`  最大重定向: ${requestConfig.maxRedirects}`);
+        console.log(`  User-Agent: ${requestConfig.headers['User-Agent']}`);
+        
+        // 访问URL获取Set-Cookie响应头
+        const response = await axios.get(url, requestConfig);
+        
+        console.log('📥 Cookie提取响应详情:');
+        console.log(`  状态码: ${response.status}`);
+        console.log(`  状态文本: ${response.statusText}`);
+        console.log(`  响应头:`, JSON.stringify(response.headers, null, 4));
         
         // 从响应头中提取Cookie
         const setCookieHeaders = response.headers['set-cookie'] || [];
+        console.log(`🍪 找到${setCookieHeaders.length}个Set-Cookie响应头:`);
+        setCookieHeaders.forEach((header, index) => {
+            console.log(`  Set-Cookie[${index}]: ${header}`);
+        });
+        
         const cookies = {};
         
-        setCookieHeaders.forEach(cookieHeader => {
+        setCookieHeaders.forEach((cookieHeader, index) => {
+            console.log(`🔍 解析第${index + 1}个Cookie头: ${cookieHeader}`);
             const cookieParts = cookieHeader.split(';')[0].split('=');
             if (cookieParts.length >= 2) {
                 const name = cookieParts[0].trim();
                 const value = cookieParts.slice(1).join('=').trim();
                 if (name && value) {
                     cookies[name] = value;
+                    console.log(`  ✅ 提取Cookie: ${name} = ${value}`);
+                } else {
+                    console.log(`  ⚠️  跳过无效Cookie: name="${name}", value="${value}"`);
                 }
+            } else {
+                console.log(`  ⚠️  跳过格式错误的Cookie头: ${cookieHeader}`);
             }
         });
         
-        console.log(`🍪 从URL提取到${Object.keys(cookies).length}个Cookie`);
+        console.log(`🍪 从URL提取到${Object.keys(cookies).length}个有效Cookie:`);
+        Object.entries(cookies).forEach(([name, value]) => {
+            console.log(`  ${name}: ${value}`);
+        });
+        
         return Object.keys(cookies).length > 0 ? cookies : null;
         
     } catch (error) {
-        console.error('从URL提取Cookie失败:', error.message);
+        console.error('❌ 从URL提取Cookie失败:', error.message);
+        if (error.response) {
+            console.error('响应状态码:', error.response.status);
+            console.error('响应状态文本:', error.response.statusText);
+            console.error('响应头:', JSON.stringify(error.response.headers, null, 4));
+            console.error('响应数据:', error.response.data);
+        }
+        if (error.code) {
+            console.error('错误代码:', error.code);
+        }
+        console.error('错误堆栈:', error.stack);
         return null;
     }
 }
