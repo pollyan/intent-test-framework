@@ -2,7 +2,8 @@
 Vercel入口文件 - 意图测试平台
 专为Serverless环境优化，避免复杂的模块导入
 """
-
+import datetime
+import json
 import sys
 import os
 from flask import Flask, jsonify, render_template_string
