@@ -2525,38 +2525,119 @@ async function generateKsyunCookies(accessKey, secretKey, region = 'cn-beijing-6
     const crypto = require('crypto');
     
     console.log('🔑 生成金山云认证Cookie');
+    console.log(`📍 区域: ${region}`);
+    console.log(`🔑 Access Key: ${accessKey.substr(0, 8)}***`);
     
     try {
-        // 基于用户提供的逻辑，这里实现简化的Cookie生成
-        // 在实际生产环境中，这里应该调用真正的金山云IAM API
+        // 检查是否有预设的真实Cookie（优先使用）
+        const realCookies = process.env.KSYUN_REAL_COOKIES;
+        if (realCookies) {
+            console.log('🍪 使用预设的真实金山云Cookie');
+            return parseRealCookies(realCookies);
+        }
         
+        // 尝试通过STS API获取临时凭证（如果可用）
+        try {
+            const stsCredentials = await getSTSCredentials(accessKey, secretKey, region);
+            if (stsCredentials) {
+                console.log('🎫 通过STS获取临时凭证成功');
+                return generateCookiesFromSTS(stsCredentials);
+            }
+        } catch (stsError) {
+            console.log('⚠️  STS凭证获取失败，使用模拟方案:', stsError.message);
+        }
+        
+        // 改进的模拟Cookie生成（更接近真实格式）
         const timestamp = Math.floor(Date.now() / 1000);
-        const userId = crypto.createHash('md5').update(accessKey).digest('hex').substr(0, 8);
+        const userId = crypto.createHash('sha256').update(accessKey + secretKey).digest('hex').substr(0, 12);
         
-        // 生成会话令牌
-        const sessionData = `${userId}_${timestamp}_${region}`;
-        const sessionToken = Buffer.from(sessionData).toString('base64');
+        // 生成更真实的会话ID
+        const sessionId = generateJSessionId();
         
-        // 生成签名
-        const signatureData = `access_key=${accessKey}&timestamp=${timestamp}&region=${region}`;
-        const signature = crypto.createHmac('sha256', secretKey).update(signatureData).digest('hex');
+        // 生成控制台会话令牌
+        const consoleSessionData = {
+            accessKeyId: accessKey,
+            userId: userId,
+            region: region,
+            timestamp: timestamp,
+            permissions: ['console:*'] // 控制台权限
+        };
+        const consoleSession = Buffer.from(JSON.stringify(consoleSessionData)).toString('base64');
         
+        // 生成认证令牌
+        const authData = `${accessKey}:${userId}:${timestamp}:${region}`;
+        const authToken = crypto.createHmac('sha256', secretKey).update(authData).digest('hex');
+        const authCookie = Buffer.from(`${authData}:${authToken}`).toString('base64');
+        
+        // 使用更接近金山云真实格式的Cookie名称
         const cookies = {
-            'ks_session': sessionToken,
-            'ks_user_id': userId,
-            'ks_region': region,
-            'ks_timestamp': timestamp.toString(),
-            'ks_signature': signature,
-            'ks_access_key_id': accessKey.substr(0, 8) + '***', // 部分隐藏
+            // Java Web应用常用的会话ID
+            'JSESSIONID': sessionId,
+            
+            // 金山云控制台相关Cookie
+            'ks-console-session': consoleSession,
+            'ks-auth-token': authCookie,
+            'ks-user-id': userId,
+            'ks-region': region,
+            
+            // 用户状态Cookie
+            'ks-logged-in': 'true',
+            'ks-user-type': 'api',
+            
+            // 时间戳和签名
+            'ks-timestamp': timestamp.toString(),
+            'ks-signature': crypto.createHmac('sha256', secretKey).update(`${userId}:${timestamp}`).digest('hex').substr(0, 16),
         };
         
-        console.log('✅ 金山云Cookie生成成功');
+        console.log('✅ 金山云Cookie生成成功 (模拟模式)');
+        console.log(`🍪 生成了${Object.keys(cookies).length}个Cookie`);
         return cookies;
         
     } catch (error) {
         console.error('❌ 金山云Cookie生成失败:', error);
         throw error;
     }
+}
+
+// 生成Java会话ID格式
+function generateJSessionId() {
+    const chars = '0123456789ABCDEF';
+    let result = '';
+    for (let i = 0; i < 32; i++) {
+        result += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return result;
+}
+
+// 解析预设的真实Cookie
+function parseRealCookies(cookieString) {
+    const cookies = {};
+    const pairs = cookieString.split(';');
+    
+    for (const pair of pairs) {
+        const [name, ...valueParts] = pair.trim().split('=');
+        if (name && valueParts.length > 0) {
+            cookies[name] = valueParts.join('=');
+        }
+    }
+    
+    console.log(`✅ 解析了${Object.keys(cookies).length}个真实Cookie`);
+    return cookies;
+}
+
+// 尝试通过STS API获取临时凭证
+async function getSTSCredentials(accessKey, secretKey, region) {
+    // 这里应该调用金山云STS API
+    // 由于金山云STS API的具体实现需要详细的API文档，这里先返回null
+    console.log('🎫 尝试获取STS临时凭证...');
+    return null; // 待实现
+}
+
+// 从STS凭证生成Cookie
+function generateCookiesFromSTS(stsCredentials) {
+    // 从STS凭证生成真实的认证Cookie
+    // 这里需要根据金山云的具体实现来转换
+    return {}; // 待实现
 }
 
 // 错误处理中间件
