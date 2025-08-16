@@ -2782,11 +2782,30 @@ async function get_cookie_from_iam(accessKey, secretKey, region = 'cn-beijing-6'
         
         console.log('✅ IAM接口调用成功');
         
-        // 解析响应获取session URL
+        // 解析响应获取session URL（支持XML格式）
         console.log('🔍 开始解析IAM接口响应...');
         
-        if (response.data && response.data.GetUserSessionResult) {
-            const result = response.data.GetUserSessionResult;
+        let parsedData = response.data;
+        
+        // 检查是否为XML格式的响应
+        if (typeof response.data === 'string' && response.data.includes('<GetUserSessionResponse>')) {
+            console.log('🔍 检测到XML格式响应，开始解析...');
+            try {
+                const xml2js = require('xml2js');
+                const parser = new xml2js.Parser({ explicitArray: false, ignoreAttrs: true });
+                const result = await parser.parseStringPromise(response.data);
+                parsedData = result;
+                console.log('✅ XML解析成功');
+                console.log('🔍 解析后的结构:', JSON.stringify(parsedData, null, 4));
+            } catch (xmlError) {
+                console.error('❌ XML解析失败:', xmlError.message);
+                console.log('🔍 原始XML内容:', response.data);
+            }
+        }
+        
+        // 解析GetUserSessionResult
+        if (parsedData && parsedData.GetUserSessionResponse && parsedData.GetUserSessionResponse.GetUserSessionResult) {
+            const result = parsedData.GetUserSessionResponse.GetUserSessionResult;
             console.log('✅ 找到GetUserSessionResult字段');
             console.log('🔍 分析响应结构:', JSON.stringify(result, null, 4));
             
@@ -2810,7 +2829,7 @@ async function get_cookie_from_iam(accessKey, secretKey, region = 'cn-beijing-6'
             }
         } else {
             console.log('❌ 响应中没有找到GetUserSessionResult字段');
-            console.log('🔍 完整响应结构分析:', JSON.stringify(response.data, null, 4));
+            console.log('🔍 完整响应结构分析:', typeof response.data === 'string' ? response.data : JSON.stringify(response.data, null, 4));
         }
         
         console.log('⚠️  未能从IAM响应中获取有效的认证信息');
