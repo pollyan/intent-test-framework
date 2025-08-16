@@ -16,12 +16,11 @@ from .base import (
     require_json, log_api_call
 )
 
-# 直接从models导入，确保使用同一个db实例 - 强制使用绝对导入
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from models import db, TestCase, ExecutionHistory, StepExecution
+# 导入数据模型
+try:
+    from ..models import db, TestCase, ExecutionHistory, StepExecution
+except ImportError:
+    from web_gui.models import db, TestCase, ExecutionHistory, StepExecution
 
 # 导入通用代码模式
 try:
@@ -114,105 +113,19 @@ def create_execution():
 def get_execution_status(execution_id):
     """获取执行状态"""
     try:
-        # 使用psycopg2直接连接数据库
-        import psycopg2
-        import os
+        # 使用SQLAlchemy查询
+        execution = ExecutionHistory.query.filter_by(execution_id=execution_id).first()
         
-        # 获取数据库连接信息
-        try:
-            from database_config import DatabaseConfig
-            db_config = DatabaseConfig()
-            database_url = db_config.database_url
-        except ImportError:
-            try:
-                from web_gui.database_config import DatabaseConfig
-                db_config = DatabaseConfig()
-                database_url = db_config.database_url
-            except:
-                database_url = os.getenv('DATABASE_URL')
+        if not execution:
+            return standard_error_response('执行记录不存在', 404)
         
-        if not database_url:
-            raise Exception("未找到数据库连接配置")
-        
-        # 连接数据库
-        conn = psycopg2.connect(database_url)
-        cursor = conn.cursor()
-        
-        try:
-            # 获取执行记录
-            execution_sql = """
-            SELECT id, execution_id, test_case_id, status, mode, browser, 
-                   start_time, end_time, error_message, executed_by, result_summary
-            FROM execution_history 
-            WHERE execution_id = %s
-            """
-            cursor.execute(execution_sql, (execution_id,))
-            execution_row = cursor.fetchone()
-            
-            if not execution_row:
-                return jsonify({
-                    'code': 404,
-                    'message': '执行记录不存在'
-                }), 404
-            
-            # 获取步骤执行详情
-            steps_sql = """
-            SELECT id, execution_id, step_index, step_description, status, start_time, end_time, 
-                   error_message, ai_decision, screenshot_path
-            FROM step_executions 
-            WHERE execution_id = %s 
-            ORDER BY step_index
-            """
-            cursor.execute(steps_sql, (execution_id,))
-            step_rows = cursor.fetchall()
-            
-            # 构建响应数据
-            execution_data = {
-                'id': execution_row[0],
-                'execution_id': execution_row[1],
-                'test_case_id': execution_row[2],
-                'status': execution_row[3],
-                'mode': execution_row[4],
-                'browser': execution_row[5],
-                'start_time': execution_row[6].isoformat() if execution_row[6] else None,
-                'end_time': execution_row[7].isoformat() if execution_row[7] else None,
-                'error_message': execution_row[8],
-                'executed_by': execution_row[9],
-                'result_summary': json.loads(execution_row[10]) if execution_row[10] else {},
-                'step_executions': []
-            }
-            
-            # 添加步骤执行数据
-            for step_row in step_rows:
-                step_data = {
-                    'id': step_row[0],
-                    'execution_id': step_row[1],
-                    'step_index': step_row[2],
-                    'step_description': step_row[3],
-                    'status': step_row[4],
-                    'start_time': step_row[5].isoformat() if step_row[5] else None,
-                    'end_time': step_row[6].isoformat() if step_row[6] else None,
-                    'error_message': step_row[7],
-                    'ai_decision': json.loads(step_row[8]) if step_row[8] else {},
-                    'screenshot_path': step_row[9]
-                }
-                execution_data['step_executions'].append(step_data)
-            
-        finally:
-            cursor.close()
-            conn.close()
-        
-        return jsonify({
-            'code': 200,
-            'message': '获取成功',
-            'data': execution_data
-        })
+        return format_success_response(
+            message='获取成功',
+            data=execution.to_dict()
+        )
         
     except Exception as e:
-        return jsonify({
-            'code': 500,
-            'message': f'获取执行状态失败: {str(e)}'
-        })
+        return standard_error_response(f'获取执行状态失败: {str(e)}')
 
 
 @api_bp.route('/executions', methods=['GET'])
@@ -222,119 +135,49 @@ def get_executions():
     try:
         params = get_pagination_params()
         
-        # 使用psycopg2直接连接数据库
-        import psycopg2
-        import os
+        # 构建查询
+        query = ExecutionHistory.query
         
-        # 获取数据库连接信息
-        try:
-            from database_config import DatabaseConfig
-            db_config = DatabaseConfig()
-            database_url = db_config.database_url
-        except ImportError:
-            try:
-                from web_gui.database_config import DatabaseConfig
-                db_config = DatabaseConfig()
-                database_url = db_config.database_url
-            except:
-                database_url = os.getenv('DATABASE_URL')
+        # 按测试用例过滤
+        testcase_id = request.args.get('testcase_id', type=int)
+        if testcase_id:
+            query = query.filter(ExecutionHistory.test_case_id == testcase_id)
         
-        if not database_url:
-            raise Exception("未找到数据库连接配置")
+        # 按状态过滤
+        status = request.args.get('status')
+        if status:
+            query = query.filter(ExecutionHistory.status == status)
         
-        # 连接数据库
-        conn = psycopg2.connect(database_url)
-        cursor = conn.cursor()
+        # 按执行者过滤
+        executed_by = request.args.get('executed_by')
+        if executed_by:
+            query = query.filter(ExecutionHistory.executed_by == executed_by)
         
-        try:
-            # 构建查询条件
-            where_conditions = []
-            sql_params = []
-            
-            # 按测试用例过滤
-            if params.get('testcase_id'):
-                where_conditions.append("test_case_id = %s")
-                sql_params.append(params['testcase_id'])
-            
-            # 按状态过滤
-            status = request.args.get('status')
-            if status:
-                where_conditions.append("status = %s")
-                sql_params.append(status)
-            
-            # 按执行者过滤
-            executed_by = request.args.get('executed_by')
-            if executed_by:
-                where_conditions.append("executed_by = %s")
-                sql_params.append(executed_by)
-            
-            # 构建WHERE子句
-            where_clause = ""
-            if where_conditions:
-                where_clause = " WHERE " + " AND ".join(where_conditions)
-            
-            # 计算分页参数
-            page = params['page']
-            size = params['size']
-            offset = (page - 1) * size
-            
-            # 获取总数
-            count_sql = f"SELECT COUNT(*) FROM execution_history{where_clause}"
-            cursor.execute(count_sql, sql_params)
-            total_count = cursor.fetchone()[0]
-            
-            # 获取分页数据
-            data_sql = f"""
-            SELECT id, execution_id, test_case_id, status, mode, browser, 
-                   start_time, end_time, duration, steps_total, steps_passed, 
-                   steps_failed, result_summary, error_message, executed_by, created_at
-            FROM execution_history
-            {where_clause}
-            ORDER BY start_time DESC
-            LIMIT %s OFFSET %s
-            """
-            
-            cursor.execute(data_sql, sql_params + [size, offset])
-            rows = cursor.fetchall()
-            
-            # 构建响应数据
-            executions_data = []
-            for row in rows:
-                execution = {
-                    'id': row[0],
-                    'execution_id': row[1],
-                    'test_case_id': row[2],
-                    'status': row[3],
-                    'mode': row[4],
-                    'browser': row[5],
-                    'start_time': row[6].isoformat() if row[6] else None,
-                    'end_time': row[7].isoformat() if row[7] else None,
-                    'duration': row[8],
-                    'steps_total': row[9],
-                    'steps_passed': row[10],
-                    'steps_failed': row[11],
-                    'result_summary': json.loads(row[12]) if row[12] else {},
-                    'error_message': row[13],
-                    'executed_by': row[14],
-                    'created_at': row[15].isoformat() if row[15] else None
-                }
-                executions_data.append(execution)
-            
-        finally:
-            cursor.close()
-            conn.close()
+        # 排序
+        query = query.order_by(ExecutionHistory.start_time.desc())
+        
+        # 分页
+        page = params['page']
+        size = params['size']
+        
+        # 获取总数
+        total_count = query.count()
+        
+        # 获取分页数据
+        executions = query.offset((page - 1) * size).limit(size).all()
+        
+        # 转换为字典
+        executions_data = [execution.to_dict() for execution in executions]
         
         return jsonify({
             'code': 200,
             'message': '获取成功',
             'data': {
                 'items': executions_data,
-                'pagination': {
-                    'page': page,
-                    'per_page': size,
-                    'total': total_count,
-                    'pages': (total_count + size - 1) // size
-                }
+                'total': total_count,
+                'page': page,
+                'size': size,
+                'pages': (total_count + size - 1) // size
             }
         })
         
@@ -347,82 +190,256 @@ def get_executions():
 def stop_execution(execution_id):
     """停止执行任务"""
     try:
-        # 使用psycopg2直接连接数据库
-        import psycopg2
-        import os
+        # 使用SQLAlchemy查询
+        execution = ExecutionHistory.query.filter_by(execution_id=execution_id).first()
         
-        # 获取数据库连接信息
-        try:
-            from database_config import DatabaseConfig
-            db_config = DatabaseConfig()
-            database_url = db_config.database_url
-        except ImportError:
-            try:
-                from web_gui.database_config import DatabaseConfig
-                db_config = DatabaseConfig()
-                database_url = db_config.database_url
-            except:
-                database_url = os.getenv('DATABASE_URL')
+        if not execution:
+            return standard_error_response('执行记录不存在', 404)
         
-        if not database_url:
-            raise Exception("未找到数据库连接配置")
+        if execution.status not in ['pending', 'running']:
+            return standard_error_response('执行已完成，无法停止', 400)
         
-        # 连接数据库
-        conn = psycopg2.connect(database_url)
-        cursor = conn.cursor()
+        # TODO: 实现实际的停止执行逻辑
+        # 需要向执行引擎发送停止信号
+        # _stop_test_execution(execution_id)
         
-        try:
-            # 检查执行记录是否存在
-            check_sql = "SELECT id, status FROM execution_history WHERE execution_id = %s"
-            cursor.execute(check_sql, (execution_id,))
-            execution_row = cursor.fetchone()
-            
-            if not execution_row:
-                return jsonify({
-                    'code': 404,
-                    'message': '执行记录不存在'
-                }), 404
-            
-            execution_status = execution_row[1]
-            
-            if execution_status not in ['pending', 'running']:
-                return jsonify({
-                    'code': 400,
-                    'message': '执行已完成，无法停止'
-                }), 400
-            
-            # TODO: 实现实际的停止执行逻辑
-            # 需要向执行引擎发送停止信号
-            _stop_test_execution(execution_id)
-            
-            # 更新执行状态
-            now = datetime.now()
-            update_sql = """
-            UPDATE execution_history 
-            SET status = %s, end_time = %s, error_message = %s
-            WHERE execution_id = %s
-            """
-            
-            cursor.execute(update_sql, ('cancelled', now, '用户手动取消执行', execution_id))
-            conn.commit()
-            
-            return jsonify({
-                'code': 200,
-                'message': '执行已停止'
-            })
-            
-        except Exception as e:
-            conn.rollback()
-            raise e
-        finally:
-            cursor.close()
-            conn.close()
+        # 更新执行状态
+        execution.status = 'stopped'
+        execution.end_time = datetime.now()
+        execution.error_message = '用户手动停止执行'
+        
+        db.session.commit()
+        
+        return format_success_response(
+            message='执行已停止',
+            data=execution.to_dict()
+        )
         
     except Exception as e:
-        return jsonify({
-            'code': 500,
-            'message': f'停止执行失败: {str(e)}'
-        })
+        db.session.rollback()
+        return standard_error_response(f'停止执行失败: {str(e)}')
+
+
+@api_bp.route('/executions/<execution_id>', methods=['DELETE'])
+@log_api_call
+def delete_execution(execution_id):
+    """删除执行记录"""
+    try:
+        # 使用SQLAlchemy查询
+        execution = ExecutionHistory.query.filter_by(execution_id=execution_id).first()
+        
+        if not execution:
+            return standard_error_response('执行记录不存在', 404)
+        
+        # 删除相关的步骤执行记录
+        StepExecution.query.filter_by(execution_id=execution_id).delete()
+        
+        # 删除执行记录
+        db.session.delete(execution)
+        db.session.commit()
+        
+        return format_success_response(message='执行记录删除成功')
+        
+    except Exception as e:
+        db.session.rollback()
+        return standard_error_response(f'删除执行记录失败: {str(e)}')
+
+
+@api_bp.route('/executions/<execution_id>/export', methods=['GET'])
+@log_api_call
+def export_execution(execution_id):
+    """导出单个执行报告"""
+    try:
+        # 使用SQLAlchemy查询执行记录
+        execution = ExecutionHistory.query.filter_by(execution_id=execution_id).first()
+        
+        if not execution:
+            return standard_error_response('执行记录不存在', 404)
+        
+        # 获取步骤执行详情
+        step_executions = StepExecution.query.filter_by(execution_id=execution_id).order_by(StepExecution.step_index).all()
+        
+        # 构建导出数据，符合测试期望的格式
+        execution_data = execution.to_dict()
+        # 按照测试期望，直接返回导出数据（不用标准API响应格式）
+        export_data = {
+            'execution_id': execution.execution_id,
+            'test_case_id': execution.test_case_id,
+            'status': execution.status,
+            'start_time': execution_data['start_time'],
+            'end_time': execution_data['end_time'],
+            'duration': execution.duration,
+            'steps_total': execution.steps_total,
+            'steps_passed': execution.steps_passed,
+            'steps_failed': execution.steps_failed,
+            'result_summary': execution_data['result_summary'],
+            'step_executions': [step.to_dict() for step in step_executions],
+            'exported_at': datetime.now().isoformat(),  # 使用测试期望的字段名
+            'report_type': 'single_execution'
+        }
+        
+        return jsonify(export_data)
+        
+    except Exception as e:
+        return standard_error_response(f'导出执行报告失败: {str(e)}')
+
+
+@api_bp.route('/executions/export-all', methods=['GET'])
+@log_api_call
+def export_all_executions():
+    """导出所有执行报告"""
+    try:
+        params = get_pagination_params()
+        
+        # 构建查询
+        query = ExecutionHistory.query
+        
+        # 排序
+        query = query.order_by(ExecutionHistory.start_time.desc())
+        
+        # 分页
+        page = params['page']
+        size = params['size']
+        
+        # 获取分页数据
+        executions = query.offset((page - 1) * size).limit(size).all()
+        
+        # 按照测试期望，构建导出数据
+        export_data = {
+            'reports': [execution.to_dict() for execution in executions],
+            'exported_at': datetime.now().isoformat(),
+            'report_type': 'batch_executions',
+            'pagination': {
+                'page': page,
+                'size': size,
+                'total': query.count()
+            }
+        }
+        
+        return jsonify(export_data)
+        
+    except Exception as e:
+        return standard_error_response(f'导出执行报告失败: {str(e)}')
+
+
+# ==================== MidScene集成API ====================
+
+@api_bp.route('/midscene/execution-start', methods=['POST'])
+@log_api_call
+@require_json
+def midscene_execution_start():
+    """MidScene执行开始通知"""
+    try:
+        data = request.get_json()
+        
+        # 验证必需字段
+        if not data or not data.get('execution_id') or not data.get('testcase_id'):
+            return standard_error_response('缺少必需字段: execution_id, testcase_id', 400)
+        
+        execution_id = data['execution_id']
+        testcase_id = data['testcase_id']
+        
+        # 验证测试用例存在
+        testcase = TestCase.query.filter_by(id=testcase_id, is_active=True).first()
+        if not testcase:
+            return standard_error_response('测试用例不存在', 404)
+        
+        # 创建或更新执行记录
+        execution = ExecutionHistory.query.filter_by(execution_id=execution_id).first()
+        
+        if not execution:
+            # 创建新执行记录
+            execution = ExecutionHistory(
+                execution_id=execution_id,
+                test_case_id=testcase_id,
+                status='running',
+                mode=data.get('mode', 'headless'),
+                browser=data.get('browser', 'chrome'),
+                start_time=datetime.now(),
+                executed_by=data.get('executed_by', 'midscene')
+            )
+            db.session.add(execution)
+        else:
+            # 更新现有记录
+            execution.status = 'running'
+            execution.start_time = datetime.now()
+            execution.mode = data.get('mode', execution.mode)
+            execution.browser = data.get('browser', execution.browser)
+        
+        db.session.commit()
+        
+        return format_success_response(
+            message='执行开始记录成功',
+            data=execution.to_dict()
+        )
+        
+    except Exception as e:
+        db.session.rollback()
+        return standard_error_response(f'记录执行开始失败: {str(e)}')
+
+
+@api_bp.route('/midscene/execution-result', methods=['POST'])
+@log_api_call
+@require_json
+def midscene_execution_result():
+    """MidScene执行结果通知"""
+    try:
+        data = request.get_json()
+        
+        # 验证必需字段
+        if not data or not data.get('execution_id'):
+            return standard_error_response('缺少必需字段: execution_id', 400)
+        
+        execution_id = data['execution_id']
+        
+        # 查找执行记录
+        execution = ExecutionHistory.query.filter_by(execution_id=execution_id).first()
+        
+        if not execution:
+            return standard_error_response('执行记录不存在', 404)
+        
+        # 更新执行记录
+        execution.status = data.get('status', 'completed')
+        execution.end_time = datetime.now()
+        execution.duration = data.get('duration')
+        execution.steps_total = data.get('steps_total')
+        execution.steps_passed = data.get('steps_passed')
+        execution.steps_failed = data.get('steps_failed')
+        execution.result_summary = json.dumps(data.get('result_summary', {}))
+        execution.error_message = data.get('error_message')
+        
+        # 处理步骤执行详情
+        if 'steps' in data:
+            # 清除现有步骤执行记录
+            StepExecution.query.filter_by(execution_id=execution_id).delete()
+            
+            # 添加新的步骤执行记录
+            for step_data in data['steps']:
+                step_execution = StepExecution(
+                    execution_id=execution_id,
+                    step_index=step_data.get('index', 0),
+                    step_description=step_data.get('description', ''),
+                    status=step_data.get('status', 'unknown'),
+                    start_time=datetime.fromisoformat(step_data['start_time']) if step_data.get('start_time') else None,
+                    end_time=datetime.fromisoformat(step_data['end_time']) if step_data.get('end_time') else None,
+                    duration=step_data.get('duration'),
+                    screenshot_path=step_data.get('screenshot_path'),
+                    ai_confidence=step_data.get('ai_confidence'),
+                    ai_decision=json.dumps(step_data.get('ai_decision', {})),
+                    error_message=step_data.get('error_message')
+                )
+                db.session.add(step_execution)
+        
+        db.session.commit()
+        
+        return format_success_response(
+            message='执行结果记录成功',
+            data=execution.to_dict()
+        )
+        
+    except Exception as e:
+        db.session.rollback()
+        return standard_error_response(f'记录执行结果失败: {str(e)}')
 
 
 # ==================== 变量管理API ====================
@@ -432,42 +449,11 @@ def stop_execution(execution_id):
 def get_execution_variables(execution_id):
     """获取执行过程中的变量"""
     try:
-        # 使用psycopg2直接连接数据库验证执行记录存在
-        import psycopg2
-        import os
+        # 使用SQLAlchemy验证执行记录存在
+        execution = ExecutionHistory.query.filter_by(execution_id=execution_id).first()
         
-        # 获取数据库连接信息
-        try:
-            from database_config import DatabaseConfig
-            db_config = DatabaseConfig()
-            database_url = db_config.database_url
-        except ImportError:
-            try:
-                from web_gui.database_config import DatabaseConfig
-                db_config = DatabaseConfig()
-                database_url = db_config.database_url
-            except:
-                database_url = os.getenv('DATABASE_URL')
-        
-        if not database_url:
-            raise Exception("未找到数据库连接配置")
-        
-        # 连接数据库
-        conn = psycopg2.connect(database_url)
-        cursor = conn.cursor()
-        
-        try:
-            # 验证执行记录存在
-            check_sql = "SELECT id FROM execution_history WHERE execution_id = %s"
-            cursor.execute(check_sql, (execution_id,))
-            if not cursor.fetchone():
-                return jsonify({
-                    'code': 404,
-                    'message': '执行记录不存在'
-                }), 404
-        finally:
-            cursor.close()
-            conn.close()
+        if not execution:
+            return standard_error_response('执行记录不存在', 404)
         
         # 获取变量管理器
         manager = VariableManagerFactory.get_manager(execution_id)

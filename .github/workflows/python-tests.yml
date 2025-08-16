@@ -58,7 +58,7 @@ jobs:
     
     - name: Run all tests with coverage
       run: |
-        python -m pytest tests/unit/ tests/api/ -v --tb=short --cov=web_gui --cov-report=xml --cov-report=html --html=test-report.html --self-contained-html || (echo "Tests failed. Running single test for debugging:" && python -m pytest tests/unit/test_models.py::TestTestCaseModel::test_should_create_testcase_with_valid_data -vvs)
+        python -m pytest tests/unit/ tests/api/ -v --tb=short --cov=web_gui --cov-report=xml --cov-report=html --html=test-report.html --self-contained-html
       env:
         TESTING: "true"
         DATABASE_URL: "sqlite:///:memory:"
@@ -102,7 +102,7 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         
         # 运行所有测试并生成JSON报告
-        python -m pytest tests/unit/ tests/api/ --tb=short --json-report --json-report-file=test-report.json || true
+        python -m pytest tests/unit/ tests/api/ --tb=short --json-report --json-report-file=test-report.json --tb=line || true
         
         # 解析测试结果
         if [ -f test-report.json ]; then

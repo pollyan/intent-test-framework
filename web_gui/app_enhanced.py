@@ -42,6 +42,12 @@ except ImportError:
     from web_gui.database_config import get_flask_config, print_database_info, validate_database_connection
     print("✅ 模块化API路由导入成功 (Serverless模式)")
 
+# 导入错误处理器
+try:
+    from utils.error_handler import APIError, ValidationError, NotFoundError, DatabaseError
+except ImportError:
+    from web_gui.utils.error_handler import APIError, ValidationError, NotFoundError, DatabaseError
+
 # 尝试导入MidSceneAI，如果失败则使用模拟版本
 try:
     from midscene_python import MidSceneAI
@@ -133,6 +139,70 @@ except ImportError as e:
 if not AI_AVAILABLE:
     MockMidSceneAI = MidSceneAI
 
+def register_error_handlers(app):
+    """注册全局错误处理器"""
+    
+    @app.errorhandler(APIError)
+    def handle_api_error(e):
+        """处理API自定义异常"""
+        logger = logging.getLogger(__name__)
+        logger.warning(f"API错误: {e.message} (代码: {e.code})")
+        
+        response_data = e.to_dict()
+        return jsonify(response_data), e.code
+    
+    @app.errorhandler(ValidationError)
+    def handle_validation_error(e):
+        """处理验证错误"""
+        return jsonify({
+            'code': e.code,
+            'message': e.message,
+            'details': e.details
+        }), e.code
+    
+    @app.errorhandler(NotFoundError)
+    def handle_not_found_error(e):
+        """处理404错误"""
+        return jsonify({
+            'code': 404,
+            'message': e.message
+        }), 404
+    
+    @app.errorhandler(DatabaseError)
+    def handle_database_error(e):
+        """处理数据库错误"""
+        logger = logging.getLogger(__name__)
+        logger.error(f"数据库错误: {e.message}")
+        
+        return jsonify({
+            'code': 500,
+            'message': '数据库操作失败，请稍后重试'
+        }), 500
+    
+    @app.errorhandler(404)
+    def handle_404(e):
+        """处理404错误"""
+        if request.path.startswith('/api/'):
+            return jsonify({
+                'code': 404,
+                'message': '接口不存在'
+            }), 404
+        return render_template('404.html'), 404
+    
+    @app.errorhandler(500)
+    def handle_500(e):
+        """处理500错误"""
+        logger = logging.getLogger(__name__)
+        logger.error(f"服务器内部错误: {str(e)}")
+        
+        if request.path.startswith('/api/'):
+            return jsonify({
+                'code': 500,
+                'message': '服务器内部错误'
+            }), 500
+        return render_template('500.html'), 500
+
+
 def create_app(test_config=None):
     """应用工厂函数"""
     app = Flask(__name__)
@@ -176,6 +246,9 @@ def create_app(test_config=None):
     # 注册模块化API路由
     register_api_routes(app)
     
+    # 注册全局错误处理器
+    register_error_handlers(app)
+    
     # 添加时区格式化过滤器
     @app.template_filter('utc_to_local')
     def utc_to_local_filter(dt):
@@ -188,6 +261,49 @@ def create_app(test_config=None):
             return ''
     
     return app
+
+def register_error_handlers(app):
+    """注册全局错误处理器"""
+    try:
+        from utils.error_handler import APIError, ValidationError, NotFoundError, DatabaseError
+    except ImportError:
+        from web_gui.utils.error_handler import APIError, ValidationError, NotFoundError, DatabaseError
+    
+    @app.errorhandler(APIError)
+    def handle_api_error(e):
+        """处理API异常"""
+        return jsonify({
+            'code': e.code,
+            'message': e.message,
+            'details': e.details
+        }), e.code
+    
+    @app.errorhandler(ValidationError)
+    def handle_validation_error(e):
+        """处理验证异常"""
+        return jsonify({
+            'code': 400,
+            'message': e.message,
+            'details': e.details
+        }), 400
+    
+    @app.errorhandler(NotFoundError)
+    def handle_not_found_error(e):
+        """处理资源不存在异常"""
+        return jsonify({
+            'code': 404,
+            'message': e.message,
+            'details': e.details
+        }), 404
+    
+    @app.errorhandler(DatabaseError)
+    def handle_database_error(e):
+        """处理数据库异常"""
+        return jsonify({
+            'code': 500,
+            'message': e.message,
+            'details': e.details
+        }), 500
 
 # 全局变量
 app = None

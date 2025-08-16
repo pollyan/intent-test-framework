@@ -20,12 +20,11 @@ except ImportError:
         format_success_response, ValidationError, NotFoundError, DatabaseError
     )
 
-# 导入数据模型 - 强制使用绝对导入确保使用同一个db实例
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from models import db, TestCase, ExecutionHistory, StepExecution, Template
+# 导入数据模型
+try:
+    from ..models import db, TestCase, ExecutionHistory, StepExecution, Template
+except ImportError:
+    from web_gui.models import db, TestCase, ExecutionHistory, StepExecution, Template
 
 
 def get_pagination_params():
@@ -93,7 +92,15 @@ def log_api_call(f):
             result = f(*args, **kwargs)
             logger.info(f"API调用成功: {request.method} {request.path}")
             return result
+        except (ValidationError, NotFoundError, DatabaseError) as e:
+            logger.error(f"API调用失败: {request.method} {request.path}, 错误: {str(e)}")
+            # 处理API异常，转换为HTTP响应
+            return jsonify({
+                'code': e.code,
+                'message': e.message
+            }), e.code
         except Exception as e:
             logger.error(f"API调用失败: {request.method} {request.path}, 错误: {str(e)}")
+            # 其他异常继续抛出让Flask处理
             raise
     return wrapper

@@ -49,11 +49,12 @@ class DatabaseError(APIError):
 
 class NotFoundError(APIError):
     """资源不存在错误"""
-    def __init__(self, resource: str, resource_id: Any = None):
-        message = f"{resource}不存在"
+    def __init__(self, message: str, resource_id: Any = None):
+        # 如果提供了resource_id，添加到消息中
         if resource_id:
-            message += f"：{resource_id}"
-        super().__init__(message, 404, {'resource': resource, 'resource_id': resource_id})
+            if not message.endswith(f"：{resource_id}"):
+                message += f"：{resource_id}"
+        super().__init__(message, 404, {'resource_id': resource_id})
 
 def api_error_handler(f):
     """增强的API错误处理装饰器"""

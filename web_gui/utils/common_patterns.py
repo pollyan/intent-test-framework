@@ -130,12 +130,20 @@ def validate_resource_exists(model_class: Type, id_param: str = 'id',
             resource = model_class.query.get(resource_id)
             if not resource:
                 message = error_message or f'{model_class.__name__}不存在'
-                raise NotFoundError(message, resource_id)
+                from flask import jsonify
+                return jsonify({
+                    'code': 404,
+                    'message': message
+                }), 404
             
             # 如果资源有is_active字段，检查是否活跃
             if hasattr(resource, 'is_active') and not resource.is_active:
                 message = error_message or f'{model_class.__name__}已删除'
-                raise NotFoundError(message, resource_id)
+                from flask import jsonify
+                return jsonify({
+                    'code': 404,
+                    'message': message
+                }), 404
             
             # 将资源添加到kwargs中
             kwargs[f'{model_class.__name__.lower()}'] = resource
@@ -159,6 +167,12 @@ def database_transaction(rollback_on_error: bool = True):
                 result = func(*args, **kwargs)
                 db.session.commit()
                 return result
+            except APIError as e:
+                # API异常直接重抛，保持原有状态码
+                if rollback_on_error:
+                    db.session.rollback()
+                    logger.warning(f"数据库事务回滚: {str(e)}")
+                raise e
             except Exception as e:
                 if rollback_on_error:
                     db.session.rollback()
