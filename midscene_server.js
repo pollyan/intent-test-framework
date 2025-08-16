@@ -1205,6 +1205,8 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                 }
                 
                 console.log(`🔑 设置金山云Cookie - 区域: ${region}`);
+                console.log(`🔑 Access Key: ${access_key ? access_key.substr(0, 8) + '***' : 'not provided'}`);
+                console.log(`🔑 Secret Key: ${secret_key ? '***' + secret_key.substr(-4) : 'not provided'}`);
                 if (target_url) {
                     console.log(`🎯 目标URL: ${target_url}`);
                 }
@@ -2646,7 +2648,90 @@ function generateJSessionId() {
 }
 
 
-// 通过金山云IAM接口获取真实的认证Cookie
+// AWS4签名算法实现 (基于金山云IAM接口)
+function generateAws4Headers(service, host, region, endpoint, accessKey, secretKey, requestParameters) {
+    const crypto = require('crypto');
+    
+    console.log('🔐 开始生成AWS4签名...');
+    
+    // 当前时间
+    const now = new Date();
+    const amzDate = now.toISOString().replace(/[:-]|\..*/g, '');
+    const dateStamp = amzDate.substr(0, 8);
+    
+    console.log(`📅 签名时间: ${amzDate}`);
+    console.log(`📅 日期戳: ${dateStamp}`);
+    
+    // HTTP方法和URI
+    const method = 'GET';
+    const canonicalUri = '/';
+    
+    // 构建查询字符串
+    const sortedParams = Object.keys(requestParameters).sort();
+    const canonicalQuerystring = sortedParams
+        .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(requestParameters[key])}`)
+        .join('&');
+    
+    console.log(`🔗 规范查询字符串: ${canonicalQuerystring}`);
+    
+    // 构建规范头
+    const canonicalHeaders = `host:${host}\nx-amz-date:${amzDate}\n`;
+    const signedHeaders = 'host;x-amz-date';
+    
+    console.log(`📋 规范头:\n${canonicalHeaders}`);
+    console.log(`✍️  签名头: ${signedHeaders}`);
+    
+    // 构建规范请求
+    const payloadHash = crypto.createHash('sha256').update('').digest('hex');
+    const canonicalRequest = `${method}\n${canonicalUri}\n${canonicalQuerystring}\n${canonicalHeaders}\n${signedHeaders}\n${payloadHash}`;
+    
+    console.log(`📜 规范请求:\n${canonicalRequest}`);
+    
+    // 构建待签名字符串
+    const algorithm = 'AWS4-HMAC-SHA256';
+    const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
+    const stringToSign = `${algorithm}\n${amzDate}\n${credentialScope}\n${crypto.createHash('sha256').update(canonicalRequest).digest('hex')}`;
+    
+    console.log(`🔤 待签名字符串:\n${stringToSign}`);
+    console.log(`🎯 凭证范围: ${credentialScope}`);
+    
+    // 计算签名密钥
+    const kDate = crypto.createHmac('sha256', `AWS4${secretKey}`).update(dateStamp).digest();
+    const kRegion = crypto.createHmac('sha256', kDate).update(region).digest();
+    const kService = crypto.createHmac('sha256', kRegion).update(service).digest();
+    const kSigning = crypto.createHmac('sha256', kService).update('aws4_request').digest();
+    
+    console.log('🔑 签名密钥计算完成');
+    
+    // 计算签名
+    const signature = crypto.createHmac('sha256', kSigning).update(stringToSign).digest('hex');
+    
+    console.log(`🖊️  最终签名: ${signature}`);
+    
+    // 构建Authorization头
+    const authorizationHeader = `${algorithm} Credential=${accessKey}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+    
+    console.log(`🔐 Authorization头: ${authorizationHeader}`);
+    
+    // 构建请求头
+    const headers = {
+        'Authorization': authorizationHeader,
+        'X-Amz-Date': amzDate,
+        'Host': host,
+        'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
+        'User-Agent': 'Intent-Test-Framework/1.0'
+    };
+    
+    // 构建完整URL
+    const requestUrl = canonicalQuerystring ? `${endpoint}/?${canonicalQuerystring}` : endpoint;
+    
+    console.log('✅ AWS4签名生成完成');
+    console.log(`🌐 请求URL: ${requestUrl}`);
+    
+    return { requestUrl, headers };
+}
+
+// 通过金山云IAM接口获取真实的认证Cookie (使用AWS4签名算法)
 async function get_cookie_from_iam(accessKey, secretKey, region = 'cn-beijing-6') {
     console.log('🔑 开始通过IAM接口获取金山云认证Cookie');
     console.log(`📍 区域: ${region}`);
@@ -2656,59 +2741,42 @@ async function get_cookie_from_iam(accessKey, secretKey, region = 'cn-beijing-6'
         const crypto = require('crypto');
         const axios = require('axios');
         
-        // 金山云IAM GetFederationToken接口
-        const action = 'GetFederationToken';
+        // 金山云IAM GetUserSession接口
+        const service = 'iam';
+        const action = 'GetUserSession';
         const version = '2015-11-01';
-        const timestamp = Math.floor(Date.now() / 1000);
+        const host = `iam.${region}.inner.api.ksyun.com`;
+        const endpoint = `https://${host}`;
         
         // 构建请求参数
-        const params = {
+        const requestParameters = {
             'Action': action,
-            'Version': version,
-            'AccessKeyId': accessKey,
-            'SignatureMethod': 'HMAC-SHA256',
-            'SignatureVersion': '1.0',
-            'Timestamp': timestamp,
-            'DurationSeconds': 3600, // 1小时有效期
-            'Name': 'AutoTestSession' // 会话名称
+            'Version': version
         };
         
-        // 生成签名
-        const signature = generateKsyunSignature(params, secretKey, 'POST', region);
-        params['Signature'] = signature;
+        console.log('🌐 准备AWS4签名认证...');
+        console.log(`  服务: ${service}`);
+        console.log(`  主机: ${host}`);
+        console.log(`  端点: ${endpoint}`);
+        console.log(`  请求参数:`, JSON.stringify(requestParameters, null, 4));
         
-        // 构建请求URL
-        const iamEndpoint = `https://iam.${region}.api.ksyun.com/`;
+        // 使用AWS4签名算法生成认证头
+        const { requestUrl, headers } = generateAws4Headers(
+            service, host, region, endpoint, accessKey, secretKey, requestParameters
+        );
         
-        console.log('🌐 请求IAM接口获取federation token...');
-        console.log(`请求地址: ${iamEndpoint}`);
-        
-        // 构建POST请求体
-        const postData = Object.keys(params)
-            .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
-            .join('&');
-        
-        // 详细记录请求信息
         console.log('📤 IAM接口请求详情:');
-        console.log(`  方法: POST`);
-        console.log(`  URL: ${iamEndpoint}`);
-        console.log(`  请求参数:`, JSON.stringify(params, null, 4));
-        console.log(`  请求体: ${postData}`);
-        console.log(`  请求头:`);
-        console.log(`    Content-Type: application/x-www-form-urlencoded`);
-        console.log(`    User-Agent: KsyunAutoTest/1.0`);
+        console.log(`  方法: GET`);
+        console.log(`  URL: ${requestUrl}`);
+        console.log(`  请求头:`, JSON.stringify(headers, null, 4));
         console.log(`  超时设置: 30000ms`);
         
         // 调用IAM接口
-        const response = await axios.post(iamEndpoint, postData, {
-            timeout: 30000,
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'User-Agent': 'KsyunAutoTest/1.0'
-            }
+        const response = await axios.get(requestUrl, {
+            headers: headers,
+            timeout: 30000
         });
         
-        // 详细记录响应信息
         console.log('📥 IAM接口响应详情:');
         console.log(`  状态码: ${response.status}`);
         console.log(`  状态文本: ${response.statusText}`);
@@ -2717,61 +2785,34 @@ async function get_cookie_from_iam(accessKey, secretKey, region = 'cn-beijing-6'
         
         console.log('✅ IAM接口调用成功');
         
-        // 解析响应获取session URL或临时凭证
+        // 解析响应获取session URL
         console.log('🔍 开始解析IAM接口响应...');
         
-        if (response.data && response.data.GetFederationTokenResult) {
-            const result = response.data.GetFederationTokenResult;
-            console.log('✅ 找到GetFederationTokenResult字段');
+        if (response.data && response.data.GetUserSessionResult) {
+            const result = response.data.GetUserSessionResult;
+            console.log('✅ 找到GetUserSessionResult字段');
             console.log('🔍 分析响应结构:', JSON.stringify(result, null, 4));
             
-            // 检查是否有临时凭证
-            if (result.Credentials) {
-                const credentials = result.Credentials;
-                console.log('🎫 获取到临时凭证');
-                console.log('🔑 临时凭证详情:', JSON.stringify(credentials, null, 4));
+            if (result.Url) {
+                const sessionUrl = result.Url;
+                console.log('🎫 获取到session URL:', sessionUrl);
                 
-                // 使用临时凭证生成控制台登录URL
-                console.log('🚀 开始使用临时凭证生成控制台登录URL...');
-                const consoleLoginUrl = await generateConsoleLoginUrl(credentials, region);
-                if (consoleLoginUrl) {
-                    console.log('🎯 生成控制台登录URL成功:', consoleLoginUrl);
-                    
-                    // 访问控制台URL获取Cookie
-                    console.log('🍪 开始从控制台URL提取Cookie...');
-                    const cookies = await extractCookiesFromUrl(consoleLoginUrl);
-                    if (cookies && Object.keys(cookies).length > 0) {
-                        console.log(`✅ 成功提取${Object.keys(cookies).length}个认证Cookie`);
-                        console.log('🍪 Cookie详情:', JSON.stringify(cookies, null, 4));
-                        console.log('🍪 Cookie列表:', Object.keys(cookies).join(', '));
-                        return cookies;
-                    } else {
-                        console.log('❌ 未能从控制台URL提取到有效Cookie');
-                    }
-                } else {
-                    console.log('❌ 生成控制台登录URL失败');
-                }
-            } else {
-                console.log('⚠️  响应中没有找到Credentials字段');
-            }
-            
-            // 检查是否直接返回了SigninToken URL
-            if (result.SigninToken) {
-                console.log('🎫 获取到signin token URL:', result.SigninToken);
-                console.log('🍪 开始从SigninToken URL提取Cookie...');
-                const cookies = await extractCookiesFromUrl(result.SigninToken);
+                // 访问session URL获取Cookie
+                console.log('🍪 开始从session URL提取Cookie...');
+                const cookies = await extractCookiesFromUrl(sessionUrl);
                 if (cookies && Object.keys(cookies).length > 0) {
                     console.log(`✅ 成功提取${Object.keys(cookies).length}个认证Cookie`);
                     console.log('🍪 Cookie详情:', JSON.stringify(cookies, null, 4));
+                    console.log('🍪 Cookie列表:', Object.keys(cookies).join(', '));
                     return cookies;
                 } else {
-                    console.log('❌ 未能从SigninToken URL提取到有效Cookie');
+                    console.log('❌ 未能从session URL提取到有效Cookie');
                 }
             } else {
-                console.log('⚠️  响应中没有找到SigninToken字段');
+                console.log('⚠️  响应中没有找到Url字段');
             }
         } else {
-            console.log('❌ 响应中没有找到GetFederationTokenResult字段');
+            console.log('❌ 响应中没有找到GetUserSessionResult字段');
             console.log('🔍 完整响应结构分析:', JSON.stringify(response.data, null, 4));
         }
         
@@ -2782,8 +2823,14 @@ async function get_cookie_from_iam(accessKey, secretKey, region = 'cn-beijing-6'
         console.error('❌ IAM认证Cookie获取失败:', error.message);
         if (error.response) {
             console.error('响应状态:', error.response.status);
-            console.error('响应数据:', JSON.stringify(error.response.data, null, 2));
+            console.error('响应状态文本:', error.response.statusText);
+            console.error('响应头:', JSON.stringify(error.response.headers, null, 4));
+            console.error('响应数据:', error.response.data);
         }
+        if (error.code) {
+            console.error('错误代码:', error.code);
+        }
+        console.error('错误堆栈:', error.stack);
         return null;
     }
 }
@@ -2803,7 +2850,7 @@ function generateKsyunSignature(params, secretKey, method = 'POST', region = 'cn
     
     // 生成签名
     const signature = crypto
-        .createHmac('sha256', secretKey)
+        .createHmac('sha1', secretKey)
         .update(stringToSign, 'utf8')
         .digest('base64');
     
