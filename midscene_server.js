@@ -1189,6 +1189,125 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                 logMessage(executionId, 'info', `AI操作规划: ${aiActionPrompt}`);
                 break;
 
+            case 'setKsyunCookie':
+                console.log(`\n[${new Date().toISOString()}] MidScene Step Execution - setKsyunCookie`);
+                console.log(`Execution ID: ${executionId}`);
+                console.log(`Step ${stepIndex + 1}/${totalSteps}`);
+                console.log(`Params:`, JSON.stringify(params, null, 2));
+                
+                const access_key = params.access_key || process.env.KSYUN_ACCESS_KEY;
+                const secret_key = params.secret_key || process.env.KSYUN_SECRET_KEY;  
+                const region = params.region || process.env.KSYUN_REGION || 'cn-beijing-6';
+                const target_url = params.target_url;
+                
+                if (!access_key || !secret_key) {
+                    throw new Error('金山云Access Key和Secret Key不能为空，请在参数中提供或设置环境变量KSYUN_ACCESS_KEY和KSYUN_SECRET_KEY');
+                }
+                
+                console.log(`🔑 设置金山云Cookie - 区域: ${region}`);
+                if (target_url) {
+                    console.log(`🎯 目标URL: ${target_url}`);
+                }
+                
+                // 调用内部API设置金山云Cookie
+                const ksyunStartTime = Date.now();
+                
+                try {
+                    // 首先访问金山云主页建立上下文
+                    console.log('🌐 访问金山云主页');
+                    await page.goto('http://www.ksyun.com');
+                    await page.waitForTimeout(2000);
+                    
+                    // 生成金山云Cookie
+                    let ksyunCookies = await generateKsyunCookies(access_key, secret_key, region);
+                    
+                    if (!ksyunCookies) {
+                        throw new Error('无法生成金山云Cookie');
+                    }
+                    
+                    // 设置Cookie
+                    console.log('🍪 设置金山云Cookie');
+                    const cookiesToSet = [];
+                    for (const [name, value] of Object.entries(ksyunCookies)) {
+                        cookiesToSet.push({
+                            name: name,
+                            value: String(value),
+                            domain: '.ksyun.com',
+                            path: '/',
+                            httpOnly: false,
+                            secure: false
+                        });
+                    }
+                    
+                    await page.context().addCookies(cookiesToSet);
+                    console.log(`✅ 已设置${cookiesToSet.length}个金山云Cookie`);
+                    
+                    // 如果指定了目标URL，跳转到目标页面
+                    if (target_url) {
+                        console.log(`🎯 跳转到目标页面: ${target_url}`);
+                        await page.goto(target_url);
+                        await page.waitForTimeout(3000);
+                        console.log('✅ 目标页面加载完成');
+                    }
+                    
+                    const ksyunEndTime = Date.now();
+                    console.log(`金山云Cookie设置完成，耗时: ${ksyunEndTime - ksyunStartTime}ms`);
+                    logMessage(executionId, 'info', `金山云Cookie设置成功 - 区域: ${region}`);
+                    
+                } catch (cookieError) {
+                    console.error('🔑 金山云Cookie设置失败:', cookieError);
+                    logMessage(executionId, 'error', `金山云Cookie设置失败: ${cookieError.message}`);
+                    throw cookieError;
+                }
+                break;
+
+            case 'setCookie':
+            case 'setCookies':
+                console.log(`\n[${new Date().toISOString()}] MidScene Step Execution - setCookie`);
+                console.log(`Execution ID: ${executionId}`);
+                console.log(`Step ${stepIndex + 1}/${totalSteps}`);
+                console.log(`Params:`, JSON.stringify(params, null, 2));
+                
+                const cookies = params.cookies;
+                const domain = params.domain;
+                
+                if (!cookies || typeof cookies !== 'object') {
+                    throw new Error('setCookie操作需要cookies参数，且必须是对象格式');
+                }
+                
+                console.log(`🍪 设置${Object.keys(cookies).length}个通用Cookie`);
+                if (domain) {
+                    console.log(`🌐 域名: ${domain}`);
+                }
+                
+                const cookieStartTime = Date.now();
+                
+                try {
+                    const cookiesToSet = [];
+                    for (const [name, value] of Object.entries(cookies)) {
+                        cookiesToSet.push({
+                            name: name,
+                            value: String(value),
+                            domain: domain || undefined,
+                            path: '/',
+                            httpOnly: false,
+                            secure: false
+                        });
+                    }
+                    
+                    await page.context().addCookies(cookiesToSet);
+                    
+                    const cookieEndTime = Date.now();
+                    console.log(`✅ 通用Cookie设置完成，耗时: ${cookieEndTime - cookieStartTime}ms`);
+                    logMessage(executionId, 'info', `设置了${cookiesToSet.length}个Cookie`);
+                    
+                } catch (setCookieError) {
+                    console.error('🍪 Cookie设置失败:', setCookieError);
+                    logMessage(executionId, 'error', `Cookie设置失败: ${setCookieError.message}`);
+                    throw setCookieError;
+                }
+                break;
+
             default:
                 // 通用AI操作 - 优先使用params中的prompt或instruction
                 const instruction = params.prompt || params.instruction || description || stepType;
