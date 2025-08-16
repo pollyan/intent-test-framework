@@ -2529,22 +2529,19 @@ async function generateKsyunCookies(accessKey, secretKey, region = 'cn-beijing-6
     console.log(`🔑 Access Key: ${accessKey.substr(0, 8)}***`);
     
     try {
-        // 检查是否有预设的真实Cookie（优先使用）
-        const realCookies = process.env.KSYUN_REAL_COOKIES;
-        if (realCookies) {
-            console.log('🍪 使用预设的真实金山云Cookie');
-            return parseRealCookies(realCookies);
-        }
-        
-        // 尝试通过STS API获取临时凭证（如果可用）
+        // 通过IAM API获取真实认证Cookie
         try {
-            const stsCredentials = await getSTSCredentials(accessKey, secretKey, region);
-            if (stsCredentials) {
-                console.log('🎫 通过STS获取临时凭证成功');
-                return generateCookiesFromSTS(stsCredentials);
+            const iamCookies = await getSTSCredentials(accessKey, secretKey, region);
+            if (iamCookies) {
+                console.log('🎫 通过IAM接口获取真实Cookie成功');
+                const validCookies = generateCookiesFromSTS(iamCookies);
+                if (validCookies) {
+                    return validCookies;
+                }
             }
-        } catch (stsError) {
-            console.log('⚠️  STS凭证获取失败，使用模拟方案:', stsError.message);
+        } catch (iamError) {
+            console.log('⚠️  IAM Cookie获取失败，使用模拟方案:', iamError.message);
+            console.log('错误详情:', iamError.stack);
         }
         
         // 改进的模拟Cookie生成（更接近真实格式）
@@ -2609,35 +2606,231 @@ function generateJSessionId() {
     return result;
 }
 
-// 解析预设的真实Cookie
-function parseRealCookies(cookieString) {
-    const cookies = {};
-    const pairs = cookieString.split(';');
+
+// 通过金山云IAM接口获取真实的认证Cookie
+async function get_cookie_from_iam(accessKey, secretKey, region = 'cn-beijing-6') {
+    console.log('🔑 开始通过IAM接口获取金山云认证Cookie');
+    console.log(`📍 区域: ${region}`);
+    console.log(`🔑 Access Key: ${accessKey ? accessKey.substr(0, 8) + '***' : 'not provided'}`);
     
-    for (const pair of pairs) {
-        const [name, ...valueParts] = pair.trim().split('=');
-        if (name && valueParts.length > 0) {
-            cookies[name] = valueParts.join('=');
+    try {
+        const crypto = require('crypto');
+        const axios = require('axios');
+        
+        // 金山云IAM GetFederationToken接口
+        const action = 'GetFederationToken';
+        const version = '2015-11-01';
+        const timestamp = Math.floor(Date.now() / 1000);
+        
+        // 构建请求参数
+        const params = {
+            'Action': action,
+            'Version': version,
+            'AccessKeyId': accessKey,
+            'SignatureMethod': 'HMAC-SHA256',
+            'SignatureVersion': '1.0',
+            'Timestamp': timestamp,
+            'DurationSeconds': 3600, // 1小时有效期
+            'Name': 'AutoTestSession' // 会话名称
+        };
+        
+        // 生成签名
+        const signature = generateKsyunSignature(params, secretKey, 'POST', region);
+        params['Signature'] = signature;
+        
+        // 构建请求URL
+        const iamEndpoint = `https://iam.${region}.api.ksyun.com/`;
+        
+        console.log('🌐 请求IAM接口获取federation token...');
+        console.log(`请求地址: ${iamEndpoint}`);
+        
+        // 构建POST请求体
+        const postData = Object.keys(params)
+            .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+            .join('&');
+        
+        // 调用IAM接口
+        const response = await axios.post(iamEndpoint, postData, {
+            timeout: 30000,
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'User-Agent': 'KsyunAutoTest/1.0'
+            }
+        });
+        
+        console.log('✅ IAM接口调用成功');
+        console.log('IAM响应:', JSON.stringify(response.data, null, 2));
+        
+        // 解析响应获取session URL或临时凭证
+        if (response.data && response.data.GetFederationTokenResult) {
+            const result = response.data.GetFederationTokenResult;
+            
+            // 检查是否有临时凭证
+            if (result.Credentials) {
+                const credentials = result.Credentials;
+                console.log('🎫 获取到临时凭证');
+                
+                // 使用临时凭证生成控制台登录URL
+                const consoleLoginUrl = await generateConsoleLoginUrl(credentials, region);
+                if (consoleLoginUrl) {
+                    console.log('🎯 生成控制台登录URL成功');
+                    
+                    // 访问控制台URL获取Cookie
+                    const cookies = await extractCookiesFromUrl(consoleLoginUrl);
+                    if (cookies && Object.keys(cookies).length > 0) {
+                        console.log(`✅ 成功提取${Object.keys(cookies).length}个认证Cookie`);
+                        console.log('🍪 Cookie列表:', Object.keys(cookies).join(', '));
+                        return cookies;
+                    }
+                }
+            }
+            
+            // 检查是否直接返回了SigninToken URL
+            if (result.SigninToken) {
+                console.log('🎫 获取到signin token URL');
+                const cookies = await extractCookiesFromUrl(result.SigninToken);
+                if (cookies && Object.keys(cookies).length > 0) {
+                    console.log(`✅ 成功提取${Object.keys(cookies).length}个认证Cookie`);
+                    return cookies;
+                }
+            }
         }
+        
+        console.log('⚠️  未能从IAM响应中获取有效的认证信息');
+        return null;
+        
+    } catch (error) {
+        console.error('❌ IAM认证Cookie获取失败:', error.message);
+        if (error.response) {
+            console.error('响应状态:', error.response.status);
+            console.error('响应数据:', JSON.stringify(error.response.data, null, 2));
+        }
+        return null;
     }
+}
+
+// 生成金山云API签名
+function generateKsyunSignature(params, secretKey, method = 'POST', region = 'cn-beijing-6') {
+    const crypto = require('crypto');
     
-    console.log(`✅ 解析了${Object.keys(cookies).length}个真实Cookie`);
-    return cookies;
+    // 构建规范化查询字符串
+    const sortedKeys = Object.keys(params).sort();
+    const canonicalQueryString = sortedKeys
+        .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+        .join('&');
+    
+    // 构建待签名字符串 (金山云V1签名算法)
+    const stringToSign = `${method}\n/\n${canonicalQueryString}`;
+    
+    // 生成签名
+    const signature = crypto
+        .createHmac('sha256', secretKey)
+        .update(stringToSign, 'utf8')
+        .digest('base64');
+    
+    console.log('🔐 生成API签名');
+    console.log('StringToSign:', stringToSign);
+    
+    return signature;
 }
 
-// 尝试通过STS API获取临时凭证
+// 使用临时凭证生成控制台登录URL
+async function generateConsoleLoginUrl(credentials, region) {
+    try {
+        const crypto = require('crypto');
+        const axios = require('axios');
+        
+        // 构建Federation URL参数
+        const federationParams = {
+            'Action': 'GetSigninToken',
+            'SessionDuration': 3600,
+            'Session': JSON.stringify({
+                sessionId: credentials.AccessKeyId,
+                sessionKey: credentials.SecretAccessKey,
+                sessionToken: credentials.SessionToken
+            })
+        };
+        
+        // 调用Federation服务获取SigninToken
+        const federationUrl = `https://signin.${region}.ksyun.com/federation`;
+        
+        const federationResponse = await axios.get(federationUrl, {
+            params: federationParams,
+            timeout: 30000
+        });
+        
+        if (federationResponse.data && federationResponse.data.SigninToken) {
+            const signinToken = federationResponse.data.SigninToken;
+            
+            // 构建最终的控制台登录URL
+            const loginUrl = `https://signin.${region}.ksyun.com/federation?` +
+                `Action=login&Issuer=AutoTest&Destination=${encodeURIComponent('https://console.ksyun.com/')}&SigninToken=${signinToken}`;
+            
+            return loginUrl;
+        }
+        
+        return null;
+        
+    } catch (error) {
+        console.error('生成控制台登录URL失败:', error.message);
+        return null;
+    }
+}
+
+// 从URL提取Cookie
+async function extractCookiesFromUrl(url) {
+    try {
+        const axios = require('axios');
+        
+        console.log('🍪 访问URL提取Cookie:', url);
+        
+        // 访问URL获取Set-Cookie响应头
+        const response = await axios.get(url, {
+            timeout: 30000,
+            maxRedirects: 5,
+            validateStatus: (status) => status >= 200 && status < 400,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+        });
+        
+        // 从响应头中提取Cookie
+        const setCookieHeaders = response.headers['set-cookie'] || [];
+        const cookies = {};
+        
+        setCookieHeaders.forEach(cookieHeader => {
+            const cookieParts = cookieHeader.split(';')[0].split('=');
+            if (cookieParts.length >= 2) {
+                const name = cookieParts[0].trim();
+                const value = cookieParts.slice(1).join('=').trim();
+                if (name && value) {
+                    cookies[name] = value;
+                }
+            }
+        });
+        
+        console.log(`🍪 从URL提取到${Object.keys(cookies).length}个Cookie`);
+        return Object.keys(cookies).length > 0 ? cookies : null;
+        
+    } catch (error) {
+        console.error('从URL提取Cookie失败:', error.message);
+        return null;
+    }
+}
+
+// 尝试通过IAM API获取临时凭证（更新函数名以保持兼容性）
 async function getSTSCredentials(accessKey, secretKey, region) {
-    // 这里应该调用金山云STS API
-    // 由于金山云STS API的具体实现需要详细的API文档，这里先返回null
-    console.log('🎫 尝试获取STS临时凭证...');
-    return null; // 待实现
+    console.log('🎫 尝试通过IAM接口获取认证Cookie...');
+    return await get_cookie_from_iam(accessKey, secretKey, region);
 }
 
-// 从STS凭证生成Cookie
-function generateCookiesFromSTS(stsCredentials) {
-    // 从STS凭证生成真实的认证Cookie
-    // 这里需要根据金山云的具体实现来转换
-    return {}; // 待实现
+// 从IAM Cookie直接返回（更新函数以处理真实Cookie）
+function generateCookiesFromSTS(iamCookies) {
+    if (iamCookies && typeof iamCookies === 'object' && Object.keys(iamCookies).length > 0) {
+        console.log('✅ 使用IAM接口获取的真实Cookie');
+        return iamCookies;
+    }
+    return null; // 返回null而不是空对象，这样可以触发回退到模拟Cookie
 }
 
 // 错误处理中间件

@@ -700,9 +700,6 @@ KSYUN_ACCESS_KEY=your-ksyun-access-key
 KSYUN_SECRET_KEY=your-ksyun-secret-key
 KSYUN_REGION=cn-beijing-6
 
-# 可选：使用真实的金山云Cookie (推荐，更可靠)
-# 获取方式：浏览器登录金山云 -> 开发者工具 -> Application -> Cookies -> 复制全部
-# KSYUN_REAL_COOKIES=JSESSIONID=ABC123;ks-console-session=XYZ789;其他Cookie...
 
 # 可选的金山云区域：
 # cn-beijing-6      (华北1-北京)
