@@ -41,7 +41,7 @@ VALID_ACTIONS = {
     'back', 'ai_select', 'ai_upload', 'ai_check'
 }
 
-def validate_step_data(data):
+def validate_step_data(data, is_update=False):
     """验证步骤数据"""
     from ..utils.error_handler import ValidationError
     
@@ -54,15 +54,17 @@ def validate_step_data(data):
     
     params = data.get('params', {})
     
-    # 根据动作类型验证参数
-    if action == 'goto':
-        if not params.get('url'):
-            raise ValidationError('goto动作需要url参数')
-    
-    elif action in ['ai_input', 'ai_tap', 'ai_assert', 'ai_wait_for']:
-        # AI动作需要locate或prompt参数之一
-        if not params.get('locate') and not params.get('prompt'):
-            raise ValidationError(f'{action}动作需要locate或prompt参数之一')
+    # 在创建时进行严格验证，更新时允许部分更新
+    if not is_update:
+        # 根据动作类型验证参数
+        if action == 'goto':
+            if not params.get('url'):
+                raise ValidationError('goto动作需要url参数')
+        
+        elif action in ['ai_input', 'ai_tap', 'ai_assert', 'ai_wait_for']:
+            # AI动作需要locate或prompt参数之一
+            if not params.get('locate') and not params.get('prompt'):
+                raise ValidationError(f'{action}动作需要locate或prompt参数之一')
     
     return True
 
@@ -333,8 +335,8 @@ def add_testcase_step(testcase_id, testcase, data):
 @database_transaction()
 def update_testcase_step(testcase_id, step_index, testcase, data):
     """更新测试用例步骤"""
-    # 验证步骤数据
-    validate_step_data(data)
+    # 验证步骤数据（更新模式）
+    validate_step_data(data, is_update=True)
     
     steps = json.loads(testcase.steps) if testcase.steps else []
     
