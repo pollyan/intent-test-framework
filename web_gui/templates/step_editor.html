@@ -236,6 +236,29 @@
             min-height: 60px;
         }
 
+        .form-textarea.json-input {
+            font-family: 'Courier New', Monaco, monospace;
+            background-color: #fafafa;
+        }
+
+        .form-textarea.json-input.error {
+            border-color: #ff4d4f;
+            background-color: #fff2f0;
+        }
+
+        .form-help {
+            display: block;
+            margin-top: 4px;
+            color: #8c8c8c;
+            font-size: 12px;
+        }
+
+        .json-error {
+            color: #ff4d4f;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
         .form-actions {
             display: flex;
             gap: 8px;
@@ -512,6 +535,30 @@
                     { name: 'locate_prompt', label: '定位描述', type: 'text', required: false, placeholder: '滚动到指定元素位置（可选）' }
                 ]
             },
+            setKsyunCookie: {
+                name: '设置金山云Cookie',
+                params: [
+                    { name: 'access_key', label: 'Access Key', type: 'text', required: false, placeholder: '金山云Access Key（可选，将使用环境变量）' },
+                    { name: 'secret_key', label: 'Secret Key', type: 'password', required: false, placeholder: '金山云Secret Key（可选，将使用环境变量）' },
+                    { name: 'region', label: '区域', type: 'select', required: false, options: [
+                        { value: 'cn-beijing-6', text: '华北1(北京)' },
+                        { value: 'cn-shanghai-3', text: '华东1(上海)' },
+                        { value: 'cn-guangzhou-1', text: '华南1(广州)' },
+                        { value: 'cn-hongkong-2', text: '香港' },
+                        { value: 'ap-singapore-1', text: '亚太1(新加坡)' },
+                        { value: 'eu-east-1', text: '欧洲东部1' },
+                        { value: 'us-east-1', text: '美国东部1' }
+                    ]},
+                    { name: 'target_url', label: '目标页面', type: 'text', required: false, placeholder: '设置Cookie后要跳转的页面URL（可选）' }
+                ]
+            },
+            setCookie: {
+                name: '设置Cookie',
+                params: [
+                    { name: 'cookies', label: 'Cookie数据', type: 'json', required: true, placeholder: '{"cookie_name": "cookie_value", "session_id": "12345"}' },
+                    { name: 'domain', label: '域名', type: 'text', required: false, placeholder: '指定Cookie的域名（可选）' }
+                ]
+            },
             ai_query: {
                 name: '数据提取',
                 params: [
@@ -766,6 +813,23 @@
                             <textarea class="form-textarea" data-param="${param.name}" placeholder="${param.placeholder || ''}" ${param.required ? 'required' : ''}>${value}</textarea>
                         </div>
                     `;
+                } else if (param.type === 'json') {
+                    // JSON类型参数使用textarea，并添加JSON验证
+                    const jsonValue = typeof value === 'object' ? JSON.stringify(value, null, 2) : value;
+                    return `
+                        <div class="form-row">
+                            <label class="form-label">${param.label}:</label>
+                            <textarea class="form-textarea json-input" data-param="${param.name}" placeholder="${param.placeholder || ''}" rows="4" ${param.required ? 'required' : ''}>${jsonValue}</textarea>
+                            <small class="form-help">请输入有效的JSON格式，例如: {"key": "value"}</small>
+                        </div>
+                    `;
+                } else if (param.type === 'password') {
+                    return `
+                        <div class="form-row">
+                            <label class="form-label">${param.label}:</label>
+                            <input type="password" class="form-input" data-param="${param.name}" value="${value}" placeholder="${param.placeholder || ''}" ${param.required ? 'required' : ''}>
+                        </div>
+                    `;
                 } else {
                     return `
                         <div class="form-row">
@@ -810,6 +874,14 @@
             
             const params = {};
             let description = '';
+            let hasError = false;
+            
+            // 清除之前的错误显示
+            stepForm.querySelectorAll('.json-error').forEach(error => error.remove());
+            stepForm.querySelectorAll('.json-input.error').forEach(input => input.classList.remove('error'));
+            
+            const actionType = steps[index].action;
+            const config = actionConfigs[actionType];
             
             inputs.forEach(input => {
                 const paramName = input.dataset.param;
@@ -818,9 +890,33 @@
                 if (paramName === 'description') {
                     description = value;
                 } else if (value) {
-                    params[paramName] = input.type === 'number' ? parseInt(value) : value;
+                    // 找到参数配置
+                    const paramConfig = config?.params?.find(p => p.name === paramName);
+                    
+                    if (paramConfig?.type === 'json') {
+                        // 验证JSON格式
+                        try {
+                            const jsonValue = JSON.parse(value);
+                            params[paramName] = jsonValue;
+                        } catch (e) {
+                            // JSON格式错误
+                            input.classList.add('error');
+                            const errorMsg = document.createElement('div');
+                            errorMsg.className = 'json-error';
+                            errorMsg.textContent = `JSON格式错误: ${e.message}`;
+                            input.parentNode.appendChild(errorMsg);
+                            hasError = true;
+                        }
+                    } else {
+                        params[paramName] = input.type === 'number' ? parseInt(value) : value;
+                    }
                 }
             });
+            
+            // 如果有验证错误，不保存
+            if (hasError) {
+                return;
+            }
             
             steps[index].params = params;
             steps[index].description = description;

@@ -934,6 +934,74 @@ def execute_single_step(ai, step, mode, execution_id, step_index=0):
                 )
                 print(f"[变量存储] {output_variable} = {output_data}")
 
+        elif action == 'setKsyunCookie':
+            # 设置金山云登录Cookie
+            access_key = resolved_params.get('access_key') or resolved_params.get('accessKey')
+            secret_key = resolved_params.get('secret_key') or resolved_params.get('secretKey') 
+            region = resolved_params.get('region', 'cn-beijing-6')
+            target_url = resolved_params.get('target_url') or resolved_params.get('targetUrl')
+            
+            # 从环境变量获取默认值（如果参数中没有提供）
+            if not access_key:
+                access_key = os.getenv('KSYUN_ACCESS_KEY')
+            if not secret_key:
+                secret_key = os.getenv('KSYUN_SECRET_KEY')
+            if not region:
+                region = os.getenv('KSYUN_REGION', 'cn-beijing-6')
+                
+            if not access_key or not secret_key:
+                raise ValueError("金山云Access Key和Secret Key不能为空，请在参数中提供或设置环境变量KSYUN_ACCESS_KEY和KSYUN_SECRET_KEY")
+            
+            print(f"🔑 设置金山云Cookie - 区域: {region}")
+            
+            if hasattr(ai, 'set_ksyun_cookies'):
+                # 使用真实AI引擎设置Cookie
+                ai.set_ksyun_cookies(
+                    access_key=access_key,
+                    secret_key=secret_key,
+                    region=region,
+                    target_url=target_url
+                )
+            else:
+                # 模拟实现
+                print(f"[模拟] 设置金山云Cookie")
+                print(f"[模拟] Access Key: {access_key[:8]}***")
+                print(f"[模拟] 区域: {region}")
+                if target_url:
+                    print(f"[模拟] 跳转到: {target_url}")
+                time.sleep(1)  # 模拟操作时间
+            
+            result['success'] = True
+            result['execution_details']['access_key'] = access_key[:8] + '***'  # 部分隐藏
+            result['execution_details']['region'] = region
+            result['execution_details']['target_url'] = target_url
+
+        elif action == 'setCookie' or action == 'setCookies':
+            # 通用Cookie设置操作
+            cookies = resolved_params.get('cookies')
+            domain = resolved_params.get('domain')
+            
+            if not cookies or not isinstance(cookies, dict):
+                raise ValueError("setCookie操作需要cookies参数，且必须是字典格式")
+            
+            print(f"🍪 设置{len(cookies)}个Cookie")
+            if domain:
+                print(f"   域名: {domain}")
+                
+            if hasattr(ai, 'set_cookies'):
+                # 使用真实AI引擎设置Cookie
+                ai.set_cookies(cookies, domain)
+            else:
+                # 模拟实现
+                print(f"[模拟] 设置Cookie:")
+                for name, value in cookies.items():
+                    print(f"  {name}: {str(value)[:50]}{'...' if len(str(value)) > 50 else ''}")
+                time.sleep(0.5)
+                
+            result['success'] = True
+            result['execution_details']['cookies_count'] = len(cookies)
+            result['execution_details']['domain'] = domain
+
         else:
             raise ValueError(f'不支持的操作类型: {action}')
 

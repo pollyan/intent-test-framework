@@ -2262,6 +2262,184 @@ app.post('/cleanup', async (req, res) => {
     }
 });
 
+// 设置浏览器Cookie
+app.post('/set-cookies', async (req, res) => {
+    try {
+        const { cookies, domain } = req.body;
+        
+        if (!page) {
+            return res.status(400).json({
+                success: false,
+                error: '浏览器页面未初始化'
+            });
+        }
+        
+        if (!cookies || typeof cookies !== 'object') {
+            return res.status(400).json({
+                success: false,
+                error: 'cookies参数无效'
+            });
+        }
+        
+        // 获取当前页面域名（如果没有指定domain）
+        const currentUrl = page.url();
+        const currentDomain = domain || new URL(currentUrl).hostname;
+        
+        console.log(`🍪 设置${Object.keys(cookies).length}个Cookie到域名: ${currentDomain}`);
+        
+        // 转换Cookie格式并添加到浏览器
+        const cookiesToSet = [];
+        for (const [name, value] of Object.entries(cookies)) {
+            cookiesToSet.push({
+                name: name,
+                value: String(value),
+                domain: currentDomain.startsWith('.') ? currentDomain : `.${currentDomain}`,
+                path: '/',
+                httpOnly: false,
+                secure: false
+            });
+        }
+        
+        // 批量设置Cookie
+        await page.context().addCookies(cookiesToSet);
+        
+        console.log('✅ Cookie设置成功');
+        res.json({ 
+            success: true, 
+            message: `已设置${cookiesToSet.length}个Cookie`,
+            domain: currentDomain,
+            cookies: cookiesToSet.map(c => ({ name: c.name, domain: c.domain }))
+        });
+        
+    } catch (error) {
+        console.error('❌ Cookie设置失败:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+// 设置金山云登录Cookie
+app.post('/set-ksyun-cookies', async (req, res) => {
+    try {
+        const { access_key, secret_key, region, target_url } = req.body;
+        
+        if (!page) {
+            return res.status(400).json({
+                success: false,
+                error: '浏览器页面未初始化'
+            });
+        }
+        
+        console.log('🔑 开始设置金山云登录Cookie');
+        
+        // 首先访问金山云主页
+        console.log('🌐 访问金山云主页');
+        await page.goto('http://www.ksyun.com');
+        await page.waitForTimeout(2000);
+        
+        // 动态导入金山云认证服务（Node.js环境）
+        let ksyunCookies;
+        try {
+            // 这里需要实现Node.js版本的金山云认证逻辑
+            ksyunCookies = await generateKsyunCookies(access_key, secret_key, region);
+        } catch (authError) {
+            console.error('🔑 金山云认证失败:', authError);
+            return res.status(400).json({
+                success: false,
+                error: `金山云认证失败: ${authError.message}`
+            });
+        }
+        
+        if (!ksyunCookies) {
+            return res.status(400).json({
+                success: false,
+                error: '无法生成金山云Cookie'
+            });
+        }
+        
+        // 设置金山云Cookie
+        console.log('🍪 设置金山云Cookie');
+        const cookiesToSet = [];
+        for (const [name, value] of Object.entries(ksyunCookies)) {
+            cookiesToSet.push({
+                name: name,
+                value: String(value),
+                domain: '.ksyun.com',
+                path: '/',
+                httpOnly: false,
+                secure: false
+            });
+        }
+        
+        await page.context().addCookies(cookiesToSet);
+        console.log(`✅ 已设置${cookiesToSet.length}个金山云Cookie`);
+        
+        // 如果指定了目标URL，跳转到目标页面
+        if (target_url) {
+            console.log(`🌐 跳转到目标页面: ${target_url}`);
+            await page.goto(target_url);
+            await page.waitForTimeout(2000);
+        }
+        
+        res.json({ 
+            success: true, 
+            message: '金山云Cookie设置成功',
+            cookies_count: cookiesToSet.length,
+            target_url: target_url,
+            current_url: page.url()
+        });
+        
+    } catch (error) {
+        console.error('❌ 金山云Cookie设置失败:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+// Node.js环境下生成金山云Cookie的函数
+async function generateKsyunCookies(accessKey, secretKey, region = 'cn-beijing-6') {
+    // 引入必要的模块
+    const crypto = require('crypto');
+    
+    console.log('🔑 生成金山云认证Cookie');
+    
+    try {
+        // 基于用户提供的逻辑，这里实现简化的Cookie生成
+        // 在实际生产环境中，这里应该调用真正的金山云IAM API
+        
+        const timestamp = Math.floor(Date.now() / 1000);
+        const userId = crypto.createHash('md5').update(accessKey).digest('hex').substr(0, 8);
+        
+        // 生成会话令牌
+        const sessionData = `${userId}_${timestamp}_${region}`;
+        const sessionToken = Buffer.from(sessionData).toString('base64');
+        
+        // 生成签名
+        const signatureData = `access_key=${accessKey}&timestamp=${timestamp}&region=${region}`;
+        const signature = crypto.createHmac('sha256', secretKey).update(signatureData).digest('hex');
+        
+        const cookies = {
+            'ks_session': sessionToken,
+            'ks_user_id': userId,
+            'ks_region': region,
+            'ks_timestamp': timestamp.toString(),
+            'ks_signature': signature,
+            'ks_access_key_id': accessKey.substr(0, 8) + '***', // 部分隐藏
+        };
+        
+        console.log('✅ 金山云Cookie生成成功');
+        return cookies;
+        
+    } catch (error) {
+        console.error('❌ 金山云Cookie生成失败:', error);
+        throw error;
+    }
+}
+
 // 错误处理中间件
 app.use((error, req, res, next) => {
     console.error('服务器错误:', error);

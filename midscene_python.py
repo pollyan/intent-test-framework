@@ -377,6 +377,52 @@ class MidSceneAI:
         print(f"✅ 页面信息: {info['title']} - {info['url']}")
         return info
     
+    def set_cookies(self, cookies: Dict[str, str], domain: str = None) -> Dict[str, Any]:
+        """
+        设置浏览器Cookie
+        
+        Args:
+            cookies: Cookie字典，键为名称，值为Cookie值
+            domain: Cookie域名，如果不指定则使用当前页面域名
+            
+        Returns:
+            操作结果
+        """
+        print(f"🍪 设置Cookie: {len(cookies)}个Cookie")
+        if domain:
+            print(f"   域名: {domain}")
+        
+        result = self._make_request("/set-cookies", data={"cookies": cookies, "domain": domain})
+        print(f"✅ Cookie设置成功")
+        return result.get("result", result)
+    
+    def set_ksyun_cookies(self, access_key: str = None, secret_key: str = None, 
+                          region: str = None, target_url: str = None) -> Dict[str, Any]:
+        """
+        设置金山云登录Cookie并跳转到目标页面
+        
+        Args:
+            access_key: 金山云访问密钥
+            secret_key: 金山云秘密密钥
+            region: 金山云区域
+            target_url: 跳转的目标页面URL
+            
+        Returns:
+            操作结果
+        """
+        print(f"🔑 设置金山云登录Cookie")
+        
+        data = {
+            "access_key": access_key,
+            "secret_key": secret_key, 
+            "region": region,
+            "target_url": target_url
+        }
+        
+        result = self._make_request("/set-ksyun-cookies", data=data)
+        print(f"✅ 金山云Cookie设置完成")
+        return result.get("result", result)
+
     def cleanup(self):
         """清理资源"""
         print("🧹 清理资源")

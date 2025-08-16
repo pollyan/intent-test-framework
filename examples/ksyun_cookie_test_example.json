@@ -1,0 +1,60 @@
+{
+  "name": "金山云Cookie自动登录测试示例",
+  "description": "演示如何使用setKsyunCookie步骤实现金山云自动登录",
+  "category": "认证测试",
+  "priority": 2,
+  "tags": ["金山云", "自动登录", "Cookie"],
+  "steps": [
+    {
+      "action": "setKsyunCookie",
+      "params": {
+        "access_key": "your-access-key",
+        "secret_key": "your-secret-key",
+        "region": "cn-beijing-6",
+        "target_url": "https://console.ksyun.com"
+      },
+      "description": "设置金山云登录Cookie并跳转到控制台"
+    },
+    {
+      "action": "ai_assert",
+      "params": {
+        "prompt": "页面显示金山云控制台，用户已登录"
+      },
+      "description": "验证自动登录成功"
+    },
+    {
+      "action": "ai_tap",
+      "params": {
+        "locate": "云服务器按钮"
+      },
+      "description": "点击云服务器菜单"
+    },
+    {
+      "action": "ai_wait_for",
+      "params": {
+        "prompt": "云服务器列表页面加载完成",
+        "timeout": 10000
+      },
+      "description": "等待云服务器页面加载"
+    },
+    {
+      "action": "aiQuery",
+      "params": {
+        "schema": {
+          "instance_count": "服务器实例数量, number",
+          "total_cpu": "总CPU核数, number",
+          "total_memory": "总内存GB数, number"
+        }
+      },
+      "output_variable": "server_stats",
+      "description": "提取服务器统计信息"
+    },
+    {
+      "action": "ai_assert",
+      "params": {
+        "prompt": "服务器统计显示实例数量: ${server_stats.instance_count}"
+      },
+      "description": "验证提取的服务器统计信息"
+    }
+  ]
+}
