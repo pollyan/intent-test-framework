@@ -367,6 +367,25 @@
                 </div>
             </div>
         </div>
+
+        <!-- Cookie设置操作 -->
+        <div style="margin-bottom: 8px;">
+            <div class="text-xs font-medium text-gray-700" style="margin-bottom: 6px;">Cookie设置</div>
+            <div class="grid grid-cols-2 gap-1">
+                <div class="btn btn-small btn-ghost text-left step-type-btn" style="padding: 4px 8px; cursor: grab;" data-action="setKsyunCookie">
+                    <div>
+                        <div class="text-xs font-medium">金山云Cookie</div>
+                        <div class="text-xs text-gray-500" style="font-size: 11px;">自动登录</div>
+                    </div>
+                </div>
+                <div class="btn btn-small btn-ghost text-left step-type-btn" style="padding: 4px 8px; cursor: grab;" data-action="setCookie">
+                    <div>
+                        <div class="text-xs font-medium">通用Cookie</div>
+                        <div class="text-xs text-gray-500" style="font-size: 11px;">设置Cookie</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -734,7 +753,11 @@ class TestCaseEditor {
             // 工具操作
             'logScreenshot': '截图并记录',
             'sleep': '延时等待',
-            'runYaml': '执行YAML脚本'
+            'runYaml': '执行YAML脚本',
+            
+            // Cookie设置操作
+            'setKsyunCookie': '设置金山云Cookie',
+            'setCookie': '设置通用Cookie'
         };
         return descriptions[action] || action;
     }
@@ -796,6 +819,16 @@ class TestCaseEditor {
                 return `等待 ${params.duration || 1000}ms`;
             case 'runYaml':
                 return `执行脚本: ${params.yaml ? params.yaml.substring(0, 30) + '...' : '未指定脚本'}`;
+            
+            // Cookie设置操作
+            case 'setKsyunCookie':
+                const region = params.region || 'cn-beijing-6';
+                const targetUrl = params.target_url ? ` → ${params.target_url}` : '';
+                return `区域: ${region}${targetUrl}`;
+            case 'setCookie':
+                const cookieCount = params.cookies ? Object.keys(params.cookies).length : 0;
+                const domain = params.domain ? ` @ ${params.domain}` : '';
+                return `设置 ${cookieCount} 个Cookie${domain}`;
                 
             default:
                 return JSON.stringify(params);
@@ -851,6 +884,13 @@ class TestCaseEditor {
                 return `等待时间: ${params.duration || 1000}ms`;
             case 'runYaml':
                 return `脚本: ${params.yaml ? '已定义' : '未指定'}`;
+            
+            // Cookie设置操作
+            case 'setKsyunCookie':
+                return `区域: ${params.region || 'cn-beijing-6'}`;
+            case 'setCookie':
+                const cookieCount = params.cookies ? Object.keys(params.cookies).length : 0;
+                return `Cookie数量: ${cookieCount}个`;
                 
             default:
                 return Object.keys(params).length > 0 ? Object.keys(params)[0] + ': ' + params[Object.keys(params)[0]] : '无参数';
@@ -930,6 +970,10 @@ class TestCaseEditor {
                             <option value="logScreenshot" ${step.action === 'logScreenshot' ? 'selected' : ''}>logScreenshot - 截图并记录</option>
                             <option value="sleep" ${step.action === 'sleep' ? 'selected' : ''}>sleep - 延时等待</option>
                             <option value="runYaml" ${step.action === 'runYaml' ? 'selected' : ''}>runYaml - 执行YAML脚本</option>
+                        </optgroup>
+                        <optgroup label="Cookie设置">
+                            <option value="setKsyunCookie" ${step.action === 'setKsyunCookie' ? 'selected' : ''}>setKsyunCookie - 设置金山云Cookie</option>
+                            <option value="setCookie" ${step.action === 'setCookie' ? 'selected' : ''}>setCookie - 设置通用Cookie</option>
                         </optgroup>
                     </select>
                 </div>
@@ -1179,7 +1223,20 @@ class TestCaseEditor {
             // 工具操作
             'logScreenshot': { description: '截图描述' },
             'sleep': { duration: 1000 },
-            'runYaml': { yaml: 'steps:\n  - action: aiTap\n    locate: 按钮' }
+            'runYaml': { yaml: 'steps:\n  - action: aiTap\n    locate: 按钮' },
+            
+            // Cookie设置操作
+            'setKsyunCookie': {
+                region: 'cn-beijing-6',
+                target_url: 'https://console.ksyun.com'
+            },
+            'setCookie': {
+                cookies: {
+                    session_id: 'abc123456',
+                    user_token: 'xyz789'
+                },
+                domain: '.example.com'
+            }
         };
         return defaults[action] || {};
     }
