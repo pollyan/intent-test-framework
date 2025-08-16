@@ -2792,14 +2792,55 @@ async function get_cookie_from_iam(accessKey, secretKey, region = 'cn-beijing-6'
             console.log('🔍 检测到XML格式响应，开始解析...');
             try {
                 const xml2js = require('xml2js');
+                
+                // 预处理XML，修复URL中的未转义字符（金山云XML响应的常见问题）
+                let cleanedXml = response.data;
+                
+                // 查找<Url>标签中的内容并手动提取
+                const urlMatch = response.data.match(/<Url>(.*?)<\/Url>/);
+                if (urlMatch && urlMatch[1]) {
+                    const originalUrl = urlMatch[1];
+                    // 不需要转义，因为我们会直接提取URL
+                    console.log('🔗 从XML中提取到URL:', originalUrl);
+                    
+                    // 暂时移除<Url>标签的内容，避免XML解析错误
+                    cleanedXml = response.data.replace(/<Url>.*?<\/Url>/, '<Url>PLACEHOLDER_URL</Url>');
+                }
+                
                 const parser = new xml2js.Parser({ explicitArray: false, ignoreAttrs: true });
-                const result = await parser.parseStringPromise(response.data);
+                const result = await parser.parseStringPromise(cleanedXml);
                 parsedData = result;
+                
+                // 如果提取到了URL，手动设置回结果中
+                if (urlMatch && urlMatch[1] && parsedData.GetUserSessionResponse && parsedData.GetUserSessionResponse.GetUserSessionResult) {
+                    parsedData.GetUserSessionResponse.GetUserSessionResult.Url = urlMatch[1];
+                }
+                
                 console.log('✅ XML解析成功');
                 console.log('🔍 解析后的结构:', JSON.stringify(parsedData, null, 4));
             } catch (xmlError) {
                 console.error('❌ XML解析失败:', xmlError.message);
                 console.log('🔍 原始XML内容:', response.data);
+                
+                // 作为备用方案，尝试直接使用正则表达式提取URL
+                console.log('🔄 尝试使用正则表达式备用方案...');
+                const urlRegex = /<Url>(.*?)<\/Url>/;
+                const expirationRegex = /<Expiration>(.*?)<\/Expiration>/;
+                const urlMatch = response.data.match(urlRegex);
+                const expirationMatch = response.data.match(expirationRegex);
+                
+                if (urlMatch && urlMatch[1]) {
+                    console.log('✅ 使用正则表达式成功提取URL');
+                    parsedData = {
+                        GetUserSessionResponse: {
+                            GetUserSessionResult: {
+                                Url: urlMatch[1],
+                                Expiration: expirationMatch ? expirationMatch[1] : null
+                            }
+                        }
+                    };
+                    console.log('🔍 正则提取的结构:', JSON.stringify(parsedData, null, 4));
+                }
             }
         }
         
