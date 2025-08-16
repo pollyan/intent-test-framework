@@ -2713,13 +2713,10 @@ function generateAws4Headers(service, host, region, endpoint, accessKey, secretK
     
     console.log(`🔐 Authorization头: ${authorizationHeader}`);
     
-    // 构建请求头
+    // 构建请求头（移除Host和User-Agent）
     const headers = {
         'Authorization': authorizationHeader,
-        'X-Amz-Date': amzDate,
-        'Host': host,
-        'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
-        'User-Agent': 'Intent-Test-Framework/1.0'
+        'X-Amz-Date': amzDate
     };
     
     // 构建完整URL
@@ -2741,12 +2738,12 @@ async function get_cookie_from_iam(accessKey, secretKey, region = 'cn-beijing-6'
         const crypto = require('crypto');
         const axios = require('axios');
         
-        // 金山云IAM GetUserSession接口
+        // 金山云IAM GetUserSession接口（使用HTTP避免SSL证书问题）
         const service = 'iam';
         const action = 'GetUserSession';
         const version = '2015-11-01';
         const host = `iam.${region}.inner.api.ksyun.com`;
-        const endpoint = `https://${host}`;
+        const endpoint = `http://${host}`;
         
         // 构建请求参数
         const requestParameters = {
