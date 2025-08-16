@@ -694,6 +694,21 @@ MIDSCENE_MODEL_NAME=qwen-vl-max-latest
 # MIDSCENE_MODEL_NAME=gemini-2.5-pro
 # MIDSCENE_USE_GEMINI=1
 
+# 金山云认证配置 (用于setKsyunCookie功能)
+# 获取方式：登录金山云控制台 -> 个人中心 -> API密钥管理
+KSYUN_ACCESS_KEY=your-ksyun-access-key
+KSYUN_SECRET_KEY=your-ksyun-secret-key
+KSYUN_REGION=cn-beijing-6
+
+# 可选的金山云区域：
+# cn-beijing-6      (华北1-北京)
+# cn-shanghai-3     (华东1-上海) 
+# cn-guangzhou-1    (华南1-广州)
+# cn-hongkong-2     (香港)
+# ap-singapore-1    (亚太1-新加坡)
+# eu-east-1         (欧洲东部1)
+# us-east-1         (美国东部1)
+
 # 服务器配置 (可选)
 # PORT=3001
 
@@ -831,6 +846,9 @@ if not exist ".env" (
         echo OPENAI_API_KEY=your-api-key-here > .env
         echo OPENAI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1 >> .env
         echo MIDSCENE_MODEL_NAME=qwen-vl-max-latest >> .env
+        echo KSYUN_ACCESS_KEY=your-ksyun-access-key >> .env
+        echo KSYUN_SECRET_KEY=your-ksyun-secret-key >> .env
+        echo KSYUN_REGION=cn-beijing-6 >> .env
         echo PORT=3001 >> .env
     )
     echo + Configuration file created
@@ -1087,10 +1105,15 @@ npx playwright install chromium
 首次运行会自动创建配置文件 `.env`，请编辑此文件添加您的AI API密钥：
 
 ```env
-# 阿里云DashScope (推荐)
+# AI API配置 - 阿里云DashScope (推荐)
 OPENAI_API_KEY=sk-your-dashscope-api-key
 OPENAI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 MIDSCENE_MODEL_NAME=qwen-vl-max-latest
+
+# 金山云认证配置 - 用于自动登录功能 (可选)
+KSYUN_ACCESS_KEY=your-ksyun-access-key
+KSYUN_SECRET_KEY=your-ksyun-secret-key
+KSYUN_REGION=cn-beijing-6
 ```
 
 ### 3. 开始使用
