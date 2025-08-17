@@ -6,6 +6,220 @@
 // 加载环境变量
 require('dotenv').config();
 
+// 智能等待工具函数
+class SmartWait {
+    /**
+     * 智能页面等待 - 等待页面稳定并检查关键内容
+     * @param {Object} page - Playwright页面对象
+     * @param {Object} options - 等待选项
+     */
+    static async forPageStability(page, options = {}) {
+        const {
+            timeout = 15000,
+            minStableTime = 1000,
+            networkIdleTimeout = 2000,
+            contentSelectors = ['.main-content', '.content', '[data-testid]', '.app'],
+            fallbackTime = 2000
+        } = options;
+
+        const startTime = Date.now();
+        console.log('🔄 开始智能页面稳定性等待...');
+
+        try {
+            // 策略1: 等待网络空闲
+            try {
+                await page.waitForLoadState('networkidle', { timeout: networkIdleTimeout });
+                console.log('✅ 网络请求已稳定');
+            } catch (error) {
+                console.log('⚠️  网络空闲等待超时，继续其他检查');
+            }
+
+            // 策略2: 等待关键内容元素出现
+            let contentFound = false;
+            for (const selector of contentSelectors) {
+                try {
+                    await page.waitForSelector(selector, { timeout: 3000, state: 'visible' });
+                    console.log(`✅ 发现关键内容: ${selector}`);
+                    contentFound = true;
+                    break;
+                } catch (error) {
+                    // 继续尝试下一个选择器
+                }
+            }
+
+            // 策略3: 检查页面是否仍在加载
+            const isStable = await page.evaluate(() => {
+                return document.readyState === 'complete' && 
+                       !document.querySelector('.loading, .spinner, [data-loading]');
+            });
+
+            // 策略4: 最小稳定时间
+            const elapsedTime = Date.now() - startTime;
+            if (elapsedTime < minStableTime) {
+                const remainingTime = minStableTime - elapsedTime;
+                await page.waitForTimeout(remainingTime);
+            }
+
+            const totalTime = Date.now() - startTime;
+            console.log(`✅ 页面稳定性检查完成 (${totalTime}ms), 内容: ${contentFound ? '已加载' : '未确认'}`);
+
+        } catch (error) {
+            console.log(`⚠️  智能等待失败，使用固定等待: ${error.message}`);
+            await page.waitForTimeout(fallbackTime);
+        }
+    }
+
+    /**
+     * 智能元素等待 - 等待元素出现并可交互
+     * @param {Object} page - Playwright页面对象
+     * @param {string} selector - 元素选择器
+     * @param {Object} options - 等待选项
+     */
+    static async forElement(page, selector, options = {}) {
+        const {
+            timeout = 10000,
+            state = 'visible',
+            checkInteractive = true
+        } = options;
+
+        console.log(`🎯 智能等待元素: ${selector}`);
+
+        try {
+            // 等待元素出现
+            await page.waitForSelector(selector, { timeout, state });
+
+            // 检查元素是否可交互
+            if (checkInteractive) {
+                const isInteractive = await page.evaluate((sel) => {
+                    const element = document.querySelector(sel);
+                    if (!element) return false;
+                    
+                    const styles = window.getComputedStyle(element);
+                    return styles.display !== 'none' && 
+                           styles.visibility !== 'hidden' && 
+                           styles.opacity !== '0' &&
+                           !element.disabled;
+                }, selector);
+
+                if (!isInteractive) {
+                    // 等待元素变为可交互状态
+                    await page.waitForFunction((sel) => {
+                        const element = document.querySelector(sel);
+                        if (!element) return false;
+                        
+                        const styles = window.getComputedStyle(element);
+                        return styles.display !== 'none' && 
+                               styles.visibility !== 'hidden' && 
+                               styles.opacity !== '0' &&
+                               !element.disabled;
+                    }, selector, { timeout: 5000 });
+                }
+            }
+
+            console.log(`✅ 元素已准备就绪: ${selector}`);
+            return true;
+
+        } catch (error) {
+            console.log(`⚠️  元素等待失败: ${selector} - ${error.message}`);
+            return false;
+        }
+    }
+
+    /**
+     * 智能AI操作重试等待
+     * @param {number} retryCount - 重试次数
+     * @param {Error} error - 错误对象
+     */
+    static async forRetry(retryCount, error) {
+        const baseDelay = 1000;
+        const maxDelay = 5000;
+        
+        if (error.message.includes('Connection error') || error.message.includes('AI model service')) {
+            // AI连接错误，使用递增延迟
+            const delay = Math.min(baseDelay * Math.pow(1.5, retryCount), maxDelay);
+            console.log(`🔄 AI连接错误，等待 ${delay}ms 后重试...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        } else if (error.message.includes('empty content')) {
+            // AI识别失败，等待页面加载
+            console.log('🔄 AI识别失败，等待页面加载...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        } else {
+            // 其他错误，短暂延迟
+            console.log(`🔄 操作失败，等待 ${baseDelay}ms 后重试...`);
+            await new Promise(resolve => setTimeout(resolve, baseDelay));
+        }
+    }
+
+    /**
+     * 智能页面导航等待
+     * @param {Object} page - Playwright页面对象
+     * @param {string} url - 目标URL
+     * @param {Object} options - 导航选项
+     */
+    static async forNavigation(page, url, options = {}) {
+        const {
+            timeout = 30000,
+            waitUntil = 'domcontentloaded',
+            expectedSelectors = [],
+            isConsoleApp = false
+        } = options;
+
+        console.log(`🌐 智能导航到: ${url}`);
+
+        try {
+            // 主要导航策略
+            await page.goto(url, { waitUntil, timeout });
+            console.log('✅ 基础页面加载完成');
+
+            // 控制台应用特殊处理
+            if (isConsoleApp || url.includes('console')) {
+                await SmartWait.forPageStability(page, {
+                    contentSelectors: [
+                        '.console-main',
+                        '.main-content',
+                        '.dashboard',
+                        '[data-v-]', // Vue.js组件
+                        '[data-reactroot]' // React组件
+                    ],
+                    networkIdleTimeout: 5000
+                });
+            } else if (expectedSelectors.length > 0) {
+                // 等待期望的选择器出现
+                for (const selector of expectedSelectors) {
+                    try {
+                        await page.waitForSelector(selector, { timeout: 5000 });
+                        console.log(`✅ 期望内容已加载: ${selector}`);
+                        break;
+                    } catch (error) {
+                        console.log(`⚠️  期望内容未找到: ${selector}`);
+                    }
+                }
+            } else {
+                // 通用页面稳定性等待
+                await SmartWait.forPageStability(page);
+            }
+
+            return true;
+
+        } catch (error) {
+            console.log(`⚠️  导航失败: ${error.message}`);
+            
+            // 降级策略
+            try {
+                console.log('🔄 尝试降级导航策略...');
+                const fallbackTimeout = Math.min(timeout / 2, 15000);
+                await page.goto(url, { waitUntil: 'commit', timeout: fallbackTimeout });
+                await SmartWait.forPageStability(page, { fallbackTime: 3000 });
+                console.log('✅ 降级导航完成');
+                return true;
+            } catch (fallbackError) {
+                console.log(`❌ 导航完全失败: ${fallbackError.message}`);
+                return false;
+            }
+        }
+    }
+}
+
 // 环境变量完整性检查
 function validateEnvironmentVariables() {
     const requiredVars = ['OPENAI_API_KEY'];
@@ -485,23 +699,19 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
         switch (normalizedAction) {
             case 'navigate':
                 if (params.url) {
-                    const pageTimeout = timeoutConfig.page_timeout || 30000;
                     const navigationTimeout = timeoutConfig.navigation_timeout || 30000;
                     
-                    try {
-                        // 首先尝试使用 domcontentloaded，更快的加载策略
-                        await page.goto(params.url, { waitUntil: 'domcontentloaded', timeout: navigationTimeout });
-                        logMessage(executionId, 'info', `导航到: ${params.url}`);
-                        
-                        // 等待页面稳定
-                        await page.waitForTimeout(2000);
-                    } catch (error) {
-                        // 如果超时，尝试使用更宽松的策略
-                        logMessage(executionId, 'warning', `导航超时，尝试使用基础加载策略: ${error.message}`);
-                        const fallbackTimeout = Math.min(navigationTimeout / 2, 15000);
-                        await page.goto(params.url, { waitUntil: 'commit', timeout: fallbackTimeout });
-                        await page.waitForTimeout(3000);
-                        logMessage(executionId, 'info', `导航到: ${params.url} (使用基础策略，超时=${fallbackTimeout}ms)`);
+                    // 使用智能导航等待
+                    const success = await SmartWait.forNavigation(page, params.url, {
+                        timeout: navigationTimeout,
+                        isConsoleApp: params.url.includes('console'),
+                        expectedSelectors: params.expectedSelectors || []
+                    });
+                    
+                    if (success) {
+                        logMessage(executionId, 'info', `智能导航完成: ${params.url}`);
+                    } else {
+                        logMessage(executionId, 'warning', `导航可能未完全成功: ${params.url}`);
                     }
                 }
                 break;
@@ -532,10 +742,10 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                             
                             console.error(`尝试 ${retryCount}/${maxRetries} 失败:`, error.message);
                             
-                            // 检查是否是AI模型连接错误
+                            // 使用智能重试等待
                             if (error.message.includes('Connection error') || error.message.includes('AI model service')) {
                                 logMessage(executionId, 'warning', `AI模型连接失败，正在重试... (${retryCount}/${maxRetries})`);
-                                await page.waitForTimeout(2000 * retryCount); // 递增等待时间
+                                await SmartWait.forRetry(retryCount, error);
                             } else if (error.message.includes('Protocol error')) {
                                 // 鼠标协议错误，可能需要重新初始化
                                 logMessage(executionId, 'warning', `鼠标协议错误，尝试使用替代方法...`);
@@ -604,14 +814,14 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                             
                             console.error(`输入尝试 ${retryCount}/${maxRetries} 失败:`, error.message);
                             
-                            // 检查是否是AI模型连接错误
+                            // 使用智能重试等待
                             if (error.message.includes('Connection error') || error.message.includes('AI model service')) {
                                 logMessage(executionId, 'warning', `AI模型连接失败，正在重试... (${retryCount}/${maxRetries})`);
-                                await page.waitForTimeout(2000 * retryCount); // 递增等待时间
+                                await SmartWait.forRetry(retryCount, error);
                             } else if (error.message.includes('empty content')) {
                                 // AI返回空内容，可能是识别失败
                                 logMessage(executionId, 'warning', `AI识别失败，等待页面加载后重试...`);
-                                await page.waitForTimeout(3000);
+                                await SmartWait.forRetry(retryCount, error);
                             } else {
                                 // 其他错误直接抛出
                                 throw error;
@@ -633,8 +843,31 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
             case 'wait':
             case 'sleep':
                 const waitTime = params.time || params.duration || 1000;
-                await page.waitForTimeout(waitTime);
-                logMessage(executionId, 'info', `等待: ${waitTime}ms`);
+                const waitCondition = params.condition || params.selector;
+                
+                if (waitCondition) {
+                    // 智能等待指定条件
+                    console.log(`🎯 智能等待条件: ${waitCondition}`);
+                    const success = await SmartWait.forElement(page, waitCondition, {
+                        timeout: waitTime,
+                        state: params.state || 'visible'
+                    });
+                    logMessage(executionId, 'info', `等待条件 ${waitCondition}: ${success ? '成功' : '超时'}`);
+                } else {
+                    // 固定时间等待，但使用智能稳定性检查
+                    console.log(`⏱️  固定时间等待: ${waitTime}ms`);
+                    if (waitTime > 3000) {
+                        // 长时间等待时，检查页面稳定性
+                        await SmartWait.forPageStability(page, {
+                            timeout: waitTime,
+                            minStableTime: Math.min(waitTime / 3, 2000),
+                            fallbackTime: waitTime
+                        });
+                    } else {
+                        await page.waitForTimeout(waitTime);
+                    }
+                    logMessage(executionId, 'info', `等待: ${waitTime}ms`);
+                }
                 break;
 
             case 'assert':
@@ -691,10 +924,10 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                             
                             console.error(`aiQuery尝试 ${retryCount}/${maxRetries} 失败:`, error.message);
                             
-                            // 检查是否是AI模型连接错误
+                            // 使用智能重试等待
                             if (error.message.includes('Connection error') || error.message.includes('AI model service')) {
                                 logMessage(executionId, 'warning', `AI模型连接失败，正在重试... (${retryCount}/${maxRetries})`);
-                                await page.waitForTimeout(2000 * retryCount); // 递增等待时间
+                                await SmartWait.forRetry(retryCount, error);
                             } else {
                                 // 其他错误直接抛出
                                 throw error;
@@ -771,10 +1004,10 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                             
                             console.error(`aiString尝试 ${retryCount}/${maxRetries} 失败:`, error.message);
                             
-                            // 检查是否是AI模型连接错误
+                            // 使用智能重试等待
                             if (error.message.includes('Connection error') || error.message.includes('AI model service')) {
                                 logMessage(executionId, 'warning', `AI模型连接失败，正在重试... (${retryCount}/${maxRetries})`);
-                                await page.waitForTimeout(2000 * retryCount); // 递增等待时间
+                                await SmartWait.forRetry(retryCount, error);
                             } else {
                                 // 其他错误直接抛出
                                 throw error;
@@ -850,10 +1083,10 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                             
                             console.error(`aiNumber尝试 ${retryCount}/${maxRetries} 失败:`, error.message);
                             
-                            // 检查是否是AI模型连接错误
+                            // 使用智能重试等待
                             if (error.message.includes('Connection error') || error.message.includes('AI model service')) {
                                 logMessage(executionId, 'warning', `AI模型连接失败，正在重试... (${retryCount}/${maxRetries})`);
-                                await page.waitForTimeout(2000 * retryCount); // 递增等待时间
+                                await SmartWait.forRetry(retryCount, error);
                             } else {
                                 // 其他错误直接抛出
                                 throw error;
@@ -929,10 +1162,10 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                             
                             console.error(`aiBoolean尝试 ${retryCount}/${maxRetries} 失败:`, error.message);
                             
-                            // 检查是否是AI模型连接错误
+                            // 使用智能重试等待
                             if (error.message.includes('Connection error') || error.message.includes('AI model service')) {
                                 logMessage(executionId, 'warning', `AI模型连接失败，正在重试... (${retryCount}/${maxRetries})`);
-                                await page.waitForTimeout(2000 * retryCount); // 递增等待时间
+                                await SmartWait.forRetry(retryCount, error);
                             } else {
                                 // 其他错误直接抛出
                                 throw error;
@@ -1008,10 +1241,10 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                             
                             console.error(`aiLocate尝试 ${retryCount}/${maxRetries} 失败:`, error.message);
                             
-                            // 检查是否是AI模型连接错误
+                            // 使用智能重试等待
                             if (error.message.includes('Connection error') || error.message.includes('AI model service')) {
                                 logMessage(executionId, 'warning', `AI模型连接失败，正在重试... (${retryCount}/${maxRetries})`);
-                                await page.waitForTimeout(2000 * retryCount); // 递增等待时间
+                                await SmartWait.forRetry(retryCount, error);
                             } else {
                                 // 其他错误直接抛出
                                 throw error;
@@ -1062,14 +1295,36 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
 
             case 'refresh':
                 const refreshTimeout = timeoutConfig.navigation_timeout || 30000;
-                await page.reload({ waitUntil: 'domcontentloaded', timeout: refreshTimeout });
-                logMessage(executionId, 'info', `刷新页面 (超时=${refreshTimeout}ms)`);
+                console.log('🔄 智能页面刷新...');
+                
+                try {
+                    await page.reload({ waitUntil: 'domcontentloaded', timeout: refreshTimeout });
+                    // 刷新后使用智能稳定性检查
+                    await SmartWait.forPageStability(page, {
+                        timeout: 10000,
+                        isConsoleApp: page.url().includes('console')
+                    });
+                    logMessage(executionId, 'info', `智能刷新完成 (超时=${refreshTimeout}ms)`);
+                } catch (error) {
+                    logMessage(executionId, 'warning', `页面刷新可能未完全成功: ${error.message}`);
+                }
                 break;
 
             case 'back':
                 const backTimeout = timeoutConfig.navigation_timeout || 30000;
-                await page.goBack({ waitUntil: 'domcontentloaded', timeout: backTimeout });
-                logMessage(executionId, 'info', `返回上一页 (超时=${backTimeout}ms)`);
+                console.log('⬅️  智能返回上一页...');
+                
+                try {
+                    await page.goBack({ waitUntil: 'domcontentloaded', timeout: backTimeout });
+                    // 返回后使用智能稳定性检查
+                    await SmartWait.forPageStability(page, {
+                        timeout: 10000,
+                        isConsoleApp: page.url().includes('console')
+                    });
+                    logMessage(executionId, 'info', `智能返回完成 (超时=${backTimeout}ms)`);
+                } catch (error) {
+                    logMessage(executionId, 'warning', `页面返回可能未完全成功: ${error.message}`);
+                }
                 break;
 
             case 'screenshot':
@@ -1218,14 +1473,16 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                     // 首先访问金山云主页建立上下文
                     console.log('🌐 访问金山云主页');
                     const homeTimeout = timeoutConfig.navigation_timeout || 30000;
-                    try {
-                        await page.goto('http://www.ksyun.com', { waitUntil: 'domcontentloaded', timeout: homeTimeout });
-                        await page.waitForTimeout(1000); // 页面稳定等待时间缩短
+                    
+                    const homeSuccess = await SmartWait.forNavigation(page, 'http://www.ksyun.com', {
+                        timeout: homeTimeout,
+                        expectedSelectors: ['.header', '.nav', '.main']
+                    });
+                    
+                    if (homeSuccess) {
                         console.log('✅ 金山云主页加载完成');
-                    } catch (error) {
-                        console.log('⚠️  金山云主页加载超时，使用基础策略');
-                        await page.goto('http://www.ksyun.com', { waitUntil: 'commit', timeout: 10000 });
-                        await page.waitForTimeout(1500);
+                    } else {
+                        console.log('⚠️  金山云主页加载可能不完整，继续执行...');
                     }
                     
                     // 生成金山云Cookie
@@ -1280,24 +1537,27 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                         console.log(`🎯 跳转到目标页面: ${target_url}`);
                         console.log('🔄 开始页面导航...');
                         
-                        // 使用动态超时配置，而不是固定3秒
+                        // 使用智能导航等待目标页面
                         const navigationTimeout = timeoutConfig.navigation_timeout || 30000;
                         console.log(`📋 使用导航超时设置: ${navigationTimeout}ms`);
                         
-                        try {
-                            // 使用domcontentloaded策略，更快加载
-                            await page.goto(target_url, { waitUntil: 'domcontentloaded', timeout: navigationTimeout });
-                            console.log('✅ 页面DOM加载完成');
-                            
-                            // 等待页面稍微稳定一下，但时间更短
-                            await page.waitForTimeout(1000);
-                        } catch (error) {
-                            console.log(`⚠️  页面导航超时 (${navigationTimeout}ms)，尝试使用基础加载策略`);
-                            // 如果超时，尝试使用更宽松的策略
-                            const fallbackTimeout = Math.min(navigationTimeout / 2, 15000);
-                            await page.goto(target_url, { waitUntil: 'commit', timeout: fallbackTimeout });
-                            await page.waitForTimeout(2000);
-                            console.log(`🔄 使用基础策略完成导航 (超时=${fallbackTimeout}ms)`);
+                        const targetSuccess = await SmartWait.forNavigation(page, target_url, {
+                            timeout: navigationTimeout,
+                            isConsoleApp: true,
+                            expectedSelectors: [
+                                '.console-main',
+                                '.main-content', 
+                                '.kec-list',
+                                '.instance-list',
+                                '[data-v-]',
+                                '.dashboard'
+                            ]
+                        });
+                        
+                        if (targetSuccess) {
+                            console.log('✅ 目标页面智能加载完成');
+                        } else {
+                            console.log('⚠️  目标页面可能未完全加载，但继续验证...');
                         }
                         
                         // 记录最终页面信息
@@ -1682,8 +1942,12 @@ async function executeTestCaseAsync(testcase, mode, executionId, timeoutConfig =
                 }
             }
 
-            // 短暂延迟，让用户看到执行过程
-            await page.waitForTimeout(500);
+            // 短暂延迟，让用户看到执行过程，但使用更智能的方式
+            await SmartWait.forPageStability(page, { 
+                timeout: 2000, 
+                minStableTime: 300,
+                fallbackTime: 500 
+            });
         }
 
         // 更新执行状态并计算统计信息
@@ -2532,14 +2796,16 @@ app.post('/set-ksyun-cookies', async (req, res) => {
         // 首先访问金山云主页
         console.log('🌐 访问金山云主页');
         const homeTimeout = parseInt(req.query.navigation_timeout) || 30000;
-        try {
-            await page.goto('http://www.ksyun.com', { waitUntil: 'domcontentloaded', timeout: homeTimeout });
-            await page.waitForTimeout(1000);
+        
+        const homeSuccess = await SmartWait.forNavigation(page, 'http://www.ksyun.com', {
+            timeout: homeTimeout,
+            expectedSelectors: ['.header', '.nav', '.main']
+        });
+        
+        if (homeSuccess) {
             console.log('✅ 金山云主页加载完成');
-        } catch (error) {
-            console.log('⚠️  金山云主页加载超时，使用基础策略');
-            await page.goto('http://www.ksyun.com', { waitUntil: 'commit', timeout: 10000 });
-            await page.waitForTimeout(1500);
+        } else {
+            console.log('⚠️  金山云主页加载可能不完整，继续执行...');
         }
         
         // 动态导入金山云认证服务（Node.js环境）
@@ -2583,20 +2849,26 @@ app.post('/set-ksyun-cookies', async (req, res) => {
         if (target_url) {
             console.log(`🌐 跳转到目标页面: ${target_url}`);
             
-            try {
-                // 使用30秒作为默认超时，可以通过查询参数传递timeout
-                const timeout = parseInt(req.query.navigation_timeout) || 30000;
-                console.log(`📋 使用导航超时设置: ${timeout}ms`);
-                
-                await page.goto(target_url, { waitUntil: 'domcontentloaded', timeout: timeout });
-                console.log('✅ 页面DOM加载完成');
-                await page.waitForTimeout(1000);
-            } catch (error) {
-                console.log(`⚠️  页面导航超时，尝试使用基础加载策略: ${error.message}`);
-                const fallbackTimeout = 15000;
-                await page.goto(target_url, { waitUntil: 'commit', timeout: fallbackTimeout });
-                await page.waitForTimeout(2000);
-                console.log(`🔄 使用基础策略完成导航 (超时=${fallbackTimeout}ms)`);
+            const timeout = parseInt(req.query.navigation_timeout) || 30000;
+            console.log(`📋 使用导航超时设置: ${timeout}ms`);
+            
+            const targetSuccess = await SmartWait.forNavigation(page, target_url, {
+                timeout: timeout,
+                isConsoleApp: target_url.includes('console'),
+                expectedSelectors: [
+                    '.console-main',
+                    '.main-content', 
+                    '.kec-list',
+                    '.instance-list',
+                    '[data-v-]',
+                    '.dashboard'
+                ]
+            });
+            
+            if (targetSuccess) {
+                console.log('✅ 目标页面智能加载完成');
+            } else {
+                console.log('⚠️  目标页面可能未完全加载');
             }
         }
         
