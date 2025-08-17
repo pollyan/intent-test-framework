@@ -15,107 +15,22 @@ class SmartWait {
      */
     static async forPageStability(page, options = {}) {
         const {
-            timeout = 15000,
-            minStableTime = 1000,
-            networkIdleTimeout = 8000, // 增加到8秒，给SPA更多加载时间
-            contentSelectors = ['.main-content', '.content', '[data-testid]', '.app'],
-            fallbackTime = 3000, // 增加fallback时间
-            requireContent = false // 是否必须找到内容才算成功
+            timeout = 10000,
+            fallbackTime = 3000
         } = options;
 
-        const startTime = Date.now();
-        console.log('🔄 开始智能页面稳定性等待...');
+        console.log('🔄 等待页面加载完成...');
 
         try {
-            // 策略1: 等待网络空闲
-            try {
-                await page.waitForLoadState('networkidle', { timeout: networkIdleTimeout });
-                console.log('✅ 网络请求已稳定');
-            } catch (error) {
-                console.log('⚠️  网络空闲等待超时，继续其他检查');
-            }
-
-            // 策略2: 等待关键内容元素出现
-            let contentFound = false;
-            console.log(`🔍 检查内容选择器: ${contentSelectors.join(', ')}`);
+            // 简单策略：等待页面完全加载
+            await page.waitForLoadState('load', { timeout });
+            console.log('✅ 页面加载完成');
             
-            for (const selector of contentSelectors) {
-                try {
-                    await page.waitForSelector(selector, { timeout: 5000, state: 'visible' });
-                    console.log(`✅ 发现关键内容: ${selector}`);
-                    contentFound = true;
-                    break;
-                } catch (error) {
-                    console.log(`⚠️  内容未找到: ${selector}`);
-                    // 继续尝试下一个选择器
-                }
-            }
-
-            // 策略3: 检查页面DOM结构和加载状态
-            const pageInfo = await page.evaluate(() => {
-                const info = {
-                    readyState: document.readyState,
-                    hasLoadingIndicators: !!document.querySelector('.loading, .spinner, [data-loading], .ant-spin'),
-                    bodyChildren: document.body ? document.body.children.length : 0,
-                    hasMainContent: !!document.querySelector('main, .main, .container, .wrapper, .app-content'),
-                    title: document.title,
-                    url: window.location.href
-                };
-                
-                // 检查是否有错误页面或登录页面
-                info.hasErrorText = !!(
-                    document.body.textContent.includes('404') ||
-                    document.body.textContent.includes('Error') ||
-                    document.body.textContent.includes('登录') ||
-                    document.body.textContent.includes('Login')
-                );
-                
-                return info;
-            });
-
-            console.log('📊 页面状态检查:');
-            console.log(`  - DOM就绪状态: ${pageInfo.readyState}`);
-            console.log(`  - 加载指示器: ${pageInfo.hasLoadingIndicators ? '存在' : '无'}`);
-            console.log(`  - Body子元素数: ${pageInfo.bodyChildren}`);
-            console.log(`  - 主要内容区: ${pageInfo.hasMainContent ? '存在' : '无'}`);
-            console.log(`  - 页面标题: ${pageInfo.title}`);
-            console.log(`  - 错误页面: ${pageInfo.hasErrorText ? '是' : '否'}`);
-
-            // 策略4: 等待页面真正稳定
-            if (pageInfo.hasLoadingIndicators) {
-                console.log('⏳ 检测到加载指示器，继续等待...');
-                try {
-                    await page.waitForFunction(() => 
-                        !document.querySelector('.loading, .spinner, [data-loading], .ant-spin'),
-                        { timeout: 10000 }
-                    );
-                    console.log('✅ 加载指示器已消失');
-                } catch (error) {
-                    console.log('⚠️  加载指示器等待超时');
-                }
-            }
-
-            // 策略5: 最小稳定时间
-            const elapsedTime = Date.now() - startTime;
-            if (elapsedTime < minStableTime) {
-                const remainingTime = minStableTime - elapsedTime;
-                console.log(`⏱️  等待最小稳定时间: ${remainingTime}ms`);
-                await page.waitForTimeout(remainingTime);
-            }
-
-            const totalTime = Date.now() - startTime;
-            const success = contentFound || pageInfo.hasMainContent || !requireContent;
+            // 短暂等待确保内容渲染
+            await page.waitForTimeout(1000);
             
-            console.log(`${success ? '✅' : '⚠️'} 页面稳定性检查完成 (${totalTime}ms)`);
-            console.log(`  - 内容检测: ${contentFound ? '成功' : '未确认'}`);
-            console.log(`  - 主要区域: ${pageInfo.hasMainContent ? '存在' : '缺失'}`);
-
-            if (requireContent && !success) {
-                throw new Error('必需的页面内容未加载完成');
-            }
-
         } catch (error) {
-            console.log(`⚠️  智能等待失败，使用固定等待: ${error.message}`);
+            console.log(`⚠️  页面加载等待超时，使用固定等待: ${error.message}`);
             await page.waitForTimeout(fallbackTime);
         }
     }
@@ -210,107 +125,33 @@ class SmartWait {
     static async forNavigation(page, url, options = {}) {
         const {
             timeout = 30000,
-            waitUntil = 'domcontentloaded',
-            expectedSelectors = [],
-            isConsoleApp = false
+            waitUntil = 'load'
         } = options;
 
-        console.log(`🌐 智能导航到: ${url}`);
+        console.log(`🌐 导航到: ${url}`);
 
         try {
-            // 主要导航策略 - 先尝试更安全的加载策略
-            console.log(`📡 开始页面导航，策略: ${waitUntil}`);
+            // 使用load策略，等待页面完全加载
             await page.goto(url, { waitUntil, timeout });
-            console.log('✅ 基础页面加载完成，开始内容检查...');
-
-            // 给页面一点时间开始加载内容
-            await page.waitForTimeout(1000);
-
-            // 控制台应用特殊处理
-            if (isConsoleApp || url.includes('console')) {
-                console.log('🖥️  检测到控制台应用，使用专门的等待策略');
-                await SmartWait.forPageStability(page, {
-                    contentSelectors: [
-                        '.console-main',
-                        '.main-content',
-                        '.dashboard',
-                        '.kec-list', // 金山云ECS列表
-                        '.instance-list', // 实例列表
-                        '[data-v-]', // Vue.js组件
-                        '[data-reactroot]', // React组件
-                        '.ant-layout-content', // Ant Design布局
-                        '.el-main' // Element UI主要区域
-                    ],
-                    networkIdleTimeout: 10000, // 控制台应用给更多时间
-                    minStableTime: 2000,
-                    requireContent: false // 不强制要求内容，避免过于严格
-                });
-            } else if (expectedSelectors.length > 0) {
-                console.log('🎯 等待期望的选择器出现');
-                // 等待期望的选择器出现
-                let foundExpected = false;
-                for (const selector of expectedSelectors) {
-                    try {
-                        await page.waitForSelector(selector, { timeout: 8000 });
-                        console.log(`✅ 期望内容已加载: ${selector}`);
-                        foundExpected = true;
-                        break;
-                    } catch (error) {
-                        console.log(`⚠️  期望内容未找到: ${selector}`);
-                    }
-                }
-                
-                if (!foundExpected) {
-                    console.log('⚠️  期望内容未找到，使用通用稳定性检查');
-                    await SmartWait.forPageStability(page, { fallbackTime: 4000 });
-                }
-            } else {
-                console.log('🔄 执行通用页面稳定性等待');
-                // 通用页面稳定性等待
-                await SmartWait.forPageStability(page, { 
-                    minStableTime: 2000,
-                    networkIdleTimeout: 6000 
-                });
-            }
-
+            console.log('✅ 页面导航完成');
+            
+            // 简单的稳定性等待
+            await SmartWait.forPageStability(page);
             return true;
 
         } catch (error) {
-            console.log(`⚠️  主要导航策略失败: ${error.message}`);
+            console.log(`⚠️  导航失败: ${error.message}`);
             
-            // 降级策略1: 尝试更宽松的加载策略
+            // 简单降级策略
             try {
-                console.log('🔄 尝试降级导航策略 (load)...');
-                const fallbackTimeout = Math.min(timeout / 2, 20000);
-                await page.goto(url, { waitUntil: 'load', timeout: fallbackTimeout });
-                console.log('✅ Load策略导航完成，等待内容稳定...');
-                
-                // 给页面更多时间加载内容
-                await SmartWait.forPageStability(page, { 
-                    fallbackTime: 5000,
-                    networkIdleTimeout: 8000,
-                    minStableTime: 3000 
-                });
-                console.log('✅ 降级导航完成');
+                console.log('🔄 使用基础导航策略...');
+                await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
+                await page.waitForTimeout(3000); // 固定等待3秒
+                console.log('✅ 基础导航完成');
                 return true;
-            } catch (loadError) {
-                console.log(`⚠️  Load策略也失败: ${loadError.message}`);
-                
-                // 降级策略2: 最基础的commit策略
-                try {
-                    console.log('🔄 尝试最基础导航策略 (commit)...');
-                    const basicTimeout = Math.min(timeout / 3, 15000);
-                    await page.goto(url, { waitUntil: 'commit', timeout: basicTimeout });
-                    console.log('✅ Commit策略导航完成，使用长时间等待...');
-                    
-                    // 使用更长的固定等待时间，确保页面内容加载
-                    await page.waitForTimeout(8000);
-                    console.log('✅ 基础导航策略完成');
-                    return true;
-                } catch (commitError) {
-                    console.log(`❌ 所有导航策略都失败了: ${commitError.message}`);
-                    return false;
-                }
+            } catch (fallbackError) {
+                console.log(`❌ 导航失败: ${fallbackError.message}`);
+                return false;
             }
         }
     }
@@ -797,17 +638,15 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                 if (params.url) {
                     const navigationTimeout = timeoutConfig.navigation_timeout || 30000;
                     
-                    // 使用智能导航等待
+                    // 使用简化的导航等待
                     const success = await SmartWait.forNavigation(page, params.url, {
-                        timeout: navigationTimeout,
-                        isConsoleApp: params.url.includes('console'),
-                        expectedSelectors: params.expectedSelectors || []
+                        timeout: navigationTimeout
                     });
                     
                     if (success) {
-                        logMessage(executionId, 'info', `智能导航完成: ${params.url}`);
+                        logMessage(executionId, 'info', `导航完成: ${params.url}`);
                     } else {
-                        logMessage(executionId, 'warning', `导航可能未完全成功: ${params.url}`);
+                        logMessage(executionId, 'warning', `导航可能失败: ${params.url}`);
                     }
                 }
                 break;
@@ -1391,35 +1230,27 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
 
             case 'refresh':
                 const refreshTimeout = timeoutConfig.navigation_timeout || 30000;
-                console.log('🔄 智能页面刷新...');
+                console.log('🔄 页面刷新...');
                 
                 try {
-                    await page.reload({ waitUntil: 'domcontentloaded', timeout: refreshTimeout });
-                    // 刷新后使用智能稳定性检查
-                    await SmartWait.forPageStability(page, {
-                        timeout: 10000,
-                        isConsoleApp: page.url().includes('console')
-                    });
-                    logMessage(executionId, 'info', `智能刷新完成 (超时=${refreshTimeout}ms)`);
+                    await page.reload({ waitUntil: 'load', timeout: refreshTimeout });
+                    await SmartWait.forPageStability(page);
+                    logMessage(executionId, 'info', `刷新完成 (超时=${refreshTimeout}ms)`);
                 } catch (error) {
-                    logMessage(executionId, 'warning', `页面刷新可能未完全成功: ${error.message}`);
+                    logMessage(executionId, 'warning', `页面刷新失败: ${error.message}`);
                 }
                 break;
 
             case 'back':
                 const backTimeout = timeoutConfig.navigation_timeout || 30000;
-                console.log('⬅️  智能返回上一页...');
+                console.log('⬅️  返回上一页...');
                 
                 try {
-                    await page.goBack({ waitUntil: 'domcontentloaded', timeout: backTimeout });
-                    // 返回后使用智能稳定性检查
-                    await SmartWait.forPageStability(page, {
-                        timeout: 10000,
-                        isConsoleApp: page.url().includes('console')
-                    });
-                    logMessage(executionId, 'info', `智能返回完成 (超时=${backTimeout}ms)`);
+                    await page.goBack({ waitUntil: 'load', timeout: backTimeout });
+                    await SmartWait.forPageStability(page);
+                    logMessage(executionId, 'info', `返回完成 (超时=${backTimeout}ms)`);
                 } catch (error) {
-                    logMessage(executionId, 'warning', `页面返回可能未完全成功: ${error.message}`);
+                    logMessage(executionId, 'warning', `页面返回失败: ${error.message}`);
                 }
                 break;
 
@@ -1571,8 +1402,7 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                     const homeTimeout = timeoutConfig.navigation_timeout || 30000;
                     
                     const homeSuccess = await SmartWait.forNavigation(page, 'http://www.ksyun.com', {
-                        timeout: homeTimeout,
-                        expectedSelectors: ['.header', '.nav', '.main']
+                        timeout: homeTimeout
                     });
                     
                     if (homeSuccess) {
@@ -1638,16 +1468,7 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                         console.log(`📋 使用导航超时设置: ${navigationTimeout}ms`);
                         
                         const targetSuccess = await SmartWait.forNavigation(page, target_url, {
-                            timeout: navigationTimeout,
-                            isConsoleApp: true,
-                            expectedSelectors: [
-                                '.console-main',
-                                '.main-content', 
-                                '.kec-list',
-                                '.instance-list',
-                                '[data-v-]',
-                                '.dashboard'
-                            ]
+                            timeout: navigationTimeout
                         });
                         
                         if (targetSuccess) {
@@ -2038,12 +1859,8 @@ async function executeTestCaseAsync(testcase, mode, executionId, timeoutConfig =
                 }
             }
 
-            // 短暂延迟，让用户看到执行过程，但使用更智能的方式
-            await SmartWait.forPageStability(page, { 
-                timeout: 2000, 
-                minStableTime: 300,
-                fallbackTime: 500 
-            });
+            // 短暂延迟，让用户看到执行过程
+            await page.waitForTimeout(500);
         }
 
         // 更新执行状态并计算统计信息
@@ -2894,8 +2711,7 @@ app.post('/set-ksyun-cookies', async (req, res) => {
         const homeTimeout = parseInt(req.query.navigation_timeout) || 30000;
         
         const homeSuccess = await SmartWait.forNavigation(page, 'http://www.ksyun.com', {
-            timeout: homeTimeout,
-            expectedSelectors: ['.header', '.nav', '.main']
+            timeout: homeTimeout
         });
         
         if (homeSuccess) {
@@ -2949,16 +2765,7 @@ app.post('/set-ksyun-cookies', async (req, res) => {
             console.log(`📋 使用导航超时设置: ${timeout}ms`);
             
             const targetSuccess = await SmartWait.forNavigation(page, target_url, {
-                timeout: timeout,
-                isConsoleApp: target_url.includes('console'),
-                expectedSelectors: [
-                    '.console-main',
-                    '.main-content', 
-                    '.kec-list',
-                    '.instance-list',
-                    '[data-v-]',
-                    '.dashboard'
-                ]
+                timeout: timeout
             });
             
             if (targetSuccess) {
