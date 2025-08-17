@@ -1217,8 +1217,16 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                 try {
                     // 首先访问金山云主页建立上下文
                     console.log('🌐 访问金山云主页');
-                    await page.goto('http://www.ksyun.com');
-                    await page.waitForTimeout(2000);
+                    const homeTimeout = timeoutConfig.navigation_timeout || 30000;
+                    try {
+                        await page.goto('http://www.ksyun.com', { waitUntil: 'domcontentloaded', timeout: homeTimeout });
+                        await page.waitForTimeout(1000); // 页面稳定等待时间缩短
+                        console.log('✅ 金山云主页加载完成');
+                    } catch (error) {
+                        console.log('⚠️  金山云主页加载超时，使用基础策略');
+                        await page.goto('http://www.ksyun.com', { waitUntil: 'commit', timeout: 10000 });
+                        await page.waitForTimeout(1500);
+                    }
                     
                     // 生成金山云Cookie
                     let ksyunCookies = await generateKsyunCookies(access_key, secret_key, region);
@@ -1271,8 +1279,26 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                     if (target_url) {
                         console.log(`🎯 跳转到目标页面: ${target_url}`);
                         console.log('🔄 开始页面导航...');
-                        await page.goto(target_url);
-                        await page.waitForTimeout(3000);
+                        
+                        // 使用动态超时配置，而不是固定3秒
+                        const navigationTimeout = timeoutConfig.navigation_timeout || 30000;
+                        console.log(`📋 使用导航超时设置: ${navigationTimeout}ms`);
+                        
+                        try {
+                            // 使用domcontentloaded策略，更快加载
+                            await page.goto(target_url, { waitUntil: 'domcontentloaded', timeout: navigationTimeout });
+                            console.log('✅ 页面DOM加载完成');
+                            
+                            // 等待页面稍微稳定一下，但时间更短
+                            await page.waitForTimeout(1000);
+                        } catch (error) {
+                            console.log(`⚠️  页面导航超时 (${navigationTimeout}ms)，尝试使用基础加载策略`);
+                            // 如果超时，尝试使用更宽松的策略
+                            const fallbackTimeout = Math.min(navigationTimeout / 2, 15000);
+                            await page.goto(target_url, { waitUntil: 'commit', timeout: fallbackTimeout });
+                            await page.waitForTimeout(2000);
+                            console.log(`🔄 使用基础策略完成导航 (超时=${fallbackTimeout}ms)`);
+                        }
                         
                         // 记录最终页面信息
                         const finalUrl = page.url();
@@ -1281,13 +1307,22 @@ async function executeStep(step, page, agent, executionId, stepIndex, totalSteps
                         console.log(`  最终URL: ${finalUrl}`);
                         console.log(`  页面标题: ${pageTitle}`);
                         
-                        // 检查是否成功避免了登录页面
-                        if (finalUrl.includes('passport.ksyun.com/login')) {
-                            console.log('⚠️  警告: 页面仍然在登录页面，Cookie可能无效');
-                        } else if (finalUrl.includes('console.ksyun.com')) {
-                            console.log('✅ 成功进入金山云控制台，Cookie认证有效');
+                        // 检查页面导航结果
+                        if (finalUrl.includes('passport.ksyun.com/login') || finalUrl.includes('/login')) {
+                            console.log('⚠️  警告: 页面跳转到了登录页面，Cookie可能无效');
                         } else {
-                            console.log('🤔 页面导航到了意外的地址，需要检查');
+                            // 检查是否成功导航到目标URL域名
+                            const targetDomain = new URL(target_url).hostname;
+                            const finalDomain = new URL(finalUrl).hostname;
+                            
+                            if (finalDomain === targetDomain || finalUrl.startsWith(target_url)) {
+                                console.log('✅ 成功导航到目标页面，Cookie认证有效');
+                            } else if (finalUrl.includes('ksyun.com')) {
+                                console.log(`🔄 页面重定向到金山云其他页面: ${finalUrl}`);
+                                console.log('💡 这可能是正常的内部重定向，Cookie认证可能有效');
+                            } else {
+                                console.log('🤔 页面导航到了意外的地址，需要检查Cookie有效性');
+                            }
                         }
                     }
                     
@@ -2496,8 +2531,16 @@ app.post('/set-ksyun-cookies', async (req, res) => {
         
         // 首先访问金山云主页
         console.log('🌐 访问金山云主页');
-        await page.goto('http://www.ksyun.com');
-        await page.waitForTimeout(2000);
+        const homeTimeout = parseInt(req.query.navigation_timeout) || 30000;
+        try {
+            await page.goto('http://www.ksyun.com', { waitUntil: 'domcontentloaded', timeout: homeTimeout });
+            await page.waitForTimeout(1000);
+            console.log('✅ 金山云主页加载完成');
+        } catch (error) {
+            console.log('⚠️  金山云主页加载超时，使用基础策略');
+            await page.goto('http://www.ksyun.com', { waitUntil: 'commit', timeout: 10000 });
+            await page.waitForTimeout(1500);
+        }
         
         // 动态导入金山云认证服务（Node.js环境）
         let ksyunCookies;
@@ -2539,8 +2582,22 @@ app.post('/set-ksyun-cookies', async (req, res) => {
         // 如果指定了目标URL，跳转到目标页面
         if (target_url) {
             console.log(`🌐 跳转到目标页面: ${target_url}`);
-            await page.goto(target_url);
-            await page.waitForTimeout(2000);
+            
+            try {
+                // 使用30秒作为默认超时，可以通过查询参数传递timeout
+                const timeout = parseInt(req.query.navigation_timeout) || 30000;
+                console.log(`📋 使用导航超时设置: ${timeout}ms`);
+                
+                await page.goto(target_url, { waitUntil: 'domcontentloaded', timeout: timeout });
+                console.log('✅ 页面DOM加载完成');
+                await page.waitForTimeout(1000);
+            } catch (error) {
+                console.log(`⚠️  页面导航超时，尝试使用基础加载策略: ${error.message}`);
+                const fallbackTimeout = 15000;
+                await page.goto(target_url, { waitUntil: 'commit', timeout: fallbackTimeout });
+                await page.waitForTimeout(2000);
+                console.log(`🔄 使用基础策略完成导航 (超时=${fallbackTimeout}ms)`);
+            }
         }
         
         res.json({ 
