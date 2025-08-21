@@ -747,8 +747,8 @@ def execute_single_step(ai, step, mode, execution_id, step_index=0):
 
         # 创建变量解析器
         try:
-            from web_gui.services.variable_resolver import VariableResolverService
-            resolver = VariableResolverService(execution_id)
+            from web_gui.services.variable_resolver_service import VariableSuggestionService
+            resolver = VariableSuggestionService(execution_id)
             
             # 解析步骤参数中的变量引用
             resolved_params = resolver.resolve_step_parameters(params, step_index)

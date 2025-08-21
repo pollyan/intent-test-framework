@@ -61,7 +61,7 @@ class MockMidSceneAI:
     def take_screenshot(self, title):
         return f"mock_screenshot_{title}.png"
 from web_gui.models import db
-from web_gui.services.variable_resolver import VariableResolverService
+from web_gui.services.variable_resolver_service import VariableSuggestionService
 
 def test_data_flow_integration():
     """测试完整的数据流集成功能"""
@@ -189,7 +189,7 @@ def test_data_flow_integration():
             
             # 验证变量存储情况
             print("\n=== 验证变量存储 ===")
-            resolver = VariableResolverService(execution_id)
+            resolver = VariableSuggestionService(execution_id)
             available_vars = resolver.get_available_variables()
             
             print(f"共存储了 {len(available_vars)} 个变量:")

@@ -25,7 +25,9 @@
       "Bash(python3 -m pytest tests/ -v --tb=short)",
       "Bash(python3 -m pytest tests/api/ -v --tb=short --maxfail=10)",
       "Bash(python3 -m pytest tests/api/test_testcase_api.py::TestCreateTestCaseAPI::test_should_validate_steps_format -v --tb=long -s)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(find:*)"
     ],
     "deny": []
   }

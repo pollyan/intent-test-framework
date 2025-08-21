@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from web_gui.app_enhanced import create_app, execute_single_step
 from web_gui.models import db
-from web_gui.services.variable_resolver import VariableResolverService
+from web_gui.services.variable_resolver_service import VariableSuggestionService
 
 # 创建模拟AI类
 class MockMidSceneAI:
@@ -117,7 +117,7 @@ def test_schema_format():
             
             # 验证变量存储
             print("\n=== 验证变量存储 ===")
-            resolver = VariableResolverService(execution_id)
+            resolver = VariableSuggestionService(execution_id)
             available_vars = resolver.get_available_variables()
             
             print(f"共存储了 {len(available_vars)} 个变量:")

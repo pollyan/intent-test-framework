@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-VariableResolverService功能测试脚本
+VariableSuggestionService功能测试脚本
 验证变量解析服务的各项功能
 """
 
@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from web_gui.app_enhanced import create_app
 from web_gui.models import db
-from web_gui.services.variable_resolver import VariableResolverService
+from web_gui.services.variable_resolver_service import VariableSuggestionService
 
 def test_variable_resolver():
     """测试变量解析服务"""
@@ -39,8 +39,8 @@ def test_variable_resolver():
             
             # 创建变量解析服务实例
             execution_id = 'test-execution-001'
-            resolver = VariableResolverService(execution_id)
-            print("✓ VariableResolverService实例创建成功")
+            resolver = VariableSuggestionService(execution_id)
+            print("✓ VariableSuggestionService实例创建成功")
             
             # 测试1: 存储变量
             print("\n=== 测试1: 存储变量 ===")
@@ -228,7 +228,7 @@ def test_variable_resolver():
             
             print("✓ 变量引用验证成功")
             
-            print("\n🎉 所有测试通过！VariableResolverService功能正常")
+            print("\n🎉 所有测试通过！VariableSuggestionService功能正常")
             return True
             
         except Exception as e:

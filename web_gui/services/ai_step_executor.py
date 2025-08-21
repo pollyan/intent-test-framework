@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 AI步骤执行器 - 支持AI方法返回值捕获和变量管理
-集成了VariableResolverService和MidSceneJS数据提取API框架
+集成了VariableSuggestionService和MidSceneJS数据提取API框架
 """
 
 import time
@@ -410,14 +410,14 @@ class AIStepExecutor:
     ) -> Dict[str, Any]:
         """
         处理参数中的变量引用
-        使用VariableResolverService解析${variable}语法
+        使用VariableSuggestionService解析${variable}语法
         支持深度递归参数解析
         """
         try:
-            from .variable_resolver import VariableResolverService
+            from .variable_resolver import VariableSuggestionService
             
             # 创建变量解析器
-            resolver = VariableResolverService(variable_manager.execution_id)
+            resolver = VariableSuggestionService(variable_manager.execution_id)
             
             # 解析参数中的变量引用，传递正确的步骤索引
             resolved_params = resolver.resolve_step_parameters(params, step_index)
