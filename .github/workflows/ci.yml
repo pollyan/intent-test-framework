@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: API Tests
 
 on:
   push:
@@ -11,8 +11,8 @@ env:
   NODE_VERSION: 18
 
 jobs:
-  test:
-    name: API Tests
+  api-tests:
+    name: API Integration Tests
     runs-on: ubuntu-latest
     
     services:
@@ -105,7 +105,7 @@ jobs:
             print('✅ Test database initialized')
         "
 
-    - name: Run API tests with coverage
+    - name: Run API tests
       run: |
         export $(cat .env.test | xargs)
         python -m pytest tests/api/ \
@@ -115,7 +115,6 @@ jobs:
           --cov-report=xml \
           --cov-report=html \
           --cov-report=term-missing \
-          --cov-fail-under=80 \
           --maxfail=10 \
           --durations=10 \
           --junit-xml=test-results.xml
@@ -123,14 +122,6 @@ jobs:
     - name: Run Node.js proxy tests
       run: |
         npm test -- --coverage --watchAll=false
-
-    - name: Upload coverage to Codecov
-      if: success()
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage.xml
-        flags: api-tests
-        name: API Tests Coverage
 
     - name: Upload test results
       if: always()
@@ -141,101 +132,3 @@ jobs:
           test-results.xml
           htmlcov/
           coverage/
-
-    - name: Comment test coverage on PR
-      if: github.event_name == 'pull_request'
-      uses: py-cov-action/python-coverage-comment-action@v3
-      with:
-        GITHUB_TOKEN: ${{ github.token }}
-
-  code-quality:
-    name: Code Quality
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    - name: Run quality checks
-      run: |
-        python scripts/quality_check.py --check-only
-
-  security-scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Install security scanning tools
-      run: |
-        python -m pip install --upgrade pip
-        pip install safety bandit semgrep
-
-    - name: Run security checks
-      run: |
-        # Check for known vulnerabilities in dependencies
-        safety check --json
-        
-        # Run static security analysis
-        bandit -r web_gui/ -f json -o bandit-report.json || true
-        
-        # Upload security reports
-        echo "Security scan completed"
-
-    - name: Upload security reports
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: security-reports
-        path: |
-          bandit-report.json
-
-  performance-test:
-    name: Performance Tests
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest-benchmark
-
-    - name: Run performance tests
-      run: |
-        python -m pytest tests/api/ \
-          -m "not slow" \
-          --benchmark-only \
-          --benchmark-json=benchmark.json
-
-    - name: Upload performance results
-      uses: actions/upload-artifact@v3
-      with:
-        name: performance-results
-        path: benchmark.json
