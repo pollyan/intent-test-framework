@@ -62,15 +62,15 @@ def midscene_config():
 def app():
     """Flask应用fixture"""
     from web_gui.app_enhanced import create_app
-    
+
     test_config = {
-        'TESTING': True,
-        'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
-        'SQLALCHEMY_TRACK_MODIFICATIONS': False,
-        'WTF_CSRF_ENABLED': False
+        "TESTING": True,
+        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+        "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+        "WTF_CSRF_ENABLED": False,
     }
     app = create_app(test_config=test_config)
-    
+
     yield app
 
 
@@ -81,25 +81,25 @@ def db_session(app):
     每个测试函数都会获得一个独立的数据库会话，测试结束后自动回滚
     """
     from web_gui.models import db
-    
+
     with app.app_context():
         # 启用外键约束（SQLite默认关闭）
         from sqlalchemy import event
         from sqlalchemy.engine import Engine
-        
+
         @event.listens_for(Engine, "connect")
         def set_sqlite_pragma(dbapi_connection, connection_record):
             cursor = dbapi_connection.cursor()
             cursor.execute("PRAGMA foreign_keys=ON")
             cursor.close()
-        
+
         # 创建所有表
         db.create_all()
-        
+
         yield db.session
-        
+
         # 清理 - 回滚任何未提交的事务
         db.session.rollback()
-        
+
         # 删除所有表
         db.drop_all()

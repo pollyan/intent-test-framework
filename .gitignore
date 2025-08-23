@@ -236,3 +236,7 @@ integration_example.py
 # 注意：保留开发工具目录
 # .bmad-core/ - 保留BMad工具配置
 # .claude/ - 保留Claude工具配置
+
+# Auto-added by quality check
+*.pyc
+logs/

@@ -29,7 +29,9 @@
       "Bash(python:*)",
       "Bash(find:*)",
       "Bash(chmod:*)",
-      "Bash(npm install)"
+      "Bash(npm install)",
+      "Bash(grep:*)",
+      "Bash(git restore:*)"
     ],
     "deny": []
   }

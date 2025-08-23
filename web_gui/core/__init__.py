@@ -7,9 +7,4 @@ from .app_factory import create_app
 from .extensions import db, socketio
 from .error_handlers import register_error_handlers
 
-__all__ = [
-    'create_app',
-    'db',
-    'socketio', 
-    'register_error_handlers'
-]
+__all__ = ["create_app", "db", "socketio", "register_error_handlers"]
