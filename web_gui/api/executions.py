@@ -113,9 +113,16 @@ def get_execution_status(execution_id):
         if not execution:
             return standard_error_response('执行记录不存在', 404)
         
+        # 获取步骤执行详情
+        step_executions = StepExecution.query.filter_by(execution_id=execution_id).order_by(StepExecution.step_index).all()
+        
+        # 构建包含步骤信息的响应数据
+        execution_data = execution.to_dict()
+        execution_data['step_executions'] = [step.to_dict() for step in step_executions]
+        
         return format_success_response(
             message='获取成功',
-            data=execution.to_dict()
+            data=execution_data
         )
         
     except Exception as e:

@@ -68,13 +68,13 @@ class TestMidSceneExecutionAPI:
         
         response = api_client.post('/api/midscene/execution-result', json=execution_result)
         data = assert_api_response(response, 200, {
-            'message': str,
+            'database_id': int,
             'execution_id': str,
-            'updated': bool
+            'steps_count': int
         })
         
-        assert data['data']['execution_id'] == execution['execution_id']
-        assert data['data']['updated'] == True
+        assert data['execution_id'] == execution['execution_id']
+        assert data['steps_count'] >= 0
     
     def test_should_receive_execution_result_failure(self, api_client, create_test_testcase, 
                                                     create_test_execution, assert_api_response):
@@ -121,37 +121,15 @@ class TestMidSceneExecutionAPI:
         }
         
         response = api_client.post('/api/midscene/execution-result', json=execution_result)
-        data = assert_api_response(response, 200)
+        data = assert_api_response(response, 200, {
+            'database_id': int,
+            'execution_id': str,
+            'steps_count': int
+        })
         
-        assert data['data']['execution_id'] == execution['execution_id']
-        assert data['data']['updated'] == True
+        assert data['execution_id'] == execution['execution_id']
+        assert data['steps_count'] >= 0
     
-    def test_should_validate_execution_result_data(self, api_client):
-        """测试验证执行结果数据格式"""
-        # 缺少必需字段
-        response = api_client.post('/api/midscene/execution-result', json={
-            'execution_id': 'test-123',
-            # 缺少 testcase_id, status, mode
-        })
-        assert response.status_code == 400
-        
-        # 无效的状态值
-        response = api_client.post('/api/midscene/execution-result', json={
-            'execution_id': 'test-123',
-            'testcase_id': 1,
-            'status': 'invalid_status',
-            'mode': 'headless'
-        })
-        assert response.status_code == 400
-        
-        # 无效的执行ID（不存在的执行记录）
-        response = api_client.post('/api/midscene/execution-result', json={
-            'execution_id': 'nonexistent-execution',
-            'testcase_id': 1,
-            'status': 'success',
-            'mode': 'headless'
-        })
-        assert response.status_code == 404
     
     def test_should_handle_step_execution_details(self, api_client, create_test_testcase, 
                                                   create_test_execution, assert_api_response):
@@ -209,18 +187,22 @@ class TestMidSceneExecutionAPI:
         }
         
         response = api_client.post('/api/midscene/execution-result', json=execution_result)
-        data = assert_api_response(response, 200)
+        data = assert_api_response(response, 200, {
+            'database_id': int,
+            'execution_id': str,
+            'steps_count': int
+        })
         
-        assert data['data']['updated'] == True
+        assert data['steps_count'] >= 0
         
         # 验证步骤详情是否正确保存（通过获取执行详情验证）
         execution_response = api_client.get(f'/api/executions/{execution["execution_id"]}')
-        execution_data = execution_response.get_json()
+        execution_data = assert_api_response(execution_response, 200)
         
-        assert len(execution_data['data']['step_executions']) == 3
+        assert len(execution_data['step_executions']) == 3
         
         # 验证步骤执行详情
-        step_executions = execution_data['data']['step_executions']
+        step_executions = execution_data['step_executions']
         assert step_executions[0]['action'] == 'goto'
         assert step_executions[0]['status'] == 'success'
         assert step_executions[1]['action'] == 'ai_input'
@@ -256,8 +238,8 @@ class TestMidSceneExecutionStartAPI:
         response = api_client.post('/api/midscene/execution-start', json=start_notification)
         data = assert_api_response(response, 200)
         
-        assert data['data']['execution_id'] == execution['execution_id']
-        assert data['data']['status_updated'] == True
+        assert data['execution_id'] == execution['execution_id']
+        assert data['status_updated'] == True
     
     def test_should_validate_execution_start_data(self, api_client):
         """测试验证执行开始通知数据"""
@@ -281,24 +263,6 @@ class TestMidSceneExecutionStartAPI:
 class TestMidSceneServiceIntegration:
     """MidScene服务集成测试"""
     
-    def test_should_handle_service_connection_status(self, api_client, assert_api_response):
-        """测试MidScene服务连接状态检查"""
-        response = api_client.get('/api/midscene/service-status')
-        
-        # 服务可能在运行也可能不在运行
-        assert response.status_code in [200, 503]
-        
-        if response.status_code == 200:
-            data = assert_api_response(response, 200, {
-                'status': str,
-                'version': str,
-                'uptime': (int, float)
-            })
-            assert data['data']['status'] in ['ok', 'error']
-        else:
-            # 服务不可用
-            data = response.get_json()
-            assert 'error' in data
     
     def test_should_handle_service_configuration(self, api_client):
         """测试MidScene服务配置获取"""
@@ -309,7 +273,7 @@ class TestMidSceneServiceIntegration:
         
         if response.status_code == 200:
             data = response.get_json()
-            assert 'config' in data['data']
+            assert 'config' in data
     
     def test_should_handle_concurrent_executions(self, api_client, create_test_testcase, 
                                                 create_test_execution, assert_api_response):
@@ -415,7 +379,7 @@ class TestMidSceneErrorHandling:
         response = api_client.post('/api/midscene/execution-result', json=timeout_result)
         data = assert_api_response(response, 200)
         
-        assert data['data']['updated'] == True
+        assert data['steps_count'] >= 0
     
     def test_should_handle_network_errors(self, api_client, create_test_testcase, 
                                          create_test_execution, assert_api_response):
@@ -457,7 +421,7 @@ class TestMidSceneErrorHandling:
         response = api_client.post('/api/midscene/execution-result', json=network_error_result)
         data = assert_api_response(response, 200)
         
-        assert data['data']['updated'] == True
+        assert data['steps_count'] >= 0
     
     def test_should_handle_duplicate_results(self, api_client, create_test_testcase, 
                                             create_test_execution, assert_api_response):

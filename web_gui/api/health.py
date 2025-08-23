@@ -26,18 +26,16 @@ logger = logging.getLogger(__name__)
 def health_check():
     """基础健康检查端点"""
     try:
-        return jsonify({
+        health_data = {
             'status': 'ok',
             'message': 'Intent Test Framework is running',
             'timestamp': '2025-08-16T10:30:00.000Z',
             'version': '1.0.0'
-        })
+        }
+        return standard_success_response(data=health_data)
     except Exception as e:
         logger.error(f"健康检查失败: {e}")
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
+        return standard_error_response(str(e), 500)
 
 
 @api_bp.route('/health/detailed', methods=['GET'])

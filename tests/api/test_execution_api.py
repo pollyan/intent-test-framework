@@ -22,10 +22,9 @@ class TestCreateExecutionAPI:
         
         data = assert_api_response(response, 200)
         
-        # 验证返回的执行数据
-        created_execution = data['data']
-        assert 'execution_id' in created_execution
-        assert created_execution['status'] == 'pending'
+        # 验证返回的执行数据 (assert_api_response已经返回data字段内容)
+        assert 'execution_id' in data
+        assert data['status'] == 'pending'
     
     def test_should_create_execution_with_optional_params(self, api_client, create_test_testcase, assert_api_response):
         """测试使用可选参数创建执行任务"""
@@ -44,9 +43,9 @@ class TestCreateExecutionAPI:
         
         data = assert_api_response(response, 200)
         
-        created_execution = data['data']
-        assert 'execution_id' in created_execution
-        assert created_execution['status'] == 'pending'
+        # assert_api_response已经返回data字段内容
+        assert 'execution_id' in data
+        assert data['status'] == 'pending'
     
     def test_should_validate_required_testcase_id(self, api_client, assert_api_response):
         """测试验证必需的testcase_id字段"""
@@ -98,7 +97,7 @@ class TestGetExecutionAPI:
         response = api_client.get(f'/api/executions/{execution.execution_id}')
         data = assert_api_response(response, 200)
         
-        execution_data = data['data']
+        execution_data = data  # assert_api_response已经返回data字段内容
         assert execution_data['execution_id'] == execution.execution_id
         assert execution_data['status'] == 'success'
         assert execution_data['test_case_id'] == execution.test_case_id
@@ -118,7 +117,7 @@ class TestGetExecutionAPI:
         response = api_client.get(f'/api/executions/{execution.execution_id}')
         data = assert_api_response(response, 200)
         
-        execution_data = data['data']
+        execution_data = data  # assert_api_response已经返回data字段内容
         assert execution_data['status'] == 'running'
         assert execution_data['end_time'] is None
         assert execution_data['duration'] is None
@@ -134,7 +133,7 @@ class TestGetExecutionAPI:
         response = api_client.get(f'/api/executions/{execution.execution_id}')
         data = assert_api_response(response, 200)
         
-        execution_data = data['data']
+        execution_data = data  # assert_api_response已经返回data字段内容
         assert execution_data['status'] == 'failed'
         assert execution_data['error_message'] == '测试错误消息'
     
@@ -158,10 +157,10 @@ class TestListExecutionsAPI:
             'pages': int
         })
         
-        assert data['data']['total'] == 0
-        assert data['data']['items'] == []
-        assert data['data']['page'] == 1
-        assert data['data']['size'] == 20
+        assert data['total'] == 0
+        assert data['items'] == []
+        assert data['page'] == 1
+        assert data['size'] == 20
     
     def test_should_get_executions_list_with_data(self, api_client, create_execution_history, assert_api_response):
         """测试获取包含数据的执行列表"""
@@ -172,11 +171,11 @@ class TestListExecutionsAPI:
         response = api_client.get('/api/executions')
         data = assert_api_response(response, 200)
         
-        assert data['data']['total'] == 2
-        assert len(data['data']['items']) == 2
+        assert data['total'] == 2
+        assert len(data['items']) == 2
         
         # 验证执行数据结构
-        execution_data = data['data']['items'][0]
+        execution_data = data['items'][0]  # 检查第一个执行记录的数据结构
         expected_fields = [
             'execution_id', 'test_case_id', 'test_case_name', 'status',
             'start_time', 'duration', 'executed_by'
@@ -194,25 +193,25 @@ class TestListExecutionsAPI:
         response = api_client.get('/api/executions?page=1&size=2')
         data = assert_api_response(response, 200)
         
-        assert data['data']['total'] == 5
-        assert data['data']['page'] == 1
-        assert data['data']['size'] == 2
-        assert data['data']['pages'] == 3
-        assert len(data['data']['items']) == 2
+        assert data['total'] == 5
+        assert data['page'] == 1
+        assert data['size'] == 2
+        assert data['pages'] == 3
+        assert len(data['items']) == 2
         
         # 测试第二页
         response = api_client.get('/api/executions?page=2&size=2')
         data = assert_api_response(response, 200)
         
-        assert data['data']['page'] == 2
-        assert len(data['data']['items']) == 2
+        assert data['page'] == 2
+        assert len(data['items']) == 2
         
         # 测试最后一页
         response = api_client.get('/api/executions?page=3&size=2')
         data = assert_api_response(response, 200)
         
-        assert data['data']['page'] == 3
-        assert len(data['data']['items']) == 1
+        assert data['page'] == 3
+        assert len(data['items']) == 1
     
     def test_should_support_testcase_filter(self, api_client, create_test_testcase, create_execution_history, assert_api_response):
         """测试按测试用例过滤功能"""
@@ -228,16 +227,16 @@ class TestListExecutionsAPI:
         response = api_client.get(f'/api/executions?testcase_id={testcase1.id}')
         data = assert_api_response(response, 200)
         
-        assert data['data']['total'] == 2
-        for item in data['data']['items']:
+        assert data['total'] == 2
+        for item in data['items']:
             assert item['test_case_id'] == testcase1.id
         
         # 按testcase2过滤
         response = api_client.get(f'/api/executions?testcase_id={testcase2.id}')
         data = assert_api_response(response, 200)
         
-        assert data['data']['total'] == 1
-        assert data['data']['items'][0]['test_case_id'] == testcase2.id
+        assert data['total'] == 1
+        assert data['items'][0]['test_case_id'] == testcase2.id
     
     def test_should_order_by_created_at_desc(self, api_client, create_execution_history, assert_api_response):
         """测试按创建时间倒序排列"""
@@ -248,7 +247,7 @@ class TestListExecutionsAPI:
         response = api_client.get('/api/executions')
         data = assert_api_response(response, 200)
         
-        items = data['data']['items']
+        items = data['items']
         assert len(items) == 2
         
         # 第一个应该是最新创建的

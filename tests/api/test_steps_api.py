@@ -20,8 +20,8 @@ class TestGetStepsAPI:
             'total': int
         })
         
-        assert data['data']['total'] == 0
-        assert data['data']['steps'] == []
+        assert data['total'] == 0
+        assert data['steps'] == []
     
     def test_should_get_steps_list_with_data(self, api_client, create_testcase_with_steps, assert_api_response):
         """测试获取包含步骤的列表"""
@@ -30,11 +30,11 @@ class TestGetStepsAPI:
         response = api_client.get(f'/api/testcases/{testcase.id}/steps')
         data = assert_api_response(response, 200)
         
-        assert data['data']['total'] > 0
-        assert len(data['data']['steps']) > 0
+        assert data['total'] > 0
+        assert len(data['steps']) > 0
         
         # 验证步骤数据结构
-        step = data['data']['steps'][0]
+        step = data['steps'][0]
         required_fields = ['action', 'params', 'description']
         for field in required_fields:
             assert field in step, f"步骤数据缺少字段: {field}"
@@ -65,12 +65,12 @@ class TestAddStepAPI:
         
         data = assert_api_response(response, 200)
         
-        created_step = data['data']['step']
+        created_step = data['step']
         assert created_step['action'] == sample_goto_step['action']
         assert created_step['params'] == sample_goto_step['params']
         assert created_step['description'] == sample_goto_step['description']
-        assert data['data']['position'] == 0
-        assert data['data']['total_steps'] == 1
+        assert data['position'] == 0
+        assert data['total_steps'] == 1
     
     def test_should_add_ai_input_step(self, api_client, create_test_testcase, sample_ai_input_step, assert_api_response):
         """测试添加ai_input步骤"""
@@ -82,7 +82,7 @@ class TestAddStepAPI:
         
         data = assert_api_response(response, 200)
         
-        created_step = data['data']['step']
+        created_step = data['step']
         assert created_step['action'] == 'ai_input'
         assert 'locate' in created_step['params']
         assert 'text' in created_step['params']
@@ -97,7 +97,7 @@ class TestAddStepAPI:
         
         data = assert_api_response(response, 200)
         
-        created_step = data['data']['step']
+        created_step = data['step']
         assert created_step['action'] == 'ai_tap'
         assert 'locate' in created_step['params']
     
@@ -111,7 +111,7 @@ class TestAddStepAPI:
         
         data = assert_api_response(response, 200)
         
-        created_step = data['data']['step']
+        created_step = data['step']
         assert created_step['action'] == 'ai_assert'
         assert 'prompt' in created_step['params']
     
@@ -129,8 +129,8 @@ class TestAddStepAPI:
         
         data = assert_api_response(response, 200)
         
-        assert data['data']['position'] == 1
-        assert data['data']['total_steps'] == 4  # 3 + 1
+        assert data['position'] == 1
+        assert data['total_steps'] == 4  # 3 + 1
     
     def test_should_validate_required_action_field(self, api_client, create_test_testcase, assert_api_response):
         """测试验证必需的action字段"""
@@ -231,8 +231,8 @@ class TestUpdateStepAPI:
         
         data = assert_api_response(response, 200)
         
-        assert data['data']['step']['action'] == 'ai_tap'
-        assert data['data']['index'] == 0
+        assert data['step']['action'] == 'ai_tap'
+        assert data['index'] == 0
     
     def test_should_update_step_params(self, api_client, create_testcase_with_steps, assert_api_response):
         """测试更新步骤的参数"""
@@ -253,7 +253,7 @@ class TestUpdateStepAPI:
         
         data = assert_api_response(response, 200)
         
-        assert data['data']['step']['params'] == new_params
+        assert data['step']['params'] == new_params
     
     def test_should_update_step_description(self, api_client, create_testcase_with_steps, assert_api_response):
         """测试更新步骤的描述"""
@@ -269,7 +269,7 @@ class TestUpdateStepAPI:
         
         data = assert_api_response(response, 200)
         
-        assert data['data']['step']['description'] == '更新后的步骤描述'
+        assert data['step']['description'] == '更新后的步骤描述'
     
     def test_should_update_step_required_flag(self, api_client, create_testcase_with_steps, assert_api_response):
         """测试更新步骤的必需标志"""
@@ -285,7 +285,7 @@ class TestUpdateStepAPI:
         
         data = assert_api_response(response, 200)
         
-        assert data['data']['step']['required'] is False
+        assert data['step']['required'] is False
     
     def test_should_update_multiple_fields(self, api_client, create_testcase_with_steps, assert_api_response):
         """测试同时更新多个字段"""
@@ -304,7 +304,7 @@ class TestUpdateStepAPI:
         
         data = assert_api_response(response, 200)
         
-        step = data['data']['step']
+        step = data['step']
         assert step['action'] == 'ai_assert'
         assert step['params'] == {'prompt': '验证页面内容'}
         assert step['description'] == '验证步骤'
@@ -377,8 +377,8 @@ class TestDeleteStepAPI:
         response = api_client.delete(f'/api/testcases/{testcase.id}/steps/1')
         data = assert_api_response(response, 200)
         
-        assert 'deleted_step' in data['data']
-        assert data['data']['remaining_steps'] == 2
+        assert 'deleted_step' in data
+        assert data['remaining_steps'] == 2
     
     def test_should_delete_first_step(self, api_client, create_testcase_with_steps, assert_api_response):
         """测试删除第一个步骤"""
@@ -387,7 +387,7 @@ class TestDeleteStepAPI:
         response = api_client.delete(f'/api/testcases/{testcase.id}/steps/0')
         data = assert_api_response(response, 200)
         
-        assert data['data']['remaining_steps'] == 1
+        assert data['remaining_steps'] == 1
     
     def test_should_delete_last_step(self, api_client, create_testcase_with_steps, assert_api_response):
         """测试删除最后一个步骤"""
@@ -396,7 +396,7 @@ class TestDeleteStepAPI:
         response = api_client.delete(f'/api/testcases/{testcase.id}/steps/2')
         data = assert_api_response(response, 200)
         
-        assert data['data']['remaining_steps'] == 2
+        assert data['remaining_steps'] == 2
     
     def test_should_return_correct_deleted_step_data(self, api_client, create_testcase_with_steps, assert_api_response):
         """测试返回正确的删除步骤数据"""
@@ -411,7 +411,7 @@ class TestDeleteStepAPI:
         data = assert_api_response(response, 200)
         
         # 验证删除的步骤数据
-        deleted_step = data['data']['deleted_step']
+        deleted_step = data['deleted_step']
         assert deleted_step == original_steps[0]
     
     def test_should_return_400_for_invalid_step_index(self, api_client, create_testcase_with_steps, assert_api_response):
@@ -464,8 +464,8 @@ class TestReorderStepsAPI:
         
         # 验证重排序后的步骤数量不变
         get_response = api_client.get(f'/api/testcases/{testcase.id}/steps')
-        steps_data = get_response.get_json()
-        assert steps_data['data']['total'] == 3
+        steps_data = assert_api_response(get_response, 200)
+        assert steps_data['total'] == 3
     
     def test_should_reverse_step_order(self, api_client, create_testcase_with_steps, assert_api_response):
         """测试反转步骤顺序"""

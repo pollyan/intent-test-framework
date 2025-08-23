@@ -198,7 +198,7 @@ class StepExecution(db.Model):
     
     def to_dict(self):
         """转换为字典"""
-        return {
+        result = {
             'id': self.id,
             'execution_id': self.execution_id,
             'step_index': self.step_index,
@@ -212,6 +212,19 @@ class StepExecution(db.Model):
             'ai_decision': json.loads(self.ai_decision) if self.ai_decision else {},
             'error_message': self.error_message
         }
+        
+        # 如果ai_decision中包含action信息，则将其暴露为顶级字段
+        if self.ai_decision:
+            try:
+                decision_data = json.loads(self.ai_decision)
+                if 'action' in decision_data:
+                    result['action'] = decision_data['action']
+                if 'result_data' in decision_data:
+                    result['result_data'] = decision_data['result_data']
+            except json.JSONDecodeError:
+                pass
+        
+        return result
 
 class Template(db.Model):
     """测试模板模型"""
