@@ -1,0 +1,88 @@
+# Intent Test Framework - Coverage配置文件
+
+[run]
+# 代码覆盖率分析源目录
+source = web_gui
+
+# 排除不需要覆盖率分析的文件和目录
+omit = 
+    */tests/*
+    */venv/*
+    */site-packages/*
+    */node_modules/*
+    web_gui/run_enhanced.py
+    web_gui/wsgi.py
+    web_gui/__init__.py
+    # 排除配置文件
+    web_gui/config/*.py
+    # 排除临时和测试辅助文件
+    */temp/*
+    */tmp/*
+    */.pytest_cache/*
+
+# 启用分支覆盖率
+branch = true
+
+# 并行模式（与pytest-xdist配合使用）
+parallel = true
+
+[report]
+# 报告中排除的代码行
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    def __str__
+    if self.debug:
+    if settings.DEBUG
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if False:
+    if __name__ == .__main__.:
+    class .*\bProtocol\):
+    @(abc\.)?abstractmethod
+    @abstractmethod
+    # 排除类型检查代码
+    if TYPE_CHECKING:
+    # 排除调试代码
+    logger.debug
+    print\(
+
+# 精度设置
+precision = 2
+
+# 显示缺失的行号
+show_missing = true
+
+# 跳过覆盖率为空的文件
+skip_empty = true
+
+# 按文件名排序
+sort = Name
+
+[html]
+# HTML报告输出目录
+directory = htmlcov
+
+# HTML报告标题
+title = Intent Test Framework - 代码覆盖率报告
+
+# 显示上下文（需要Python 3.8+和coverage 5.0+）
+show_contexts = true
+
+[xml]
+# XML报告输出文件（用于CI/CD和第三方工具）
+output = coverage.xml
+
+[json]
+# JSON报告输出文件
+output = coverage.json
+pretty_print = true
+show_contexts = true
+
+# 路径映射（处理不同环境下的路径差异）
+[paths]
+source =
+    web_gui/
+    /home/runner/work/*/web_gui/
+    /app/web_gui/

@@ -1,0 +1,1263 @@
+2025-08-22 18:32:32 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 18:32:32 [INFO    ] [no-request] core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 18:44:32 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 18:44:32 [INFO    ] [no-request] web_gui.core.app_factory:50 - Intent Test Framework 启动中...
+2025-08-22 18:44:36 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 18:44:36 [INFO    ] [no-request] core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 18:45:42 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 18:45:42 [INFO    ] [no-request] web_gui.core.app_factory:50 - Intent Test Framework 启动中...
+2025-08-22 18:45:46 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 18:45:46 [INFO    ] [no-request] core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 18:46:32 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 18:46:32 [INFO    ] [no-request] web_gui.core.app_factory:50 - Intent Test Framework 启动中...
+2025-08-22 18:46:35 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 18:46:35 [INFO    ] [no-request] core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 18:47:11 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 18:47:11 [INFO    ] [no-request] web_gui.core.app_factory:50 - Intent Test Framework 启动中...
+2025-08-22 18:47:33 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 18:47:33 [INFO    ] [no-request] web_gui.core.app_factory:50 - Intent Test Framework 启动中...
+2025-08-22 18:47:55 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 18:47:55 [INFO    ] [no-request] web_gui.core.app_factory:50 - Intent Test Framework 启动中...
+2025-08-22 18:48:44 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 18:48:44 [INFO    ] [no-request] web_gui.core.app_factory:50 - Intent Test Framework 启动中...
+2025-08-22 18:49:00 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 18:49:00 [INFO    ] [no-request] core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 18:50:03 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 18:50:03 [INFO    ] [no-request] core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 18:56:31 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 18:56:31 [INFO    ] [no-request] core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 18:57:07 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 18:57:07 [INFO    ] [no-request] core.app_factory:50 - Intent Test Framework 启动中...
+2025-08-22 18:57:42 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 18:57:42 [INFO    ] [no-request] core.app_factory:50 - Intent Test Framework 启动中...
+2025-08-22 19:29:13 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 19:29:13 [INFO    ] [no-request] web_gui.core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 19:29:36 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 19:29:36 [INFO    ] [no-request] web_gui.core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 19:29:56 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 19:29:56 [INFO    ] [no-request] web_gui.core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 19:33:01 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 19:33:01 [INFO    ] [no-request] web_gui.core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 19:33:31 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 19:33:31 [INFO    ] [no-request] web_gui.core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 19:33:31 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 19:33:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 19:33:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 19:33:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 19:33:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 19:33:31 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 19:33:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 19:33:31 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 19:33:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 19:33:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 19:33:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 19:33:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 19:33:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 19:33:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 19:33:31 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 19:33:31 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 19:33:31 [INFO    ] [no-request] web_gui.app_new:103 - ✅ 默认模板创建完成
+2025-08-22 19:33:31 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 19:33:31 [INFO    ] [no-request] web_gui.app_new:132 - 📍 后端地址: http://localhost:5001
+2025-08-22 19:33:31 [INFO    ] [no-request] web_gui.app_new:133 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 19:33:31 [INFO    ] [no-request] web_gui.app_new:134 - ✨ 应用启动完成，等待连接...
+2025-08-22 19:33:40 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 19:33:40 [INFO    ] [no-request] web_gui.core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 19:33:40 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 19:33:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 19:33:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 19:33:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 19:33:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 19:33:40 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 19:33:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 19:33:40 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 19:33:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 19:33:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 19:33:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 19:33:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 19:33:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 19:33:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 19:33:40 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 19:33:40 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 19:33:40 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 19:33:40 [INFO    ] [no-request] web_gui.app_new:132 - 📍 后端地址: http://localhost:5001
+2025-08-22 19:33:40 [INFO    ] [no-request] web_gui.app_new:133 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 19:33:40 [INFO    ] [no-request] web_gui.app_new:134 - ✨ 应用启动完成，等待连接...
+2025-08-22 19:34:40 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 19:34:40 [INFO    ] [no-request] web_gui.core.app_factory:50 - Intent Test Framework 启动中...
+2025-08-22 19:34:40 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 19:34:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 19:34:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 19:34:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 19:34:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 19:34:40 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 19:34:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 19:34:40 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 19:34:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 19:34:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 19:34:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 19:34:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 19:34:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 19:34:40 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 19:34:40 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 19:34:40 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 19:34:40 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 19:34:40 [INFO    ] [no-request] web_gui.app_new:132 - 📍 后端地址: http://localhost:5001
+2025-08-22 19:34:40 [INFO    ] [no-request] web_gui.app_new:133 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 19:34:40 [INFO    ] [no-request] web_gui.app_new:134 - ✨ 应用启动完成，等待连接...
+2025-08-22 19:34:54 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 19:34:54 [INFO    ] [no-request] web_gui.core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 19:34:55 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 19:34:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 19:34:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 19:34:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 19:34:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 19:34:55 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 19:34:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 19:34:55 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 19:34:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 19:34:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 19:34:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 19:34:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 19:34:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 19:34:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 19:34:55 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 19:34:55 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 19:34:55 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 19:34:55 [INFO    ] [no-request] web_gui.app_new:132 - 📍 后端地址: http://localhost:5001
+2025-08-22 19:34:55 [INFO    ] [no-request] web_gui.app_new:133 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 19:34:55 [INFO    ] [no-request] web_gui.app_new:134 - ✨ 应用启动完成，等待连接...
+2025-08-22 19:35:32 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 19:35:32 [INFO    ] [no-request] web_gui.core.app_factory:50 - Intent Test Framework 启动中...
+2025-08-22 19:35:32 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 19:35:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 19:35:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 19:35:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 19:35:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 19:35:32 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 19:35:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 19:35:32 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 19:35:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 19:35:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 19:35:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 19:35:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 19:35:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 19:35:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 19:35:32 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 19:35:32 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 19:35:32 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 19:35:32 [INFO    ] [no-request] web_gui.app_new:132 - 📍 后端地址: http://localhost:5001
+2025-08-22 19:35:32 [INFO    ] [no-request] web_gui.app_new:133 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 19:35:32 [INFO    ] [no-request] web_gui.app_new:134 - ✨ 应用启动完成，等待连接...
+2025-08-22 19:35:43 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 19:35:43 [INFO    ] [no-request] web_gui.core.app_factory:50 - Intent Test Framework 启动中...
+2025-08-22 19:35:44 [INFO    ] [no-request] __main__:29 - ✅ 数据库表创建完成
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 19:35:44 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 19:35:44 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 19:35:44 [INFO    ] [no-request] __main__:35 - ✅ 数据库索引优化完成
+2025-08-22 19:35:44 [INFO    ] [no-request] __main__:126 - ✅ 数据库初始化成功
+2025-08-22 19:35:44 [INFO    ] [no-request] __main__:132 - 📍 后端地址: http://localhost:5001
+2025-08-22 19:35:44 [INFO    ] [no-request] __main__:133 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 19:35:44 [INFO    ] [no-request] __main__:134 - ✨ 应用启动完成，等待连接...
+2025-08-22 19:35:44 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.core.app_factory:50 - Intent Test Framework 启动中...
+2025-08-22 19:35:44 [INFO    ] [no-request] __main__:29 - ✅ 数据库表创建完成
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 19:35:44 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 19:35:44 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 19:35:44 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 19:35:44 [INFO    ] [no-request] __main__:35 - ✅ 数据库索引优化完成
+2025-08-22 19:35:44 [INFO    ] [no-request] __main__:126 - ✅ 数据库初始化成功
+2025-08-22 19:35:44 [INFO    ] [no-request] __main__:132 - 📍 后端地址: http://localhost:5001
+2025-08-22 19:35:44 [INFO    ] [no-request] __main__:133 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 19:35:44 [INFO    ] [no-request] __main__:134 - ✨ 应用启动完成，等待连接...
+2025-08-22 19:35:44 [WARNING ] [no-request] werkzeug:97 -  * Debugger is active!
+2025-08-22 21:32:47 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:32:47 [INFO    ] [no-request] web_gui.core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 21:33:57 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:33:57 [INFO    ] [no-request] web_gui.core.app_factory:50 - Intent Test Framework 启动中...
+2025-08-22 21:33:57 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:33:57 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:33:57 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:33:57 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:33:57 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:33:57 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:33:57 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:33:57 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:33:57 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:33:57 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:33:57 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:33:57 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:33:57 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:33:57 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:33:57 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 21:33:57 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:33:57 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:33:57 [INFO    ] [no-request] web_gui.app_new:132 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:33:57 [INFO    ] [no-request] web_gui.app_new:133 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:33:57 [INFO    ] [no-request] web_gui.app_new:134 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:35:01 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:35:01 [INFO    ] [no-request] web_gui.core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 21:35:01 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:35:01 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:35:01 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:35:01 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:35:01 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:35:01 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:35:01 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:35:01 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:35:01 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:35:01 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:35:01 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:35:01 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:35:01 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:35:01 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:35:01 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 21:35:01 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:35:01 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:35:01 [INFO    ] [no-request] web_gui.app_new:132 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:35:01 [INFO    ] [no-request] web_gui.app_new:133 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:35:01 [INFO    ] [no-request] web_gui.app_new:134 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:36:23 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:36:23 [INFO    ] [no-request] web_gui.core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 21:36:23 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:36:23 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:36:23 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:36:23 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:36:23 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:36:23 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:36:23 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:36:23 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:36:23 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:36:23 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:36:23 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:36:23 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:36:23 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:36:23 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:36:23 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 21:36:23 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:36:23 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:36:23 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:36:23 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:36:23 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:36:24 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:36:24 [INFO    ] [no-request] web_gui.core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 21:36:24 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:36:24 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:36:24 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:36:24 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:36:24 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:36:24 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:36:24 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:36:24 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:36:24 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:36:24 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:36:24 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:36:24 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:36:24 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:36:24 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:36:24 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 21:36:24 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:36:24 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:36:24 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:36:24 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:36:24 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:36:24 [WARNING ] [no-request] werkzeug:97 -  * Debugger is active!
+2025-08-22 21:36:53 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:36:53 [INFO    ] [no-request] web_gui.core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 21:36:53 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:36:53 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:36:53 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:36:53 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:36:53 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:36:53 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:36:53 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:36:53 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:36:53 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:36:53 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:36:53 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:36:53 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:36:53 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:36:53 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:36:53 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 21:36:53 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:36:53 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:36:53 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:36:53 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:36:53 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:36:54 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:36:54 [INFO    ] [no-request] web_gui.core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 21:36:54 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:36:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:36:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:36:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:36:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:36:54 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:36:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:36:54 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:36:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:36:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:36:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:36:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:36:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:36:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:36:54 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 21:36:54 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:36:54 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:36:54 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:36:54 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:36:54 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:36:54 [WARNING ] [no-request] werkzeug:97 -  * Debugger is active!
+2025-08-22 21:37:20 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:37:20 [INFO    ] [no-request] web_gui.core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 21:37:20 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:37:20 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:37:20 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:37:20 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:37:20 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:37:20 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:37:20 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:37:20 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:37:20 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:37:20 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:37:20 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:37:20 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:37:20 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:37:20 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:37:20 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 21:37:20 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:37:20 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:37:20 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:37:20 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:37:20 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:37:21 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:37:21 [INFO    ] [no-request] web_gui.core.app_factory:56 - Intent Test Framework 启动中...
+2025-08-22 21:37:21 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:37:21 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:37:21 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:37:21 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:37:21 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:37:21 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:37:21 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:37:21 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:37:21 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:37:21 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:37:21 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:37:21 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:37:21 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:37:21 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:37:21 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 21:37:21 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:37:21 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:37:21 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:37:21 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:37:21 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:37:21 [WARNING ] [no-request] werkzeug:97 -  * Debugger is active!
+2025-08-22 21:37:42 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:37:42 [INFO    ] [no-request] web_gui.core.app_factory:50 - Intent Test Framework 启动中...
+2025-08-22 21:37:42 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:37:42 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:37:42 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:37:42 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:37:42 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:37:42 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:37:42 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:37:42 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:37:42 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:37:42 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:37:42 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:37:42 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:37:42 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:37:42 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:37:42 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 21:37:42 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:37:42 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:37:42 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:37:42 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:37:42 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:37:42 [WARNING ] [no-request] werkzeug:97 - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-08-22 21:37:43 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:37:43 [INFO    ] [no-request] web_gui.core.app_factory:50 - Intent Test Framework 启动中...
+2025-08-22 21:37:43 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:37:43 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:37:43 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:37:43 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:37:43 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:37:43 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:37:43 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:37:43 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:37:43 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:37:43 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:37:43 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:37:43 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:37:43 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:37:43 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:37:43 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 21:37:43 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:37:43 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:37:43 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:37:43 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:37:43 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:37:43 [WARNING ] [no-request] werkzeug:97 - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-08-22 21:37:43 [WARNING ] [no-request] werkzeug:97 -  * Debugger is active!
+2025-08-22 21:38:54 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:38:54 [INFO    ] [no-request] web_gui.core.app_factory:50 - Intent Test Framework 启动中...
+2025-08-22 21:38:54 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:38:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:38:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:38:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:38:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:38:54 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:38:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:38:54 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:38:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:38:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:38:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:38:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:38:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:38:54 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:38:54 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 21:38:54 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:38:54 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:38:54 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:38:54 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:38:54 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:38:54 [WARNING ] [no-request] werkzeug:97 - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-08-22 21:38:55 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:38:55 [INFO    ] [no-request] web_gui.core.app_factory:50 - Intent Test Framework 启动中...
+2025-08-22 21:38:55 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:38:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:38:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:38:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:38:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:38:55 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:38:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:38:55 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:38:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:38:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:38:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:38:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:38:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:38:55 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:38:55 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 21:38:55 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:38:55 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:38:55 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:38:55 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:38:55 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:38:55 [WARNING ] [no-request] werkzeug:97 - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-08-22 21:38:55 [WARNING ] [no-request] werkzeug:97 -  * Debugger is active!
+2025-08-22 21:40:08 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:40:08 [INFO    ] [no-request] web_gui.core.app_factory:50 - Intent Test Framework 启动中...
+2025-08-22 21:40:08 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:40:08 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:40:08 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:40:08 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:40:08 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:40:08 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:40:08 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:40:08 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:40:08 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:40:08 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:40:08 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:40:08 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:40:08 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:40:08 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:40:08 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 21:40:08 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:40:08 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:40:08 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:40:08 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:40:08 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:40:08 [WARNING ] [no-request] werkzeug:97 - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-08-22 21:41:36 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:41:36 [INFO    ] [no-request] web_gui.core.app_factory:57 - Intent Test Framework 启动中...
+2025-08-22 21:41:36 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:41:36 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:41:36 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:41:36 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:41:36 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:41:36 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:41:36 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:41:36 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:41:36 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:41:36 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:41:36 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:41:36 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:41:36 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:41:36 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:41:36 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 21:41:36 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:41:37 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:41:37 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:41:37 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:41:37 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:41:37 [WARNING ] [no-request] werkzeug:97 - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-08-22 21:41:37 [WARNING ] [no-request] werkzeug:97 -  * Debugger is active!
+2025-08-22 21:41:52 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:41:52 [INFO    ] [no-request] web_gui.core.app_factory:57 - Intent Test Framework 启动中...
+2025-08-22 21:41:52 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:41:52 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:41:52 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:41:52 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:41:52 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:41:52 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:41:52 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:41:52 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:41:52 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:41:52 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:41:52 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:41:52 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:41:52 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:41:52 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:41:52 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 21:41:52 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:41:52 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:41:52 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:41:52 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:41:52 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:41:52 [WARNING ] [no-request] werkzeug:97 - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-08-22 21:42:04 [INFO    ] [unknown] api.base:80 - API调用: GET /api/stats/today
+2025-08-22 21:42:04 [INFO    ] [unknown] api.base:80 - API调用: GET /api/executions
+2025-08-22 21:42:04 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 21:42:04 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/stats/today
+2025-08-22 21:42:04 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/executions
+2025-08-22 21:42:04 [INFO    ] [unknown] api.base:80 - API调用: GET /api/system/status
+2025-08-22 21:42:04 [INFO    ] [unknown] api.base:80 - API调用: GET /api/stats/trend
+2025-08-22 21:42:04 [INFO    ] [unknown] api.base:80 - API调用: GET /api/executions
+2025-08-22 21:42:04 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/stats/trend
+2025-08-22 21:42:04 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 21:42:04 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/executions
+2025-08-22 21:42:04 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/system/status
+2025-08-22 21:42:21 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 21:42:21 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 21:42:37 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 21:42:37 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 21:43:02 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 21:43:02 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 21:43:21 [INFO    ] [unknown] api.base:80 - API调用: GET /api/executions
+2025-08-22 21:43:21 [INFO    ] [unknown] api.base:80 - API调用: GET /api/stats/today
+2025-08-22 21:43:21 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 21:43:21 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/executions
+2025-08-22 21:43:21 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/stats/today
+2025-08-22 21:43:21 [INFO    ] [unknown] api.base:80 - API调用: GET /api/system/status
+2025-08-22 21:43:21 [INFO    ] [unknown] api.base:80 - API调用: GET /api/stats/trend
+2025-08-22 21:43:21 [INFO    ] [unknown] api.base:80 - API调用: GET /api/executions
+2025-08-22 21:43:21 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/stats/trend
+2025-08-22 21:43:21 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/system/status
+2025-08-22 21:43:21 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 21:43:21 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/executions
+2025-08-22 21:43:26 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 21:43:26 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 21:44:11 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:44:11 [INFO    ] [no-request] web_gui.core.app_factory:57 - Intent Test Framework 启动中...
+2025-08-22 21:44:11 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:44:11 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:44:11 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:44:11 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:44:11 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:44:11 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_test_case_id - (sqlite3.OperationalError) no such column: test_case_id
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_test_case_id ON execution_history(test_case_id)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:44:11 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:44:11 [WARNING ] [no-request] web_gui.utils.db_optimization:43 - ⚠️ 索引创建失败: idx_execution_history_created_at - (sqlite3.OperationalError) no such column: created_at
+[SQL: CREATE INDEX IF NOT EXISTS idx_execution_history_created_at ON execution_history(created_at DESC)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-22 21:44:11 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:44:11 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:44:11 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:44:11 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:44:11 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:44:11 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:44:11 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 11, 失败 2
+2025-08-22 21:44:11 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:44:11 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:44:11 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:44:11 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:44:11 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:44:11 [WARNING ] [no-request] werkzeug:97 - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-08-22 21:44:11 [WARNING ] [no-request] werkzeug:97 -  * Debugger is active!
+2025-08-22 21:44:15 [INFO    ] [unknown] api.base:80 - API调用: GET /api/stats/today
+2025-08-22 21:44:15 [INFO    ] [unknown] api.base:80 - API调用: GET /api/executions
+2025-08-22 21:44:15 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 21:44:15 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/stats/today
+2025-08-22 21:44:15 [INFO    ] [unknown] api.base:80 - API调用: GET /api/system/status
+2025-08-22 21:44:15 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/executions
+2025-08-22 21:44:15 [INFO    ] [unknown] api.base:80 - API调用: GET /api/stats/trend
+2025-08-22 21:44:15 [INFO    ] [unknown] api.base:80 - API调用: GET /api/executions
+2025-08-22 21:44:15 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/system/status
+2025-08-22 21:44:15 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/stats/trend
+2025-08-22 21:44:15 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/executions
+2025-08-22 21:44:15 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 21:44:23 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 21:44:23 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 21:47:11 [INFO    ] [unknown] api.base:80 - API调用: PUT /api/testcases/1
+2025-08-22 21:47:11 [INFO    ] [unknown] api.base:85 - API调用成功: PUT /api/testcases/1
+2025-08-22 21:47:21 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 21:47:21 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 21:48:23 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 21:48:23 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 21:48:27 [INFO    ] [unknown] api.base:80 - API调用: POST /api/executions
+2025-08-22 21:48:27 [INFO    ] [unknown] api.base:85 - API调用成功: POST /api/executions
+2025-08-22 21:48:27 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases/1
+2025-08-22 21:48:27 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases/1
+2025-08-22 21:49:33 [INFO    ] [unknown] api.base:80 - API调用: PUT /api/testcases/1
+2025-08-22 21:49:33 [INFO    ] [unknown] api.base:85 - API调用成功: PUT /api/testcases/1
+2025-08-22 21:49:36 [INFO    ] [unknown] api.base:80 - API调用: PUT /api/testcases/1
+2025-08-22 21:49:36 [INFO    ] [unknown] api.base:85 - API调用成功: PUT /api/testcases/1
+2025-08-22 21:49:41 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 21:49:41 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 21:49:42 [INFO    ] [unknown] api.base:80 - API调用: POST /api/executions
+2025-08-22 21:49:42 [INFO    ] [unknown] api.base:85 - API调用成功: POST /api/executions
+2025-08-22 21:49:42 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases/1
+2025-08-22 21:49:42 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases/1
+2025-08-22 21:50:05 [INFO    ] [unknown] api.base:80 - API调用: PUT /api/testcases/1
+2025-08-22 21:50:05 [INFO    ] [unknown] api.base:85 - API调用成功: PUT /api/testcases/1
+2025-08-22 21:50:06 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 21:50:06 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 21:50:07 [INFO    ] [unknown] api.base:80 - API调用: POST /api/executions
+2025-08-22 21:50:07 [INFO    ] [unknown] api.base:85 - API调用成功: POST /api/executions
+2025-08-22 21:50:07 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases/1
+2025-08-22 21:50:07 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases/1
+2025-08-22 21:51:31 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:51:31 [INFO    ] [no-request] web_gui.core.app_factory:57 - Intent Test Framework 启动中...
+2025-08-22 21:51:31 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:51:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:51:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:51:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:51:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:51:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_test_case_id
+2025-08-22 21:51:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:51:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_created_at
+2025-08-22 21:51:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:51:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:51:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:51:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:51:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:51:31 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:51:31 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 13, 失败 0
+2025-08-22 21:51:31 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:51:31 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:51:31 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:51:31 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:51:31 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:51:31 [WARNING ] [no-request] werkzeug:97 - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-08-22 21:51:47 [INFO    ] [unknown] api.base:80 - API调用: POST /api/executions
+2025-08-22 21:51:47 [INFO    ] [unknown] api.base:85 - API调用成功: POST /api/executions
+2025-08-22 21:51:47 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases/1
+2025-08-22 21:51:47 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases/1
+2025-08-22 21:53:14 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:53:14 [INFO    ] [no-request] web_gui.core.app_factory:57 - Intent Test Framework 启动中...
+2025-08-22 21:53:14 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:53:14 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:53:14 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:53:14 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:53:14 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:53:14 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_test_case_id
+2025-08-22 21:53:14 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:53:14 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_created_at
+2025-08-22 21:53:14 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:53:14 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:53:14 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:53:14 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:53:14 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:53:14 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:53:14 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 13, 失败 0
+2025-08-22 21:53:14 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:53:14 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:53:14 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:53:14 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:53:14 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:53:14 [WARNING ] [no-request] werkzeug:97 - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-08-22 21:53:14 [WARNING ] [no-request] werkzeug:97 -  * Debugger is active!
+2025-08-22 21:53:16 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:53:16 [INFO    ] [no-request] web_gui.core.app_factory:57 - Intent Test Framework 启动中...
+2025-08-22 21:53:16 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:53:16 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:53:16 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:53:16 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:53:16 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:53:16 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_test_case_id
+2025-08-22 21:53:16 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:53:16 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_created_at
+2025-08-22 21:53:16 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:53:16 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:53:16 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:53:16 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:53:16 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:53:16 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:53:16 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 13, 失败 0
+2025-08-22 21:53:16 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:53:16 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:53:16 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:53:16 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:53:16 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:53:16 [WARNING ] [no-request] werkzeug:97 - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-08-22 21:53:16 [WARNING ] [no-request] werkzeug:97 -  * Debugger is active!
+2025-08-22 21:57:18 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:57:18 [INFO    ] [no-request] web_gui.core.app_factory:57 - Intent Test Framework 启动中...
+2025-08-22 21:57:18 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:57:18 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:57:18 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:57:18 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:57:18 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:57:18 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_test_case_id
+2025-08-22 21:57:18 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:57:18 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_created_at
+2025-08-22 21:57:18 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:57:18 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:57:18 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:57:18 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:57:18 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:57:18 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:57:18 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 13, 失败 0
+2025-08-22 21:57:18 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:57:18 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:57:18 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:57:18 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:57:18 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:57:18 [WARNING ] [no-request] werkzeug:97 - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-08-22 21:57:48 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:57:48 [INFO    ] [no-request] web_gui.core.app_factory:63 - Intent Test Framework 启动中...
+2025-08-22 21:57:48 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:57:48 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:57:48 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:57:48 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:57:48 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:57:48 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_test_case_id
+2025-08-22 21:57:48 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:57:48 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_created_at
+2025-08-22 21:57:48 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:57:48 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:57:48 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:57:48 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:57:48 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:57:48 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:57:48 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 13, 失败 0
+2025-08-22 21:57:48 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:57:48 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:57:48 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:57:48 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:57:48 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:59:32 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.core.app_factory:63 - Intent Test Framework 启动中...
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_test_case_id
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_created_at
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 13, 失败 0
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:59:32 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 21:59:32 [INFO    ] [no-request] web_gui.core.app_factory:63 - Intent Test Framework 启动中...
+2025-08-22 21:59:33 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 21:59:33 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 21:59:33 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 21:59:33 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 21:59:33 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 21:59:33 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_test_case_id
+2025-08-22 21:59:33 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 21:59:33 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_created_at
+2025-08-22 21:59:33 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 21:59:33 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 21:59:33 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 21:59:33 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 21:59:33 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 21:59:33 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 21:59:33 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 13, 失败 0
+2025-08-22 21:59:33 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 21:59:33 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 21:59:33 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 21:59:33 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 21:59:33 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 21:59:33 [WARNING ] [no-request] werkzeug:97 -  * Debugger is active!
+2025-08-22 21:59:47 [INFO    ] [unknown] web_gui.api.base:80 - API调用: GET /api/testcases
+2025-08-22 21:59:47 [INFO    ] [unknown] web_gui.api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 21:59:49 [INFO    ] [unknown] web_gui.api.base:80 - API调用: GET /api/testcases
+2025-08-22 21:59:49 [INFO    ] [unknown] web_gui.api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 21:59:52 [INFO    ] [unknown] web_gui.api.base:80 - API调用: POST /api/executions
+2025-08-22 21:59:52 [INFO    ] [unknown] web_gui.api.base:85 - API调用成功: POST /api/executions
+2025-08-22 21:59:52 [INFO    ] [unknown] web_gui.api.base:80 - API调用: GET /api/testcases/1
+2025-08-22 21:59:52 [INFO    ] [unknown] web_gui.api.base:85 - API调用成功: GET /api/testcases/1
+2025-08-22 22:05:25 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.core.app_factory:57 - Intent Test Framework 启动中...
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_test_case_id
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_created_at
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 13, 失败 0
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 22:05:25 [WARNING ] [no-request] werkzeug:97 - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-08-22 22:05:25 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.core.app_factory:57 - Intent Test Framework 启动中...
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_test_case_id
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_created_at
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 13, 失败 0
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 22:05:25 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 22:05:25 [WARNING ] [no-request] werkzeug:97 - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-08-22 22:05:26 [WARNING ] [no-request] werkzeug:97 -  * Debugger is active!
+2025-08-22 22:06:07 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 22:06:07 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 22:06:42 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 22:06:42 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 22:09:28 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 22:09:28 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 22:09:28 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 22:09:28 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 22:09:30 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 22:09:30 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 22:09:31 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 22:09:31 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 22:09:33 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 22:09:33 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 22:09:35 [INFO    ] [unknown] api.base:80 - API调用: POST /api/executions
+2025-08-22 22:09:35 [INFO    ] [unknown] api.base:85 - API调用成功: POST /api/executions
+2025-08-22 22:09:35 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases/1
+2025-08-22 22:09:35 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases/1
+2025-08-22 22:10:43 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 22:10:43 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 22:10:55 [INFO    ] [unknown] api.base:80 - API调用: PUT /api/testcases/1
+2025-08-22 22:10:55 [INFO    ] [unknown] api.base:85 - API调用成功: PUT /api/testcases/1
+2025-08-22 22:10:57 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 22:10:57 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 22:11:01 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 22:11:01 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 22:11:03 [INFO    ] [unknown] api.base:80 - API调用: POST /api/executions
+2025-08-22 22:11:03 [INFO    ] [unknown] api.base:85 - API调用成功: POST /api/executions
+2025-08-22 22:11:03 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases/1
+2025-08-22 22:11:03 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases/1
+2025-08-22 22:11:49 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 22:11:49 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 22:11:52 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 22:11:52 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 22:11:55 [INFO    ] [unknown] api.base:80 - API调用: POST /api/executions
+2025-08-22 22:11:55 [INFO    ] [unknown] api.base:85 - API调用成功: POST /api/executions
+2025-08-22 22:11:55 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases/1
+2025-08-22 22:11:55 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases/1
+2025-08-22 22:16:09 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 22:16:09 [INFO    ] [no-request] web_gui.core.app_factory:57 - Intent Test Framework 启动中...
+2025-08-22 22:16:09 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 22:16:09 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 22:16:09 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 22:16:09 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 22:16:09 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 22:16:09 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_test_case_id
+2025-08-22 22:16:09 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 22:16:09 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_created_at
+2025-08-22 22:16:09 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 22:16:09 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 22:16:09 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 22:16:09 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 22:16:09 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 22:16:09 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 22:16:09 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 13, 失败 0
+2025-08-22 22:16:09 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 22:16:09 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 22:16:09 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 22:16:09 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 22:16:09 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 22:16:09 [WARNING ] [no-request] werkzeug:97 - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-08-22 22:16:10 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 22:16:10 [INFO    ] [no-request] web_gui.core.app_factory:57 - Intent Test Framework 启动中...
+2025-08-22 22:16:10 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 22:16:10 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 22:16:10 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 22:16:10 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 22:16:10 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 22:16:10 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_test_case_id
+2025-08-22 22:16:10 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 22:16:10 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_created_at
+2025-08-22 22:16:10 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 22:16:10 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 22:16:10 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 22:16:10 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 22:16:10 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 22:16:10 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 22:16:10 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 13, 失败 0
+2025-08-22 22:16:10 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 22:16:10 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 22:16:10 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 22:16:10 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 22:16:10 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 22:16:10 [WARNING ] [no-request] werkzeug:97 - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-08-22 22:16:10 [WARNING ] [no-request] werkzeug:97 -  * Debugger is active!
+2025-08-22 22:26:48 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 22:26:48 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 22:30:32 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 22:30:32 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 22:30:35 [INFO    ] [unknown] api.base:80 - API调用: POST /api/executions
+2025-08-22 22:30:35 [INFO    ] [unknown] api.base:85 - API调用成功: POST /api/executions
+2025-08-22 22:30:35 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases/1
+2025-08-22 22:30:35 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases/1
+2025-08-22 22:31:22 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 22:31:22 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 22:31:27 [INFO    ] [unknown] api.base:80 - API调用: POST /api/executions
+2025-08-22 22:31:27 [INFO    ] [unknown] api.base:85 - API调用成功: POST /api/executions
+2025-08-22 22:31:27 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases/1
+2025-08-22 22:31:27 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases/1
+2025-08-22 22:32:16 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 22:32:16 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 22:36:11 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 22:36:11 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 22:37:00 [INFO    ] [unknown] api.base:80 - API调用: POST /api/executions
+2025-08-22 22:37:00 [INFO    ] [unknown] api.base:85 - API调用成功: POST /api/executions
+2025-08-22 22:37:00 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases/1
+2025-08-22 22:37:00 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases/1
+2025-08-22 22:45:19 [INFO    ] [unknown] api.base:80 - API调用: POST /api/executions
+2025-08-22 22:45:19 [INFO    ] [unknown] api.base:85 - API调用成功: POST /api/executions
+2025-08-22 22:45:19 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases/1
+2025-08-22 22:45:19 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases/1
+2025-08-22 23:07:11 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 23:07:11 [INFO    ] [no-request] web_gui.core.app_factory:57 - Intent Test Framework 启动中...
+2025-08-22 23:07:12 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 23:07:12 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 23:07:12 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 23:07:12 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 23:07:12 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 23:07:12 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_test_case_id
+2025-08-22 23:07:12 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 23:07:12 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_created_at
+2025-08-22 23:07:12 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 23:07:12 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 23:07:12 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 23:07:12 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 23:07:12 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 23:07:12 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 23:07:12 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 13, 失败 0
+2025-08-22 23:07:12 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 23:07:12 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 23:07:12 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 23:07:12 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 23:07:12 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 23:07:12 [WARNING ] [no-request] werkzeug:97 - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-08-22 23:07:13 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 23:07:13 [INFO    ] [no-request] web_gui.core.app_factory:57 - Intent Test Framework 启动中...
+2025-08-22 23:07:13 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 23:07:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 23:07:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 23:07:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 23:07:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 23:07:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_test_case_id
+2025-08-22 23:07:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 23:07:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_created_at
+2025-08-22 23:07:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 23:07:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 23:07:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 23:07:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 23:07:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 23:07:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 23:07:13 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 13, 失败 0
+2025-08-22 23:07:13 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 23:07:13 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 23:07:13 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 23:07:13 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 23:07:13 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 23:07:13 [WARNING ] [no-request] werkzeug:97 - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-08-22 23:07:13 [WARNING ] [no-request] werkzeug:97 -  * Debugger is active!
+2025-08-22 23:07:17 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 23:07:17 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 23:10:59 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 23:10:59 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 23:11:05 [INFO    ] [unknown] api.base:80 - API调用: GET /api/stats/today
+2025-08-22 23:11:05 [INFO    ] [unknown] api.base:80 - API调用: GET /api/executions
+2025-08-22 23:11:05 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 23:11:05 [INFO    ] [unknown] api.base:80 - API调用: GET /api/system/status
+2025-08-22 23:11:05 [INFO    ] [unknown] api.base:80 - API调用: GET /api/stats/trend
+2025-08-22 23:11:05 [INFO    ] [unknown] api.base:80 - API调用: GET /api/executions
+2025-08-22 23:11:05 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/executions
+2025-08-22 23:11:05 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 23:11:05 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/stats/today
+2025-08-22 23:11:05 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/executions
+2025-08-22 23:11:05 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/system/status
+2025-08-22 23:11:05 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/stats/trend
+2025-08-22 23:11:58 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 23:11:58 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 23:13:12 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 23:13:12 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 23:13:33 [INFO    ] [unknown] api.base:80 - API调用: POST /api/executions
+2025-08-22 23:13:33 [INFO    ] [unknown] api.base:85 - API调用成功: POST /api/executions
+2025-08-22 23:13:33 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases/1
+2025-08-22 23:13:33 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases/1
+2025-08-22 23:14:41 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 23:14:41 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 23:14:45 [INFO    ] [unknown] api.base:80 - API调用: POST /api/executions
+2025-08-22 23:14:45 [INFO    ] [unknown] api.base:85 - API调用成功: POST /api/executions
+2025-08-22 23:14:45 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases/1
+2025-08-22 23:14:45 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases/1
+2025-08-22 23:25:36 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 23:25:36 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 23:25:49 [INFO    ] [unknown] api.base:80 - API调用: POST /api/executions
+2025-08-22 23:25:49 [INFO    ] [unknown] api.base:85 - API调用成功: POST /api/executions
+2025-08-22 23:25:49 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases/1
+2025-08-22 23:25:49 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases/1
+2025-08-22 23:27:11 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 23:27:11 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 23:28:41 [INFO    ] [unknown] api.base:80 - API调用: PUT /api/testcases/1
+2025-08-22 23:28:41 [INFO    ] [unknown] api.base:85 - API调用成功: PUT /api/testcases/1
+2025-08-22 23:28:44 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 23:28:44 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 23:28:46 [INFO    ] [unknown] api.base:80 - API调用: POST /api/executions
+2025-08-22 23:28:46 [INFO    ] [unknown] api.base:85 - API调用成功: POST /api/executions
+2025-08-22 23:28:46 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases/1
+2025-08-22 23:28:46 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases/1
+2025-08-22 23:36:13 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 23:36:13 [INFO    ] [no-request] web_gui.core.app_factory:57 - Intent Test Framework 启动中...
+2025-08-22 23:36:13 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 23:36:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 23:36:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 23:36:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 23:36:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 23:36:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_test_case_id
+2025-08-22 23:36:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 23:36:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_created_at
+2025-08-22 23:36:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 23:36:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 23:36:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 23:36:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 23:36:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 23:36:13 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 23:36:13 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 13, 失败 0
+2025-08-22 23:36:13 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 23:36:13 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 23:36:13 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 23:36:13 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 23:36:13 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 23:36:13 [WARNING ] [no-request] werkzeug:97 - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-08-22 23:38:34 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 23:38:34 [INFO    ] [no-request] web_gui.core.app_factory:57 - Intent Test Framework 启动中...
+2025-08-22 23:38:34 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 23:38:34 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 23:38:34 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 23:38:34 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 23:38:34 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 23:38:34 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_test_case_id
+2025-08-22 23:38:34 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 23:38:34 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_created_at
+2025-08-22 23:38:34 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 23:38:34 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 23:38:34 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 23:38:34 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 23:38:34 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 23:38:34 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 23:38:34 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 13, 失败 0
+2025-08-22 23:38:34 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 23:38:34 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 23:38:34 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 23:38:34 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 23:38:34 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 23:38:34 [WARNING ] [no-request] werkzeug:97 - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-08-22 23:38:45 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 23:38:45 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 23:38:50 [INFO    ] [unknown] api.base:80 - API调用: POST /api/executions
+2025-08-22 23:38:50 [INFO    ] [unknown] api.base:85 - API调用成功: POST /api/executions
+2025-08-22 23:38:50 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases/1
+2025-08-22 23:38:50 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases/1
+2025-08-22 23:43:10 [INFO    ] [unknown] api.base:80 - API调用: GET /api/stats/today
+2025-08-22 23:43:10 [INFO    ] [unknown] api.base:80 - API调用: GET /api/executions
+2025-08-22 23:43:10 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 23:43:10 [INFO    ] [unknown] api.base:80 - API调用: GET /api/system/status
+2025-08-22 23:43:10 [INFO    ] [unknown] api.base:80 - API调用: GET /api/stats/trend
+2025-08-22 23:43:10 [INFO    ] [unknown] api.base:80 - API调用: GET /api/executions
+2025-08-22 23:43:10 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/system/status
+2025-08-22 23:43:10 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/executions
+2025-08-22 23:43:10 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 23:43:10 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/stats/today
+2025-08-22 23:43:10 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/executions
+2025-08-22 23:43:10 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/stats/trend
+2025-08-22 23:43:19 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 23:43:19 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 23:44:04 [INFO    ] [no-request] root:201 - 日志系统配置完成
+2025-08-22 23:44:04 [INFO    ] [no-request] web_gui.core.app_factory:57 - Intent Test Framework 启动中...
+2025-08-22 23:44:04 [INFO    ] [no-request] web_gui.app_new:29 - ✅ 数据库表创建完成
+2025-08-22 23:44:04 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_is_active
+2025-08-22 23:44:04 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_category
+2025-08-22 23:44:04 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_updated_at
+2025-08-22 23:44:04 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_testcases_name
+2025-08-22 23:44:04 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_test_case_id
+2025-08-22 23:44:04 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_status
+2025-08-22 23:44:04 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_created_at
+2025-08-22 23:44:04 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_execution_history_execution_id
+2025-08-22 23:44:04 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_execution_id
+2025-08-22 23:44:04 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_step_index
+2025-08-22 23:44:04 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_step_executions_status
+2025-08-22 23:44:04 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_category
+2025-08-22 23:44:04 [INFO    ] [no-request] web_gui.utils.db_optimization:40 - ✅ 索引创建成功: idx_templates_is_public
+2025-08-22 23:44:04 [INFO    ] [no-request] web_gui.utils.db_optimization:48 - 🎯 索引优化完成: 成功 13, 失败 0
+2025-08-22 23:44:04 [INFO    ] [no-request] web_gui.app_new:35 - ✅ 数据库索引优化完成
+2025-08-22 23:44:04 [INFO    ] [no-request] web_gui.app_new:126 - ✅ 数据库初始化成功
+2025-08-22 23:44:04 [INFO    ] [no-request] web_gui.app_new:138 - 📍 后端地址: http://localhost:5001
+2025-08-22 23:44:04 [INFO    ] [no-request] web_gui.app_new:139 - 📍 API文档: http://localhost:5001/api/v1/
+2025-08-22 23:44:04 [INFO    ] [no-request] web_gui.app_new:140 - ✨ 应用启动完成，等待连接...
+2025-08-22 23:44:04 [WARNING ] [no-request] werkzeug:97 - Werkzeug appears to be used in a production deployment. Consider switching to a production web server instead.
+2025-08-22 23:44:04 [WARNING ] [no-request] werkzeug:97 -  * Debugger is active!
+2025-08-22 23:45:37 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 23:45:37 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 23:45:42 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 23:45:42 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 23:45:43 [INFO    ] [unknown] api.base:80 - API调用: POST /api/executions
+2025-08-22 23:45:43 [INFO    ] [unknown] api.base:85 - API调用成功: POST /api/executions
+2025-08-22 23:45:43 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases/4
+2025-08-22 23:45:43 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases/4
+2025-08-22 23:46:24 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 23:46:24 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 23:46:29 [INFO    ] [unknown] api.base:80 - API调用: PUT /api/testcases/9
+2025-08-22 23:46:29 [INFO    ] [unknown] api.base:85 - API调用成功: PUT /api/testcases/9
+2025-08-22 23:46:32 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases
+2025-08-22 23:46:32 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases
+2025-08-22 23:46:36 [INFO    ] [unknown] api.base:80 - API调用: POST /api/executions
+2025-08-22 23:46:36 [INFO    ] [unknown] api.base:85 - API调用成功: POST /api/executions
+2025-08-22 23:46:36 [INFO    ] [unknown] api.base:80 - API调用: GET /api/testcases/9
+2025-08-22 23:46:36 [INFO    ] [unknown] api.base:85 - API调用成功: GET /api/testcases/9

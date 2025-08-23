@@ -7,7 +7,7 @@ import pytest
 import json
 from web_gui.app_enhanced import create_app
 from web_gui.models import db, TestCase, ExecutionHistory, StepExecution, Template
-from tests.unit.factories import TestCaseFactory, ExecutionHistoryFactory, StepExecutionFactory
+# 移除单元测试相关导入
 
 
 @pytest.fixture(scope="function")
@@ -99,88 +99,112 @@ def invalid_testcase_data():
 
 
 @pytest.fixture
-def create_test_testcase(db_session):
-    """创建测试用例的工厂函数"""
-    def _create_testcase(**kwargs):
-        # 设置默认值
-        defaults = {
-            'name': 'API测试用例',
-            'description': '测试描述',
-            'steps': json.dumps([
-                {'action': 'navigate', 'params': {'url': 'https://example.com'}}
-            ]),
-            'category': 'API测试',
-            'priority': 2,
-            'tags': 'api,test',
-            'created_by': 'test_user',
-            'is_active': True
-        }
-        defaults.update(kwargs)
-        
-        testcase = TestCase(**defaults)
-        db_session.add(testcase)
-        db_session.commit()
-        return testcase
-    
+def test_data_manager(db_session):
+    """提供测试数据管理器"""
+    from .test_data_manager import APITestDataManager
+    manager = APITestDataManager(db_session)
+    yield manager
+    # 自动清理
+    manager.cleanup_all()
+
+
+@pytest.fixture
+def create_test_testcase(test_data_manager):
+    """创建测试用例的便捷fixture"""
+    def _create_testcase(data=None, **kwargs):
+        # 如果传入了kwargs，合并到data中
+        if kwargs:
+            if data is None:
+                data = kwargs
+            else:
+                data.update(kwargs)
+        return test_data_manager.create_testcase(data)
     return _create_testcase
 
 
 @pytest.fixture
-def assert_json_structure():
-    """验证JSON响应结构的辅助函数"""
-    def _assert_structure(response_data, expected_fields):
-        """验证响应数据包含期望的字段"""
-        if isinstance(expected_fields, dict):
-            for field, field_type in expected_fields.items():
-                assert field in response_data, f"缺少字段: {field}"
-                if field_type is not None:
-                    assert isinstance(response_data[field], field_type), \
-                        f"字段 {field} 类型错误，期望 {field_type}，实际 {type(response_data[field])}"
-        elif isinstance(expected_fields, list):
-            for field in expected_fields:
-                assert field in response_data, f"缺少字段: {field}"
-    
-    return _assert_structure
+def create_test_execution(test_data_manager):
+    """创建执行记录的便捷fixture"""
+    def _create_execution(data=None):
+        return test_data_manager.create_execution(data)
+    return _create_execution
+
+
+@pytest.fixture
+def create_test_template(test_data_manager):
+    """创建模板的便捷fixture（占位符，等模板功能实现）"""
+    def _create_template(data=None):
+        # 目前返回模拟数据，等模板功能实现后再修改
+        import uuid
+        mock_template = {
+            'id': abs(hash(str(uuid.uuid4()))) % 1000000,
+            'name': data.get('name', '测试模板') if data else '测试模板',
+            'description': data.get('description', '测试模板描述') if data else '测试模板描述',
+            'category': data.get('category', 'API测试') if data else 'API测试',
+            'steps': data.get('steps', []) if data else [],
+            'created_at': '2023-12-01T10:00:00Z'
+        }
+        return mock_template
+    return _create_template
 
 
 @pytest.fixture
 def assert_api_response():
-    """验证API响应格式的辅助函数"""
-    def _assert_response(response, expected_status=200, expected_fields=None):
-        """验证API响应的基本格式"""
-        assert response.status_code == expected_status, \
-            f"状态码错误，期望 {expected_status}，实际 {response.status_code}"
+    """API响应断言助手"""
+    def _assert_response(response, expected_status=200, expected_structure=None):
+        """
+        断言API响应格式和状态
+        
+        Args:
+            response: Flask测试响应对象
+            expected_status: 期望的HTTP状态码
+            expected_structure: 期望的响应数据结构（字典）
+        
+        Returns:
+            解析后的响应数据
+        """
+        assert response.status_code == expected_status, f"期望状态码{expected_status}，实际{response.status_code}"
         
         # 验证响应是JSON格式
-        assert response.content_type == 'application/json', \
-            f"Content-Type错误，期望 application/json，实际 {response.content_type}"
+        assert response.content_type == 'application/json', f"期望JSON响应，实际{response.content_type}"
         
         data = response.get_json()
         assert data is not None, "响应体不是有效的JSON"
         
-        # 验证基本结构
+        # 验证基本响应结构
         assert 'code' in data, "响应缺少code字段"
-        assert data['code'] == expected_status, \
-            f"响应code字段错误，期望 {expected_status}，实际 {data['code']}"
+        assert 'message' in data, "响应缺少message字段"
         
-        if expected_status == 200:
-            assert 'data' in data or 'message' in data, "成功响应应该包含data或message字段"
-        else:
-            assert 'message' in data, "错误响应应该包含message字段"
+        assert data['code'] == expected_status, f"响应code字段期望{expected_status}，实际{data['code']}"
         
-        # 验证自定义字段
-        if expected_fields:
-            if 'data' in data and expected_fields:
-                if isinstance(expected_fields, dict):
-                    for field, field_type in expected_fields.items():
-                        assert field in data['data'], f"响应数据缺少字段: {field}"
-                        if field_type is not None:
-                            assert isinstance(data['data'][field], field_type), \
-                                f"字段 {field} 类型错误"
+        # 对于成功响应，默认返回data字段内容
+        if expected_status < 400:
+            if expected_structure:
+                assert 'data' in data, "成功响应缺少data字段"
+                _validate_structure(data['data'], expected_structure)
+            return data.get('data', data)  # 成功响应返回data字段内容，如果没有data字段则返回完整响应
         
-        return data
+        return data  # 错误响应返回完整响应
+    
+    def _validate_structure(actual_data, expected_structure):
+        """验证数据结构"""
+        if isinstance(expected_structure, dict):
+            for key, value_type in expected_structure.items():
+                assert key in actual_data, f"响应数据缺少字段: {key}"
+                
+                if isinstance(value_type, type):
+                    assert isinstance(actual_data[key], value_type), f"字段{key}类型错误，期望{value_type}，实际{type(actual_data[key])}"
+                elif isinstance(value_type, tuple):
+                    # 支持多种类型
+                    assert any(isinstance(actual_data[key], t) for t in value_type), f"字段{key}类型错误，期望{value_type}之一，实际{type(actual_data[key])}"
+                elif isinstance(value_type, dict):
+                    # 嵌套结构验证
+                    _validate_structure(actual_data[key], value_type)
     
     return _assert_response
+
+
+# 移除重复的fixture定义，使用上面更完整的版本
 
 
 # ==================== Steps 测试相关 Fixtures ====================

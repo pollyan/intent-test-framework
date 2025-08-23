@@ -196,8 +196,8 @@ def create_testcase():
 def get_testcase(testcase_id):
     """获取测试用例详情"""
     try:
-        # 使用SQLAlchemy查询
-        testcase = TestCase.query.filter_by(id=testcase_id, is_active=True).first()
+        # 使用SQLAlchemy查询（允许访问inactive测试用例）
+        testcase = TestCase.query.filter_by(id=testcase_id).first()
         
         if not testcase:
             return standard_error_response('测试用例不存在', 404)
@@ -222,8 +222,8 @@ def update_testcase(testcase_id):
         if not data:
             return standard_error_response('请求数据不能为空', 400)
         
-        # 使用SQLAlchemy查询
-        testcase = TestCase.query.filter_by(id=testcase_id, is_active=True).first()
+        # 使用SQLAlchemy查询（允许更新inactive测试用例）
+        testcase = TestCase.query.filter_by(id=testcase_id).first()
         
         if not testcase:
             return standard_error_response('测试用例不存在', 404)
@@ -242,6 +242,8 @@ def update_testcase(testcase_id):
             testcase.category = data['category']
         if 'priority' in data:
             testcase.priority = data['priority']
+        if 'is_active' in data:
+            testcase.is_active = data['is_active']
         
         testcase.updated_at = datetime.now()
         
