@@ -94,7 +94,7 @@ jobs:
 
     - name: Initialize test database
       run: |
-        export $(cat .env.test | xargs)
+        export $(cat .env.test | grep -v '^#' | grep -v '^$' | xargs)
         python -c "
         from web_gui.app_enhanced import create_app
         from web_gui.models import db
@@ -107,7 +107,7 @@ jobs:
 
     - name: Run API tests
       run: |
-        export $(cat .env.test | xargs)
+        export $(cat .env.test | grep -v '^#' | grep -v '^$' | xargs)
         python -m pytest tests/api/ \
           --verbose \
           --tb=short \
