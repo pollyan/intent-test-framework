@@ -271,19 +271,13 @@ def send_message(session_id):
                 'current_stage': session.current_stage
             }
             
-            # 为了向后兼容，返回用户消息的详细信息
-            if not is_activation_message:
-                # 返回用户消息详情，与测试期望的格式匹配
-                return standard_success_response(
-                    data=user_message.to_dict(),
-                    message="消息处理成功"
-                )
-            else:
-                # 激活消息返回处理结果
-                return standard_success_response(
-                    data=response_data,
-                    message="消息处理成功"
-                )
+            # 统一返回格式，包含AI响应和用户消息（如果非激活消息）
+            response_data['user_message'] = user_message.to_dict() if not is_activation_message else None
+            
+            return standard_success_response(
+                data=response_data,
+                message="消息处理成功"
+            )
             
         except Exception as ai_error:
             print(f"❌ Alex AI服务调用失败: {str(ai_error)}")
