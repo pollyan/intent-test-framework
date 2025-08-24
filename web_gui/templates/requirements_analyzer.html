@@ -1115,13 +1115,44 @@ function getStageDisplayName(stage) {
 }
 
 // AI配置相关函数
-function initializeAiConfig() {
+async function initializeAiConfig() {
     const form = document.getElementById('aiConfigForm');
     form.addEventListener('submit', handleAiConfigSubmit);
+    
+    // 加载已有的AI配置到表单中
+    await loadExistingConfig();
 }
 
-function openAiConfig() {
+// 加载已有的AI配置
+async function loadExistingConfig() {
+    try {
+        const response = await axios.get('/api/ai-configs');
+        
+        if (response.data.code === 200 && response.data.data.configs.length > 0) {
+            // 查找默认配置或第一个配置
+            const configs = response.data.data.configs;
+            const defaultConfig = configs.find(config => config.is_default) || configs[0];
+            
+            if (defaultConfig) {
+                // 填充表单字段
+                document.getElementById('configName').value = defaultConfig.config_name || '';
+                document.getElementById('baseUrl').value = defaultConfig.base_url || '';
+                document.getElementById('modelName').value = defaultConfig.model_name || '';
+                // API密钥不显示，保持为空（安全考虑）
+                
+                console.log('已加载AI配置:', defaultConfig.config_name);
+            }
+        }
+    } catch (error) {
+        console.error('加载AI配置失败:', error);
+        // 不显示错误消息，因为可能是第一次使用没有配置
+    }
+}
+
+async function openAiConfig() {
     document.getElementById('aiConfigModal').classList.add('show');
+    // 每次打开弹窗时重新加载配置
+    await loadExistingConfig();
 }
 
 function closeAiConfig() {
