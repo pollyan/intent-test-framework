@@ -263,20 +263,32 @@ class RequirementsAIService:
             # 解析响应
             if response.status_code == 200:
                 result = response.json()
+                logger.info(f"AI API响应结构: {json.dumps(result, ensure_ascii=False, indent=2)}")
                 
-                # 支持多种API格式
-                if 'choices' in result and result['choices'] and 'message' in result['choices'][0]:
-                    message = result['choices'][0]['message']
-                    if 'content' in message and message['content']:
-                        ai_message = message['content'].strip()
+                # 统一的AI响应提取逻辑
+                try:
+                    # OpenAI格式
+                    if 'choices' in result and result['choices'] and 'message' in result['choices'][0]:
+                        message = result['choices'][0]['message']
+                        if 'content' in message and message['content']:
+                            ai_message = message['content'].strip()
+                        else:
+                            # Gemini API可能返回空content或缺少content字段
+                            logger.warning(f"AI响应message缺少content或content为空: {message}")
+                            ai_message = "AI响应内容为空，请重新尝试。"
+                    elif 'candidates' in result:
+                        # Google AI格式
+                        ai_message = result['candidates'][0]['content']['parts'][0]['text'].strip()
                     else:
-                        logger.warning(f"AI响应message缺少content或content为空: {message}")
-                        ai_message = "AI响应内容为空，请重新尝试。"
-                else:
-                    logger.error(f"AI API响应格式异常: {result}")
-                    raise Exception(f"AI API响应格式异常，请检查API配置")
-                
-                return ai_message
+                        # 未识别的格式
+                        logger.error(f"未知的API响应格式: {result}")
+                        raise Exception(f"无法解析AI响应格式，未找到choices或candidates字段")
+                        
+                    return ai_message
+                    
+                except (KeyError, IndexError, TypeError) as e:
+                    logger.error(f"解析AI响应时发生错误: {e}, 完整响应: {result}")
+                    return "抱歉，AI响应格式解析失败。请检查API配置或稍后重试。"
             else:
                 error_msg = f"AI API调用失败: {response.status_code} - {response.text}"
                 logger.error(error_msg)
