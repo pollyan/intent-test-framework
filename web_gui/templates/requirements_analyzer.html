@@ -340,10 +340,7 @@
     margin: 0 auto;
 }
 
-.connect-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-}
+
 
 .connect-prompt h3 {
     font-size: 20px;
@@ -759,25 +756,58 @@ focus: 执行深度需求澄清，生成高质量PRD、Epic和用户故事
 }
 
 // 显示连接AI助手的提示
-function showConnectPrompt() {
-    const messagesArea = document.getElementById('messagesArea');
-    messagesArea.innerHTML = `
-        <div class="connect-prompt">
-            <div class="connect-icon">🤖</div>
-            <h3>准备连接AI助手Alex</h3>
-            <p>Alex是您的智能需求分析师，专门帮助您从模糊的想法中提炼出清晰、完整的产品需求文档。</p>
-            <div class="connect-features">
-                <div class="feature">🔍 智能需求澄清</div>
-                <div class="feature">📋 自动PRD生成</div>
-                <div class="feature">📚 Epic智能分解</div>
-                <div class="feature">📝 Story自动创建</div>
-            </div>
-            <button class="connect-btn" onclick="connectAIAssistant()">连接AI助手Alex</button>
-            <p class="connect-note">💡 点击连接后，Alex将自动激活并向您问好</p>
-        </div>
-    `;
+async function showConnectPrompt() {
+    // 先检查是否有AI配置
+    const hasAIConfig = await checkAIConfiguration();
     
-    updateConnectionStatus('ready', '准备连接');
+    const messagesArea = document.getElementById('messagesArea');
+    
+    if (!hasAIConfig) {
+        // 没有AI配置，显示配置提示
+        messagesArea.innerHTML = `
+            <div class="connect-prompt">
+                <h3>需要配置AI服务</h3>
+                <p>要使用Alex智能需求分析师，需要先配置AI服务连接。</p>
+                <div class="connect-features">
+                    <div class="feature">智能需求澄清</div>
+                    <div class="feature">自动PRD生成</div>
+                    <div class="feature">Epic智能分解</div>
+                    <div class="feature">Story自动创建</div>
+                </div>
+                <button class="connect-btn" onclick="openAiConfig()">配置AI服务</button>
+                <p class="connect-note">配置完成后即可连接Alex助手</p>
+            </div>
+        `;
+        updateConnectionStatus('config-needed', '需要配置AI服务');
+    } else {
+        // 有AI配置，显示连接提示
+        messagesArea.innerHTML = `
+            <div class="connect-prompt">
+                <h3>准备连接AI助手Alex</h3>
+                <p>Alex是您的智能需求分析师，专门帮助您从模糊的想法中提炼出清晰、完整的产品需求文档。</p>
+                <div class="connect-features">
+                    <div class="feature">智能需求澄清</div>
+                    <div class="feature">自动PRD生成</div>
+                    <div class="feature">Epic智能分解</div>
+                    <div class="feature">Story自动创建</div>
+                </div>
+                <button class="connect-btn" onclick="connectAIAssistant()">连接AI助手Alex</button>
+                <p class="connect-note">点击连接后，Alex将自动激活并向您问好</p>
+            </div>
+        `;
+        updateConnectionStatus('ready', '准备连接');
+    }
+}
+
+// 检查AI配置是否存在
+async function checkAIConfiguration() {
+    try {
+        const response = await axios.get('/api/ai-configs');
+        return response.data.code === 200 && response.data.data && response.data.data.length > 0;
+    } catch (error) {
+        console.error('检查AI配置失败:', error);
+        return false;
+    }
 }
 
 // 发送消息
@@ -858,10 +888,23 @@ function updateConnectionStatus(status, text) {
     const statusText = document.getElementById('statusText');
     
     statusDot.className = 'status-dot';
-    if (status === 'connected') {
-        statusDot.style.background = '#28a745';
-    } else {
-        statusDot.style.background = '#dc3545';
+    switch(status) {
+        case 'connected':
+            statusDot.style.background = '#28a745';
+            break;
+        case 'connecting':
+            statusDot.style.background = '#ffc107';
+            break;
+        case 'ready':
+            statusDot.style.background = '#17a2b8';
+            break;
+        case 'config-needed':
+            statusDot.style.background = '#6c757d';
+            break;
+        case 'error':
+        default:
+            statusDot.style.background = '#dc3545';
+            break;
     }
     
     statusText.textContent = text;
@@ -997,8 +1040,8 @@ async function handleAiConfigSubmit(event) {
         if (response.data.code === 200) {
             showMessage('AI配置保存成功！现在可以开始使用AI助手了', 'success');
             closeAiConfig();
-            // 重新创建会话以使用新配置
-            createSession();
+            // 重新显示连接提示，这次应该显示连接按钮
+            showConnectPrompt();
         } else {
             showMessage('保存失败: ' + response.data.message, 'error');
         }
