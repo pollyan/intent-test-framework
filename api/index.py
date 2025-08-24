@@ -1400,6 +1400,187 @@ try:
                 500,
             )
 
+    # 需求分析消息处理API (替代WebSocket)
+    @app.route("/api/requirements/sessions/<session_id>/send-message", methods=["POST"])
+    def send_requirements_message(session_id):
+        """发送需求分析消息并获取AI响应 (Vercel专用，替代WebSocket)"""
+        try:
+            from flask import request
+            import json
+            from datetime import datetime
+            
+            data = request.get_json() or {}
+            content = data.get("content", "").strip()
+            
+            if not content:
+                return jsonify({"code": 400, "message": "消息内容不能为空"}), 400
+                
+            if len(content) > 2000:
+                return jsonify({"code": 400, "message": "消息内容不能超过2000字符"}), 400
+            
+            # 验证会话存在
+            from web_gui.models import RequirementsSession, RequirementsMessage
+            
+            session = RequirementsSession.query.get(session_id)
+            if not session:
+                return jsonify({"code": 404, "message": "会话不存在"}), 404
+                
+            if session.session_status != "active":
+                return jsonify({"code": 400, "message": "会话不在活跃状态"}), 400
+            
+            # 保存用户消息
+            user_message = RequirementsMessage(
+                session_id=session_id,
+                message_type="user",
+                content=content,
+                message_metadata=json.dumps({
+                    "stage": session.current_stage,
+                    "char_count": len(content),
+                    "source": "http_api"
+                })
+            )
+            
+            db.session.add(user_message)
+            db.session.commit()
+            
+            # 调用AI服务处理
+            try:
+                from web_gui.services.requirements_ai_service import RequirementsAIService
+                
+                ai_service = RequirementsAIService()
+                
+                # 获取会话上下文
+                session_context = {
+                    "ai_context": json.loads(session.ai_context or "{}"),
+                    "consensus_content": json.loads(session.consensus_content or "{}")
+                }
+                
+                # 调用AI分析
+                ai_result = ai_service.analyze_user_requirement(
+                    user_message=content,
+                    session_context=session_context,
+                    project_name=session.project_name or "未命名项目",
+                    current_stage=session.current_stage
+                )
+                
+                # 保存AI响应消息
+                ai_message = RequirementsMessage(
+                    session_id=session_id,
+                    message_type="ai",
+                    content=ai_result.get("ai_response", "AI响应处理中..."),
+                    message_metadata=json.dumps({
+                        "stage": ai_result.get("stage", session.current_stage),
+                        "model_used": ai_result.get("model_used", "unknown"),
+                        "processing_time": ai_result.get("processing_time"),
+                        "alex_persona": ai_result.get("alex_persona", True)
+                    })
+                )
+                
+                db.session.add(ai_message)
+                
+                # 更新会话上下文
+                if ai_result.get("ai_context"):
+                    session.ai_context = json.dumps(ai_result["ai_context"])
+                if ai_result.get("consensus_content"):
+                    session.consensus_content = json.dumps(ai_result["consensus_content"])
+                
+                session.updated_at = datetime.utcnow()
+                db.session.commit()
+                
+                return jsonify({
+                    "code": 200,
+                    "message": "消息处理成功",
+                    "data": {
+                        "user_message": user_message.to_dict(),
+                        "ai_message": ai_message.to_dict(),
+                        "session_updated": True
+                    }
+                })
+                
+            except Exception as ai_error:
+                print(f"AI服务调用失败: {ai_error}")
+                
+                # 保存错误消息
+                error_message = RequirementsMessage(
+                    session_id=session_id,
+                    message_type="system",
+                    content=f"抱歉，AI分析服务遇到了问题：{str(ai_error)}。请稍后重试，或重新描述您的需求。",
+                    message_metadata=json.dumps({
+                        "error_type": "ai_service_error",
+                        "error_details": str(ai_error),
+                        "stage": session.current_stage
+                    })
+                )
+                
+                db.session.add(error_message)
+                db.session.commit()
+                
+                return jsonify({
+                    "code": 200,
+                    "message": "消息已保存，但AI服务暂时不可用",
+                    "data": {
+                        "user_message": user_message.to_dict(),
+                        "ai_message": error_message.to_dict(),
+                        "ai_error": True
+                    }
+                })
+                
+        except Exception as e:
+            print(f"发送需求分析消息失败: {e}")
+            try:
+                db.session.rollback()
+            except:
+                pass
+            return jsonify({"code": 500, "message": f"处理消息失败: {str(e)}"}), 500
+
+    # 轮询获取最新消息API
+    @app.route("/api/requirements/sessions/<session_id>/poll-messages", methods=["GET"])
+    def poll_requirements_messages(session_id):
+        """轮询获取会话的最新消息 (Vercel专用，替代WebSocket)"""
+        try:
+            from flask import request
+            
+            # 获取查询参数
+            since_timestamp = request.args.get("since")  # ISO格式时间戳
+            limit = min(int(request.args.get("limit", 10)), 50)  # 限制最多50条
+            
+            # 验证会话存在
+            from web_gui.models import RequirementsSession, RequirementsMessage
+            
+            session = RequirementsSession.query.get(session_id)
+            if not session:
+                return jsonify({"code": 404, "message": "会话不存在"}), 404
+            
+            # 构建查询
+            query = RequirementsMessage.query.filter_by(session_id=session_id)
+            
+            if since_timestamp:
+                try:
+                    from datetime import datetime
+                    since_dt = datetime.fromisoformat(since_timestamp.replace('Z', '+00:00'))
+                    query = query.filter(RequirementsMessage.created_at > since_dt)
+                except ValueError:
+                    pass  # 忽略无效的时间戳格式
+            
+            # 获取最新消息
+            messages = query.order_by(RequirementsMessage.created_at.desc()).limit(limit).all()
+            messages.reverse()  # 按时间正序返回
+            
+            return jsonify({
+                "code": 200,
+                "message": "获取消息成功",
+                "data": {
+                    "messages": [msg.to_dict() for msg in messages],
+                    "session_info": session.to_dict(),
+                    "total": len(messages),
+                    "has_more": len(messages) == limit
+                }
+            })
+            
+        except Exception as e:
+            print(f"轮询消息失败: {e}")
+            return jsonify({"code": 500, "message": f"获取消息失败: {str(e)}"}), 500
+
     # 数据库连接测试
     @app.route("/api/db-test")
     def db_test():

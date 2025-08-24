@@ -583,8 +583,104 @@ document.addEventListener('DOMContentLoaded', function() {
     createSession();
 });
 
-// WebSocket连接
+// 环境检测
+function isVercelEnvironment() {
+    // 检测是否在Vercel环境中（没有WebSocket支持）
+    return window.location.hostname.includes('.vercel.app') || 
+           window.location.hostname.includes('vercel.com') ||
+           !window.io; // 如果socket.io库不可用
+}
+
+// HTTP方式发送消息（Vercel环境专用）
+async function sendMessageViaHTTP(content) {
+    try {
+        const response = await axios.post(`/api/requirements/sessions/${currentSessionId}/send-message`, {
+            content: content
+        });
+        
+        if (response.data.code === 200) {
+            const data = response.data.data;
+            
+            // 显示用户消息
+            displayMessage(data.user_message);
+            
+            // 显示AI响应
+            if (data.ai_message) {
+                displayMessage(data.ai_message);
+                hideAiTyping();
+                
+                // 如果是AI消息且包含Alex的回应，更新连接状态
+                if (data.ai_message.message_type === 'ai' && data.ai_message.content.includes('Alex')) {
+                    updateConnectionStatus('connected', 'AI助手Alex已激活');
+                }
+            }
+            
+            return true;
+        } else {
+            throw new Error(response.data.message || '发送失败');
+        }
+    } catch (error) {
+        console.error('HTTP发送消息失败:', error);
+        hideAiTyping();
+        showMessage('发送消息失败: ' + (error.response?.data?.message || error.message), 'error');
+        return false;
+    }
+}
+
+// 轮询获取新消息（Vercel环境专用）
+let lastMessageTimestamp = null;
+let pollingInterval = null;
+
+function startMessagePolling() {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+    }
+    
+    pollingInterval = setInterval(async () => {
+        try {
+            const params = new URLSearchParams();
+            if (lastMessageTimestamp) {
+                params.append('since', lastMessageTimestamp);
+            }
+            params.append('limit', '10');
+            
+            const response = await axios.get(`/api/requirements/sessions/${currentSessionId}/poll-messages?${params}`);
+            
+            if (response.data.code === 200) {
+                const messages = response.data.data.messages;
+                
+                messages.forEach(message => {
+                    displayMessage(message);
+                    lastMessageTimestamp = message.created_at;
+                    
+                    // 如果是AI消息且包含Alex的回应，更新连接状态
+                    if (message.message_type === 'ai' && message.content.includes('Alex')) {
+                        updateConnectionStatus('connected', 'AI助手Alex已激活');
+                        hideAiTyping();
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('轮询消息失败:', error);
+        }
+    }, 2000); // 每2秒轮询一次
+}
+
+function stopMessagePolling() {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+    }
+}
+
+// WebSocket连接（本地环境）
 function initializeWebSocket() {
+    if (isVercelEnvironment()) {
+        console.log('检测到Vercel环境，使用HTTP轮询模式');
+        updateConnectionStatus('ready', '准备就绪');
+        return;
+    }
+    
     socket = io();
     
     socket.on('connect', function() {
@@ -674,10 +770,12 @@ async function createSession() {
             currentSessionId = response.data.data.id;
             console.log('会话创建成功:', currentSessionId);
             
-            // 加入WebSocket房间
-            socket.emit('join_requirements_session', {
-                session_id: currentSessionId
-            });
+            // 加入WebSocket房间（仅本地环境）
+            if (!isVercelEnvironment()) {
+                socket.emit('join_requirements_session', {
+                    session_id: currentSessionId
+                });
+            }
             
             // 显示连接AI助手的提示
             showConnectPrompt();
@@ -732,11 +830,17 @@ focus: 执行深度需求澄清，生成高质量PRD、Epic和用户故事
 
 现在请以Alex的身份问好并运行 *help 命令。`;
         
-        // 通过WebSocket发送激活消息
-        socket.emit('requirements_message', {
-            session_id: currentSessionId,
-            content: activationMessage
-        });
+        // 检测环境并选择通信方式
+        if (isVercelEnvironment()) {
+            await sendMessageViaHTTP(activationMessage);
+            startMessagePolling(); // 开始轮询新消息
+        } else {
+            // 本地环境使用WebSocket
+            socket.emit('requirements_message', {
+                session_id: currentSessionId,
+                content: activationMessage
+            });
+        }
         
         // 显示用户的连接请求
         displayMessage({
@@ -815,26 +919,19 @@ async function checkAIConfiguration() {
 }
 
 // 发送消息
-function sendMessage() {
+async function sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const content = messageInput.value.trim();
     
-    if (!content || !currentSessionId || !isConnected) {
+    if (!content || !currentSessionId) {
         return;
     }
     
-    // 显示用户消息
-    displayMessage({
-        message_type: 'user',
-        content: content,
-        created_at: new Date().toISOString()
-    });
-    
-    // 发送到服务器
-    socket.emit('requirements_message', {
-        session_id: currentSessionId,
-        content: content
-    });
+    // 检查连接状态（Vercel环境不需要WebSocket连接）
+    if (!isVercelEnvironment() && !isConnected) {
+        showMessage('WebSocket未连接，请稍后重试', 'error');
+        return;
+    }
     
     // 清空输入框
     messageInput.value = '';
@@ -844,6 +941,31 @@ function sendMessage() {
     
     // 显示AI思考状态
     showAiTyping();
+    
+    try {
+        if (isVercelEnvironment()) {
+            // Vercel环境使用HTTP API
+            await sendMessageViaHTTP(content);
+        } else {
+            // 本地环境使用WebSocket
+            // 显示用户消息
+            displayMessage({
+                message_type: 'user',
+                content: content,
+                created_at: new Date().toISOString()
+            });
+            
+            // 发送到服务器
+            socket.emit('requirements_message', {
+                session_id: currentSessionId,
+                content: content
+            });
+        }
+    } catch (error) {
+        console.error('发送消息失败:', error);
+        hideAiTyping();
+        showMessage('发送消息失败: ' + error.message, 'error');
+    }
 }
 
 // 显示消息
