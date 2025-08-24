@@ -24,22 +24,22 @@ except ImportError:
 # 创建蓝图
 ai_configs_bp = Blueprint("ai_configs", __name__, url_prefix="/api/ai-configs")
 
-# 支持的AI服务商配置
-PROVIDER_CONFIGS = {
-    "openai": {
-        "name": "OpenAI",
-        "default_base_url": "https://api.openai.com/v1",
-        "default_models": ["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"]
+# AI配置常用模板（仅供参考）
+AI_CONFIG_EXAMPLES = {
+    "openai_gpt4": {
+        "name": "OpenAI GPT-4",
+        "base_url": "https://api.openai.com/v1",
+        "models": ["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"]
     },
-    "dashscope": {
-        "name": "阿里云DashScope",
-        "default_base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        "default_models": ["qwen-vl-max-latest", "qwen-turbo", "qwen-plus"]
+    "dashscope_qwen": {
+        "name": "阿里云通义千问",
+        "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "models": ["qwen-vl-max-latest", "qwen-turbo", "qwen-plus"]
     },
-    "claude": {
-        "name": "Anthropic Claude",
-        "default_base_url": "https://api.anthropic.com",
-        "default_models": ["claude-3-5-sonnet-20241022", "claude-3-haiku-20240307"]
+    "claude_api": {
+        "name": "Claude API",
+        "base_url": "https://api.anthropic.com",
+        "models": ["claude-3-5-sonnet-20241022", "claude-3-haiku-20240307"]
     }
 }
 
@@ -72,27 +72,16 @@ def create_config():
         data = request.get_json()
         
         # 验证必要字段
-        required_fields = ["config_name", "provider", "api_key", "model_name"]
+        required_fields = ["config_name", "api_key", "base_url", "model_name"]
         for field in required_fields:
             if not data.get(field):
                 raise ValidationError(f"缺少必要字段: {field}")
         
-        # 验证服务商
-        provider = data.get("provider").lower()
-        if provider not in PROVIDER_CONFIGS:
-            raise ValidationError(f"不支持的服务商: {provider}")
-        
-        # 设置默认base_url（如果未提供）
-        base_url = data.get("base_url")
-        if not base_url:
-            base_url = PROVIDER_CONFIGS[provider]["default_base_url"]
-        
         # 创建配置
         config = RequirementsAIConfig(
             config_name=data["config_name"].strip(),
-            provider=provider,
             api_key=data["api_key"].strip(),
-            base_url=base_url,
+            base_url=data["base_url"].strip(),
             model_name=data["model_name"].strip(),
             is_default=data.get("is_default", False),
             is_active=True
@@ -132,12 +121,6 @@ def update_config(config_id):
         # 更新基本字段
         if "config_name" in data:
             config.config_name = data["config_name"].strip()
-        
-        if "provider" in data:
-            provider = data["provider"].lower()
-            if provider not in PROVIDER_CONFIGS:
-                raise ValidationError(f"不支持的服务商: {provider}")
-            config.provider = provider
         
         if "api_key" in data:
             config.api_key = data["api_key"].strip()
@@ -214,13 +197,13 @@ def delete_config(config_id):
         return standard_error_response(f"删除配置失败: {str(e)}", 500)
 
 
-@ai_configs_bp.route("/providers", methods=["GET"])
+@ai_configs_bp.route("/examples", methods=["GET"])
 @log_api_call
-def get_providers():
-    """获取支持的AI服务商信息"""
+def get_config_examples():
+    """获取AI配置示例模板"""
     return standard_success_response(
-        data=PROVIDER_CONFIGS,
-        message="获取服务商信息成功"
+        data=AI_CONFIG_EXAMPLES,
+        message="获取配置示例成功"
     )
 
 

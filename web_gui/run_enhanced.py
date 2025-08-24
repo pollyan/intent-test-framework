@@ -93,7 +93,7 @@ def init_database():
 
     try:
         # 导入应用和数据库
-        from app_enhanced import init_app, init_database as app_init_db
+        from web_gui.app_enhanced import init_app, init_database as app_init_db
 
         # 调用应用的初始化函数
         if not app_init_db():
@@ -104,7 +104,7 @@ def init_database():
         
         with app.app_context():
             # 检查是否需要创建示例数据
-            from models import TestCase, Template
+            from web_gui.models import TestCase, Template, db
 
             if TestCase.query.count() == 0:
                 create_sample_data(db)

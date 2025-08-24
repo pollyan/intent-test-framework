@@ -37,8 +37,7 @@ def create_ai_config_table():
                 if not existing_default:
                     # 创建默认配置（使用环境变量或占位符）
                     default_config = RequirementsAIConfig(
-                        config_name="默认DashScope配置",
-                        provider="dashscope",
+                        config_name="默认AI配置",
                         api_key=os.getenv("OPENAI_API_KEY", "your_api_key_here"),
                         base_url=os.getenv("OPENAI_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1"),
                         model_name=os.getenv("MIDSCENE_MODEL_NAME", "qwen-vl-max-latest"),

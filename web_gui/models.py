@@ -666,15 +666,14 @@ class VariableReference(db.Model):
 
 
 class RequirementsAIConfig(db.Model):
-    """需求分析AI配置模型 - 简化版"""
+    """需求分析AI配置模型 - 用户自定义版"""
     
     __tablename__ = "requirements_ai_configs"
     
     id = db.Column(db.Integer, primary_key=True)
-    config_name = db.Column(db.String(255), nullable=False)
-    provider = db.Column(db.String(50), nullable=False)  # openai, dashscope, claude
+    config_name = db.Column(db.String(255), nullable=False)  # 用户自定义配置名称
     api_key = db.Column(db.Text, nullable=False)
-    base_url = db.Column(db.String(500))
+    base_url = db.Column(db.String(500), nullable=False)  # 改为必填
     model_name = db.Column(db.String(100), nullable=False)
     is_default = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
@@ -688,7 +687,6 @@ class RequirementsAIConfig(db.Model):
         return {
             "id": self.id,
             "config_name": self.config_name,
-            "provider": self.provider,
             "api_key_masked": self._mask_api_key(self.api_key),  # 只返回脱敏的密钥
             "base_url": self.base_url,
             "model_name": self.model_name,
@@ -711,8 +709,7 @@ class RequirementsAIConfig(db.Model):
         return {
             "api_key": self.api_key,
             "base_url": self.base_url,
-            "model_name": self.model_name,
-            "provider": self.provider
+            "model_name": self.model_name
         }
     
     @classmethod

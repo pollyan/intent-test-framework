@@ -471,33 +471,29 @@
     <div class="modal">
         <div class="modal-header">
             <div class="modal-title">AI服务配置</div>
-            <div class="modal-subtitle">配置你的AI服务提供商设置</div>
+            <div class="modal-subtitle">配置你的AI助手连接设置</div>
         </div>
         
         <form id="aiConfigForm">
             <div class="form-group">
-                <label class="form-label">服务提供商</label>
-                <select class="form-select" id="aiProvider" name="provider">
-                    <option value="openai">OpenAI GPT</option>
-                    <option value="dashscope">阿里云灵积 DashScope</option>
-                    <option value="claude">Anthropic Claude</option>
-                </select>
+                <label class="form-label">配置名称</label>
+                <input type="text" class="form-input" id="configName" name="config_name" placeholder="给你的AI配置起个名字，如：我的OpenAI配置" required>
             </div>
             
             <div class="form-grid">
                 <div class="form-group">
                     <label class="form-label">API密钥</label>
-                    <input type="password" class="form-input" id="apiKey" name="api_key" placeholder="输入你的API密钥">
+                    <input type="password" class="form-input" id="apiKey" name="api_key" placeholder="输入你的API密钥" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">模型名称</label>
-                    <input type="text" class="form-input" id="modelName" name="model_name" placeholder="如: gpt-4o">
+                    <input type="text" class="form-input" id="modelName" name="model_name" placeholder="如: gpt-4o, qwen-vl-max-latest" required>
                 </div>
             </div>
             
             <div class="form-group">
-                <label class="form-label">API基础URL (可选)</label>
-                <input type="url" class="form-input" id="baseUrl" name="base_url" placeholder="如: https://api.openai.com/v1">
+                <label class="form-label">API基础URL</label>
+                <input type="url" class="form-input" id="baseUrl" name="base_url" placeholder="如: https://api.openai.com/v1" required>
             </div>
             
             <div class="modal-actions">
@@ -521,6 +517,7 @@ let isConnected = false;
 document.addEventListener('DOMContentLoaded', function() {
     initializeWebSocket();
     initializeUI();
+    initializeAiConfig();
     createSession();
 });
 
@@ -599,13 +596,11 @@ function initializeUI() {
     });
 }
 
-// 创建新会话
+// 创建新会话  
 async function createSession() {
     try {
-        const projectName = prompt('请输入项目名称:') || '未命名项目';
-        
         const response = await axios.post('/api/requirements/sessions', {
-            project_name: projectName
+            project_name: '需求分析会话'  // 使用固定的默认名称
         });
         
         if (response.data.code === 200) {
@@ -791,6 +786,11 @@ function getStageDisplayName(stage) {
 }
 
 // AI配置相关函数
+function initializeAiConfig() {
+    const form = document.getElementById('aiConfigForm');
+    form.addEventListener('submit', handleAiConfigSubmit);
+}
+
 function openAiConfig() {
     document.getElementById('aiConfigModal').classList.add('show');
 }
@@ -800,7 +800,52 @@ function closeAiConfig() {
 }
 
 function testAiConfig() {
-    showMessage('AI配置测试功能待实现', 'warning');
+    const configName = document.getElementById('configName').value;
+    const apiKey = document.getElementById('apiKey').value;
+    const baseUrl = document.getElementById('baseUrl').value;
+    const modelName = document.getElementById('modelName').value;
+    
+    if (!configName || !apiKey || !baseUrl || !modelName) {
+        showMessage('请填写完整的配置信息', 'error');
+        return;
+    }
+    
+    // 简单的配置验证
+    if (!baseUrl.startsWith('http')) {
+        showMessage('API基础URL必须以http://或https://开头', 'error');
+        return;
+    }
+    
+    showMessage('配置格式验证通过！', 'success');
+}
+
+async function handleAiConfigSubmit(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const configData = {
+        config_name: formData.get('config_name'),
+        api_key: formData.get('api_key'),
+        base_url: formData.get('base_url'),
+        model_name: formData.get('model_name'),
+        is_default: true // 新创建的配置设为默认
+    };
+    
+    try {
+        const response = await axios.post('/api/ai-configs', configData);
+        
+        if (response.data.code === 200) {
+            showMessage('AI配置保存成功！现在可以开始使用AI助手了', 'success');
+            closeAiConfig();
+            // 重新创建会话以使用新配置
+            createSession();
+        } else {
+            showMessage('保存失败: ' + response.data.message, 'error');
+        }
+    } catch (error) {
+        console.error('保存AI配置失败:', error);
+        showMessage('保存失败: ' + (error.response?.data?.message || error.message), 'error');
+    }
 }
 
 // 工具函数
