@@ -425,6 +425,106 @@
     font-style: italic;
 }
 
+/* 标准markdown元素样式 */
+.ai-formatted h1, .ai-formatted h2 {
+    color: #2c3e50;
+    margin: 16px 0 12px 0;
+    font-weight: 600;
+}
+
+.ai-formatted h1 {
+    font-size: 24px;
+    border-bottom: 2px solid #e8e8e8;
+    padding-bottom: 8px;
+}
+
+.ai-formatted h2 {
+    font-size: 20px;
+    border-bottom: 1px solid #e8e8e8;
+    padding-bottom: 4px;
+}
+
+.ai-formatted ul, .ai-formatted ol {
+    margin: 12px 0;
+    padding-left: 24px;
+}
+
+.ai-formatted li {
+    margin: 4px 0;
+    line-height: 1.6;
+}
+
+.ai-formatted blockquote {
+    border-left: 4px solid #007bff;
+    margin: 16px 0;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    color: #555555;
+    font-style: italic;
+}
+
+.ai-formatted pre {
+    background: #f6f8fa;
+    border: 1px solid #e1e4e8;
+    border-radius: 6px;
+    padding: 16px;
+    margin: 16px 0;
+    overflow-x: auto;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.ai-formatted pre code {
+    background: none;
+    padding: 0;
+    border-radius: 0;
+    color: inherit;
+}
+
+.ai-formatted table {
+    border-collapse: collapse;
+    margin: 16px 0;
+    width: 100%;
+    max-width: 100%;
+}
+
+.ai-formatted table th,
+.ai-formatted table td {
+    border: 1px solid #e1e4e8;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.ai-formatted table th {
+    background: #f6f8fa;
+    font-weight: 600;
+}
+
+.ai-formatted table tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+.ai-formatted del {
+    color: #6a737d;
+    text-decoration: line-through;
+}
+
+.ai-formatted hr {
+    border: none;
+    border-top: 1px solid #e1e4e8;
+    margin: 24px 0;
+}
+
+.ai-formatted a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.ai-formatted a:hover {
+    text-decoration: underline;
+}
+
 /* AI处理中动效 */
 .ai-processing {
     display: none;
@@ -756,6 +856,10 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- 引入marked.js用于完整markdown解析 -->
+<script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
+<!-- 引入DOMPurify用于HTML安全过滤 -->
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js"></script>
 <script>
 // 全局变量
 let socket = null;
@@ -1540,50 +1644,104 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// 增强的Markdown解析函数，专门处理Alex的回复格式
+// 增强的Markdown解析函数，结合marked.js和Alex特殊格式
 function parseMarkdown(text) {
+    if (!text) return '';
+    
+    // 检查是否存在marked库
+    if (typeof marked === 'undefined') {
+        console.warn('marked.js未加载，使用简化解析');
+        return parseMarkdownSimple(text);
+    }
+    
+    // 先处理Alex的特殊格式，再交给marked.js处理标准markdown
+    let processedText = text;
+    
+    // 1. 预处理Alex特有的格式，转换为标准markdown或保留标记
+    processedText = processedText
+        // Alex标题格式转为标准markdown标题
+        .replace(/^=== (.*?) ===/gm, '### $1')
+        
+        // Alex命令项转为代码块+描述
+        .replace(/^(\d+)\.\s+`([^`]+)`\s*$/gm, '$1. `$2`')
+        
+        // 带描述的命令项
+        .replace(/^(\d+)\.\s+`([^`]+)`\s*\*\s*\*\*(.*?)\*\*[：:]\s*(.*?)$/gm, 
+            '$1. `$2`\n   **$3：** $4')
+        
+        // 功能描述项保持markdown格式
+        .replace(/^\*\s+\*\*(.*?)\*\*[：:]\s*(.*?)$/gm, '* **$1：** $2');
+    
+    // 2. 使用marked.js解析标准markdown
+    try {
+        // 配置marked选项
+        marked.setOptions({
+            breaks: true,        // 支持换行
+            gfm: true,          // 启用GitHub Flavored Markdown
+            sanitize: false,    // 不清理HTML，我们用DOMPurify
+            silent: false       // 显示警告信息
+        });
+        
+        let html = marked.parse(processedText);
+        
+        // 3. 应用Alex特定的CSS类
+        html = html
+            .replace(/<h3>/g, '<h3 class="ai-title">')
+            .replace(/<h4>/g, '<h4 class="ai-subtitle">')
+            .replace(/<code>/g, '<code class="inline-code">')
+            .replace(/<p>/g, '<p class="ai-paragraph">')
+            .replace(/<li>/g, '<li class="ai-list-item">');
+        
+        // 4. 使用DOMPurify清理HTML（如果可用）
+        if (typeof DOMPurify !== 'undefined') {
+            html = DOMPurify.sanitize(html, {
+                ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'strong', 'em', 'code', 'pre', 'ul', 'ol', 'li', 'blockquote', 'a', 'del', 'hr', 'table', 'thead', 'tbody', 'tr', 'td', 'th'],
+                ALLOWED_ATTR: ['href', 'title', 'class']
+            });
+        }
+        
+        return html;
+        
+    } catch (error) {
+        console.error('marked.js解析失败:', error);
+        return parseMarkdownSimple(text);
+    }
+}
+
+// 简化的markdown解析器（备用）
+function parseMarkdownSimple(text) {
     if (!text) return '';
     
     let html = escapeHtml(text);
     
-    // 按顺序替换Markdown语法，避免冲突
+    // 基础markdown语法支持
     html = html
-        // 1. 处理标题 === title ===
-        .replace(/^=== (.*?) ===/gm, '<h3 class="ai-title">$1</h3>')
+        // 标题
+        .replace(/^### (.*?)$/gm, '<h3 class="ai-title">$1</h3>')
+        .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
+        .replace(/^# (.*?)$/gm, '<h1>$1</h1>')
         
-        // 2. 处理Alex命令列表项 数字. `*command`
+        // Alex特殊格式
+        .replace(/^=== (.*?) ===/gm, '<h3 class="ai-title">$1</h3>')
         .replace(/^(\d+)\.\s+`([^`]+)`\s*$/gm, '<div class="ai-command-item"><span class="ai-command-num">$1.</span><code class="ai-command">$2</code></div>')
         
-        // 3. 处理带描述的命令项 数字. `*command` * **功能**：描述
-        .replace(/^(\d+)\.\s+`([^`]+)`\s*\*\s*\*\*(.*?)\*\*[：:]\s*(.*?)$/gm, 
-            '<div class="ai-command-item"><span class="ai-command-num">$1.</span><code class="ai-command">$2</code><div class="ai-feature-item"><span class="ai-feature-label">$3：</span><span class="ai-feature-desc">$4</span></div></div>')
-        
-        // 4. 处理功能描述项 * **功能**：
-        .replace(/^\*\s+\*\*(.*?)\*\*[：:]\s*(.*?)$/gm, '<div class="ai-feature-item"><span class="ai-feature-label">$1：</span><span class="ai-feature-desc">$2</span></div>')
-        
-        // 5. 处理二级标题模式（粗体+冒号）
-        .replace(/^\*\*(.*?)：?\*\*$/gm, '<h4 class="ai-subtitle">$1</h4>')
-        
-        // 6. 处理普通列表项 * text
+        // 列表
         .replace(/^\*\s+(.*)$/gm, '<div class="ai-list-item">• $1</div>')
+        .replace(/^-\s+(.*)$/gm, '<div class="ai-list-item">• $1</div>')
+        .replace(/^(\d+)\.\s+(.*)$/gm, '<div class="ai-list-item">$1. $2</div>')
         
-        // 7. 处理行内代码 `code`（避免与命令冲突）
-        .replace(/`([^`*]+)`/g, '<code class="inline-code">$1</code>')
-        
-        // 8. 处理粗体 **text**
+        // 格式化
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
+        .replace(/~~(.*?)~~/g, '<del>$1</del>')
         
-        // 9. 处理斜体 *text*（最后处理避免与列表冲突）
-        .replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, '<em>$1</em>')
-        
-        // 10. 处理段落分隔（双换行转为段落）
+        // 段落和换行
         .replace(/\n\n/g, '</p><p class="ai-paragraph">')
-        
-        // 11. 处理单换行
         .replace(/\n/g, '<br>');
     
-    // 包装在段落中
-    if (html.includes('<p class="ai-paragraph">')) {
+    // 包装段落
+    if (html && !html.startsWith('<')) {
         html = '<p class="ai-paragraph">' + html + '</p>';
     }
     
