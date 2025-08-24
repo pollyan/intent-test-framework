@@ -259,7 +259,7 @@ class RequirementsAIService:
                 api_url,
                 headers=headers,
                 json=data,
-                timeout=30
+                timeout=180  # 增加到3分钟，避免长回复被截断
             )
             
             # 解析响应
@@ -332,7 +332,7 @@ class RequirementsAIService:
                 api_url,
                 headers=headers,
                 json=data,
-                timeout=30
+                timeout=180  # 增加到3分钟，避免长回复被截断
             )
             
             if response.status_code != 200:
