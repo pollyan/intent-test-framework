@@ -209,6 +209,18 @@ def local_proxy_page():
         return jsonify({"error": f"无法加载本地代理页面: {str(e)}"}), 500
 
 
+@app.route("/requirements-analyzer")
+@app.route("/requirements")  # 备选路由
+def requirements_analyzer_page():
+    """智能需求分析页面"""
+    try:
+        from flask import render_template
+        
+        return render_template("requirements_analyzer.html")
+    except Exception as e:
+        return jsonify({"error": f"无法加载智能需求分析页面: {str(e)}"}), 500
+
+
 @app.route("/testcases/create")
 def testcase_create_page():
     """测试用例创建页面"""
