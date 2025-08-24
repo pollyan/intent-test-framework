@@ -260,77 +260,85 @@ class TestRequirementsAPI:
         assert_api_response(response, 404)
 
     def test_get_welcome_message_ai_unavailable(self, api_client, assert_api_response, create_test_requirements_session):
-        """测试AI服务不可用时的响应 - 验证错误传输功能"""
+        """测试AI服务不可用时的响应 - 验证默认消息功能"""
         session = create_test_requirements_session()
         
         # 在测试环境中，AI服务通常不可用（缺少API密钥）
         response = api_client.get(f'/api/requirements/sessions/{session.id}/welcome')
-        # AI服务不可用应该返回500错误
-        assert_api_response(response, 500)
+        # AI服务不可用时现在返回默认欢迎消息而不是错误
+        assert_api_response(response, 200)
+        
+        data = response.get_json()
+        assert "data" in data
+        assert "message" in data["data"]
+        # 验证返回了默认的Alex欢迎消息
+        assert "Alex" in data["data"]["message"]["content"]
     
     def test_get_welcome_message_not_found(self, api_client, assert_api_response):
         """测试获取不存在会话的欢迎消息"""
         response = api_client.get('/api/requirements/sessions/nonexistent-id/welcome')
         assert_api_response(response, 404)
 
-    def test_session_model_methods(self, create_test_requirements_session):
+    def test_session_model_methods(self, api_app, create_test_requirements_session):
         """测试RequirementsSession模型方法"""
-        session = create_test_requirements_session()
-        
-        # 测试to_dict方法
-        session_dict = session.to_dict()
-        assert session_dict['id'] == session.id
-        assert session_dict['project_name'] == session.project_name
-        assert session_dict['session_status'] == session.session_status
-        assert session_dict['current_stage'] == session.current_stage
-        assert isinstance(session_dict['user_context'], dict)
-        assert isinstance(session_dict['ai_context'], dict)
-        assert isinstance(session_dict['consensus_content'], dict)
-        
-        # 测试update_context方法
-        user_context = {'key1': 'value1'}
-        ai_context = {'key2': 'value2'}
-        consensus = {'requirements': ['需求1', '需求2']}
-        
-        session.update_context(
-            user_context=user_context,
-            ai_context=ai_context,
-            consensus_content=consensus
-        )
-        
-        updated_dict = session.to_dict()
-        assert updated_dict['user_context'] == user_context
-        assert updated_dict['ai_context'] == ai_context
-        assert updated_dict['consensus_content'] == consensus
+        with api_app.app_context():
+            session = create_test_requirements_session()
+            
+            # 测试to_dict方法
+            session_dict = session.to_dict()
+            assert session_dict['id'] == session.id
+            assert session_dict['project_name'] == session.project_name
+            assert session_dict['session_status'] == session.session_status
+            assert session_dict['current_stage'] == session.current_stage
+            assert isinstance(session_dict['user_context'], dict)
+            assert isinstance(session_dict['ai_context'], dict)
+            assert isinstance(session_dict['consensus_content'], dict)
+            
+            # 测试update_context方法
+            user_context = {'key1': 'value1'}
+            ai_context = {'key2': 'value2'}
+            consensus = {'requirements': ['需求1', '需求2']}
+            
+            session.update_context(
+                user_context=user_context,
+                ai_context=ai_context,
+                consensus_content=consensus
+            )
+            
+            updated_dict = session.to_dict()
+            assert updated_dict['user_context'] == user_context
+            assert updated_dict['ai_context'] == ai_context
+            assert updated_dict['consensus_content'] == consensus
 
-    def test_message_model_methods(self, create_test_requirements_session):
+    def test_message_model_methods(self, api_app, create_test_requirements_session):
         """测试RequirementsMessage模型方法"""
-        session = create_test_requirements_session()
-        
-        # 创建测试消息
-        message_data = {
-            'session_id': session.id,
-            'message_type': 'user',
-            'content': '测试消息内容',
-            'metadata': {'key': 'value'}
-        }
-        
-        message = RequirementsMessage.from_dict(message_data)
-        db.session.add(message)
-        db.session.commit()
-        
-        # 测试to_dict方法
-        message_dict = message.to_dict()
-        assert message_dict['session_id'] == session.id
-        assert message_dict['message_type'] == 'user'
-        assert message_dict['content'] == '测试消息内容'
-        assert message_dict['metadata'] == {'key': 'value'}
-        assert 'created_at' in message_dict
-        
-        # 测试get_by_session方法
-        messages = RequirementsMessage.get_by_session(session.id, limit=10)
-        assert len(messages) >= 1
-        assert messages[0].session_id == session.id
+        with api_app.app_context():
+            session = create_test_requirements_session()
+            
+            # 创建测试消息
+            message_data = {
+                'session_id': session.id,
+                'message_type': 'user',
+                'content': '测试消息内容',
+                'metadata': {'key': 'value'}
+            }
+            
+            message = RequirementsMessage.from_dict(message_data)
+            db.session.add(message)
+            db.session.commit()
+            
+            # 测试to_dict方法
+            message_dict = message.to_dict()
+            assert message_dict['session_id'] == session.id
+            assert message_dict['message_type'] == 'user'
+            assert message_dict['content'] == '测试消息内容'
+            assert message_dict['metadata'] == {'key': 'value'}
+            assert 'created_at' in message_dict
+            
+            # 测试get_by_session方法
+            messages = RequirementsMessage.get_by_session(session.id, limit=10)
+            assert len(messages) >= 1
+            assert messages[0].session_id == session.id
 
 
 @pytest.fixture
