@@ -803,7 +803,11 @@ async function showConnectPrompt() {
 async function checkAIConfiguration() {
     try {
         const response = await axios.get('/api/ai-configs');
-        return response.data.code === 200 && response.data.data && response.data.data.length > 0;
+        console.log('AI配置检查响应:', response.data); // 调试日志
+        return response.data.code === 200 && 
+               response.data.data && 
+               response.data.data.configs && 
+               response.data.data.configs.length > 0;
     } catch (error) {
         console.error('检查AI配置失败:', error);
         return false;
