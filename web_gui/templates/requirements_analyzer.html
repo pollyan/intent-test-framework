@@ -924,7 +924,23 @@ function initializeUI() {
     });
     
     // 支持Shift+Enter换行，Enter发送
+    // 添加输入法状态跟踪
+    let isComposing = false;
+    
+    messageInput.addEventListener('compositionstart', function() {
+        isComposing = true;
+    });
+    
+    messageInput.addEventListener('compositionend', function() {
+        isComposing = false;
+    });
+    
     messageInput.addEventListener('keydown', function(e) {
+        // 如果正在输入法组合中，不触发发送
+        if (isComposing) {
+            return;
+        }
+        
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             if (this.value.trim()) {
@@ -1019,12 +1035,17 @@ focus: 执行深度需求澄清，生成高质量PRD、Epic和用户故事
 现在请以Alex的身份问好并运行 *help 命令。`;
 }
 
+// 防重复连接标志
+let isConnecting = false;
+
 // 连接AI助手 - 发送智能需求分析师提示词激活Alex
 async function connectAIAssistant() {
-    if (!currentSessionId) {
-        console.error('没有活跃的会话ID');
+    if (!currentSessionId || isConnecting) {
+        console.error('没有活跃的会话ID或正在连接中');
         return;
     }
+    
+    isConnecting = true;
     
     try {
         updateConnectionStatus('connecting', '正在激活AI助手Alex...');
@@ -1043,6 +1064,9 @@ async function connectAIAssistant() {
         // 恢复按钮状态
         setConnectButtonState('normal');
         showMessage('连接AI助手失败: ' + error.message, 'error');
+    } finally {
+        // 无论成功或失败都重置连接状态
+        isConnecting = false;
     }
 }
 
@@ -1173,17 +1197,24 @@ async function checkAIConfiguration() {
     }
 }
 
+// 防重复发送标志
+let isSending = false;
+
 // 发送消息
 async function sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const content = messageInput.value.trim();
     
-    if (!content || !currentSessionId) {
+    if (!content || !currentSessionId || isSending) {
         return;
     }
     
+    // 设置发送中状态，防止重复发送
+    isSending = true;
+    
     // 检查连接状态（Vercel环境不需要WebSocket连接）
     if (!isVercelEnvironment() && !isConnected) {
+        isSending = false; // 重置发送状态
         showMessage('WebSocket未连接，请稍后重试', 'error');
         return;
     }
@@ -1212,6 +1243,9 @@ async function sendMessage() {
         console.error('发送消息失败:', error);
         hideAiProcessing();
         showMessage('发送消息失败: ' + error.message, 'error');
+    } finally {
+        // 无论成功或失败都重置发送状态
+        isSending = false;
     }
 }
 
