@@ -233,7 +233,8 @@ def send_message(session_id):
                 user_message=content,
                 session_context=session_context,
                 project_name=session.project_name,
-                current_stage=session.current_stage
+                current_stage=session.current_stage,
+                session_id=session_id
             )
             
             # 创建AI响应消息

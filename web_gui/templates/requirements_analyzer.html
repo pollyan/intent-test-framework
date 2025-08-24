@@ -587,12 +587,7 @@ async function sendMessageViaHTTP(content) {
         if (response.data.code === 200) {
             const data = response.data.data;
             
-            // 显示用户消息（仅当不是激活消息时）
-            if (data.user_message) {
-                displayMessage(data.user_message);
-            }
-            
-            // 显示AI响应
+            // 只显示AI响应（用户消息已在前端立即显示）
             if (data.ai_message) {
                 displayMessage(data.ai_message);
                 hideAiTyping();
@@ -922,6 +917,14 @@ async function sendMessage() {
         showMessage('WebSocket未连接，请稍后重试', 'error');
         return;
     }
+    
+    // 立即显示用户消息
+    const userMessage = {
+        message_type: 'user',
+        content: content,
+        created_at: new Date().toISOString()
+    };
+    displayMessage(userMessage);
     
     // 清空输入框
     messageInput.value = '';

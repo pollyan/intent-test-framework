@@ -106,44 +106,38 @@ class RequirementsAIService:
                                 user_message: str, 
                                 session_context: Dict[str, Any],
                                 project_name: str,
-                                current_stage: str = "initial") -> Dict[str, Any]:
+                                current_stage: str = "initial",
+                                session_id: str = None) -> Dict[str, Any]:
         """
-        纯传输模式：直接转发用户消息给AI模型，让Alex完全自主处理
+        无状态方案：仅通过历史对话维持连续性
         
         Args:
             user_message: 用户输入的需求描述
-            session_context: 会话上下文（在纯传输模式下基本不使用）
+            session_context: 会话上下文（此方案中基本不使用）
             project_name: 项目名称
             current_stage: 当前分析阶段
+            session_id: 会话ID，用于获取历史消息
             
         Returns:
             Dict包含AI回应等基本信息
         """
         try:
-            # 纯传输模式：不构建复杂的系统提示词，直接使用用户消息
-            # 如果是激活消息（包含bundle），直接发送
-            # 如果是普通消息，简单转发
+            # 构建完整的对话历史（包括当前消息）
+            ai_response = self._call_ai_with_full_history(user_message, session_id)
             
-            if "智能需求分析师" in user_message and "Bundle" in user_message:
-                # 这是激活Alex的消息，直接发送
-                ai_response = self._call_ai_model("", user_message)
-            else:
-                # 普通对话消息，简单转发
-                ai_response = self._call_ai_model("", user_message)
-            
-            # 纯传输模式：最简化的返回结构
+            # 返回简化的结果结构
             result = {
                 'ai_response': ai_response,
                 'processing_time': datetime.utcnow().isoformat(),
                 'model_used': self.model_name,
                 'stage': current_stage,  # 保持当前阶段不变
                 'alex_persona': True,
-                # 简化的上下文信息
-                'ai_context': session_context.get('ai_context', {}),
-                'consensus_content': session_context.get('consensus_content', {})
+                # 无状态方案：不使用复杂的上下文存储
+                'ai_context': {},
+                'consensus_content': {}
             }
             
-            logger.info(f"纯传输模式：消息已转发给Alex")
+            logger.info(f"无状态Alex消息处理完成，会话ID: {session_id}")
             
             return result
             
@@ -196,6 +190,105 @@ class RequirementsAIService:
 请作为智能需求分析师Alex，分析这条用户输入，结合历史上下文，提供专业的需求分析和澄清引导。
 
 请直接以对话方式回应，但同时识别和提取关键的需求信息。"""
+
+    def _call_ai_with_full_history(self, user_message: str, session_id: str) -> str:
+        """
+        发送所有历史对话，完全无状态方案
+        """
+        try:
+            # 获取会话历史消息
+            messages = []
+            
+            if session_id:
+                from ..models import RequirementsMessage
+                # 获取所有历史消息，不限制条数
+                history_messages = RequirementsMessage.get_by_session(session_id, limit=None)
+                
+                # 构建消息历史
+                for msg in history_messages:
+                    if msg.message_type == 'system' and "智能需求分析师" in msg.content:
+                        # 激活消息作为系统提示词
+                        alex_system_prompt = "你是Alex，智能需求分析师。请严格按照之前加载的指令和身份执行任务。保持专业的Alex身份，使用之前定义的命令和功能来帮助用户。"
+                        messages.append({"role": "system", "content": alex_system_prompt})
+                        messages.append({"role": "user", "content": msg.content})
+                    elif msg.message_type == 'user':
+                        messages.append({"role": "user", "content": msg.content})
+                    elif msg.message_type == 'ai':
+                        messages.append({"role": "assistant", "content": msg.content})
+            
+            # 如果没有历史记录，添加基础的Alex身份
+            if not messages:
+                alex_system_prompt = "你是Alex，智能需求分析师。你专门帮助用户澄清和完善项目需求。请保持专业、友好的态度。"
+                messages.append({"role": "system", "content": alex_system_prompt})
+            
+            # 添加当前用户消息
+            messages.append({"role": "user", "content": user_message})
+            
+            # 调用AI模型
+            return self._call_ai_model_with_messages(messages)
+            
+        except Exception as e:
+            logger.error(f"发送完整历史调用AI失败: {str(e)}")
+            # 降级到简单调用
+            return self._call_ai_model("你是Alex，智能需求分析师。", user_message)
+
+    def _call_ai_model_with_messages(self, messages: List[Dict[str, str]]) -> str:
+        """使用消息列表调用AI模型"""
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        data = {
+            "model": self.model_name,
+            "messages": messages,
+            "temperature": 0.7,
+            "max_tokens": 2000
+        }
+        
+        try:
+            # 处理base_url的尾部斜杠，避免双斜杠
+            base_url = self.base_url.rstrip('/')
+            api_url = f"{base_url}/chat/completions"
+            
+            logger.info(f"调用AI API with full history: {api_url}, 消息数: {len(messages)}")
+            
+            response = requests.post(
+                api_url,
+                headers=headers,
+                json=data,
+                timeout=30
+            )
+            
+            # 解析响应
+            if response.status_code == 200:
+                result = response.json()
+                
+                # 支持多种API格式
+                if 'choices' in result and result['choices'] and 'message' in result['choices'][0]:
+                    message = result['choices'][0]['message']
+                    if 'content' in message and message['content']:
+                        ai_message = message['content'].strip()
+                    else:
+                        logger.warning(f"AI响应message缺少content或content为空: {message}")
+                        ai_message = "AI响应内容为空，请重新尝试。"
+                else:
+                    logger.error(f"AI API响应格式异常: {result}")
+                    raise Exception(f"AI API响应格式异常，请检查API配置")
+                
+                return ai_message
+            else:
+                error_msg = f"AI API调用失败: {response.status_code} - {response.text}"
+                logger.error(error_msg)
+                raise Exception(error_msg)
+                
+        except requests.exceptions.RequestException as e:
+            error_msg = f"AI API网络请求失败: {str(e)}"
+            logger.error(error_msg)
+            raise Exception(error_msg)
+        except Exception as e:
+            logger.error(f"调用AI模型失败: {str(e)}")
+            raise
 
     def _call_ai_model(self, system_prompt: str, user_prompt: str) -> str:
         """调用AI模型API"""
