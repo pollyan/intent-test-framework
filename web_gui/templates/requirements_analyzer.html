@@ -322,6 +322,107 @@
     color: #999999;
 }
 
+/* AI消息格式化样式 */
+.ai-formatted {
+    line-height: 1.6;
+}
+
+.ai-formatted .ai-paragraph {
+    margin: 8px 0;
+    color: #333333;
+}
+
+.ai-formatted .ai-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 16px 0 12px 0;
+    text-align: center;
+    padding: 8px 0;
+    border-bottom: 2px solid #3498db;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 4px;
+}
+
+.ai-formatted .ai-subtitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: #34495e;
+    margin: 16px 0 10px 0;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-left: 4px solid #3498db;
+    border-radius: 0 4px 4px 0;
+}
+
+.ai-formatted .ai-command-item {
+    margin: 10px 0;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #007bff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
+
+.ai-formatted .ai-command-item:hover {
+    background: #e9ecef;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.ai-formatted .ai-command-num {
+    font-weight: 600;
+    color: #007bff;
+    margin-right: 8px;
+}
+
+.ai-formatted .ai-command {
+    background: #e9ecef;
+    color: #495057;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 13px;
+}
+
+.ai-formatted .ai-feature-item {
+    margin: 6px 0 6px 16px;
+    padding: 4px 0;
+}
+
+.ai-formatted .ai-feature-label {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.ai-formatted .ai-feature-desc {
+    color: #555555;
+}
+
+.ai-formatted .ai-list-item {
+    margin: 4px 0 4px 12px;
+    color: #555555;
+}
+
+.ai-formatted .inline-code {
+    background: #f1f3f4;
+    color: #d73a49;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 13px;
+}
+
+.ai-formatted strong {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.ai-formatted em {
+    color: #555555;
+    font-style: italic;
+}
+
 
 /* 连接AI助手提示样式 */
 .connect-prompt {
@@ -950,10 +1051,15 @@ function displayMessage(message) {
     const avatar = message.message_type === 'user' ? '你' : 'AI';
     const time = new Date(message.created_at).toLocaleTimeString();
     
+    // AI消息使用Markdown渲染，用户消息使用普通HTML转义
+    const contentHtml = message.message_type === 'ai' || message.message_type === 'assistant' 
+        ? parseMarkdown(message.content) 
+        : escapeHtml(message.content);
+    
     messageEl.innerHTML = `
         <div class="message-avatar">${avatar}</div>
         <div>
-            <div class="message-content">${escapeHtml(message.content)}</div>
+            <div class="message-content ${message.message_type === 'ai' || message.message_type === 'assistant' ? 'ai-formatted' : ''}">${contentHtml}</div>
             <div class="message-time">${time}</div>
         </div>
     `;
@@ -1193,6 +1299,56 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// 增强的Markdown解析函数，专门处理Alex的回复格式
+function parseMarkdown(text) {
+    if (!text) return '';
+    
+    let html = escapeHtml(text);
+    
+    // 按顺序替换Markdown语法，避免冲突
+    html = html
+        // 1. 处理标题 === title ===
+        .replace(/^=== (.*?) ===/gm, '<h3 class="ai-title">$1</h3>')
+        
+        // 2. 处理Alex命令列表项 数字. `*command`
+        .replace(/^(\d+)\.\s+`([^`]+)`\s*$/gm, '<div class="ai-command-item"><span class="ai-command-num">$1.</span><code class="ai-command">$2</code></div>')
+        
+        // 3. 处理带描述的命令项 数字. `*command` * **功能**：描述
+        .replace(/^(\d+)\.\s+`([^`]+)`\s*\*\s*\*\*(.*?)\*\*[：:]\s*(.*?)$/gm, 
+            '<div class="ai-command-item"><span class="ai-command-num">$1.</span><code class="ai-command">$2</code><div class="ai-feature-item"><span class="ai-feature-label">$3：</span><span class="ai-feature-desc">$4</span></div></div>')
+        
+        // 4. 处理功能描述项 * **功能**：
+        .replace(/^\*\s+\*\*(.*?)\*\*[：:]\s*(.*?)$/gm, '<div class="ai-feature-item"><span class="ai-feature-label">$1：</span><span class="ai-feature-desc">$2</span></div>')
+        
+        // 5. 处理二级标题模式（粗体+冒号）
+        .replace(/^\*\*(.*?)：?\*\*$/gm, '<h4 class="ai-subtitle">$1</h4>')
+        
+        // 6. 处理普通列表项 * text
+        .replace(/^\*\s+(.*)$/gm, '<div class="ai-list-item">• $1</div>')
+        
+        // 7. 处理行内代码 `code`（避免与命令冲突）
+        .replace(/`([^`*]+)`/g, '<code class="inline-code">$1</code>')
+        
+        // 8. 处理粗体 **text**
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        
+        // 9. 处理斜体 *text*（最后处理避免与列表冲突）
+        .replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, '<em>$1</em>')
+        
+        // 10. 处理段落分隔（双换行转为段落）
+        .replace(/\n\n/g, '</p><p class="ai-paragraph">')
+        
+        // 11. 处理单换行
+        .replace(/\n/g, '<br>');
+    
+    // 包装在段落中
+    if (html.includes('<p class="ai-paragraph">')) {
+        html = '<p class="ai-paragraph">' + html + '</p>';
+    }
+    
+    return html;
 }
 
 function showMessage(message, type) {
