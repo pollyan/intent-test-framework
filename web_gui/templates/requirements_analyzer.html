@@ -583,26 +583,26 @@ document.addEventListener('DOMContentLoaded', function() {
     createSession();
 });
 
-// 环境检测
+// 环境检测 - 现在所有环境都使用HTTP轮询，不再使用WebSocket
 function isVercelEnvironment() {
-    // 检测是否在Vercel环境中（没有WebSocket支持）
-    return window.location.hostname.includes('.vercel.app') || 
-           window.location.hostname.includes('vercel.com') ||
-           !window.io; // 如果socket.io库不可用
+    // 始终返回true，因为我们已经移除了WebSocket支持
+    return true;
 }
 
-// HTTP方式发送消息（Vercel环境专用）
+// HTTP方式发送消息（替代WebSocket）
 async function sendMessageViaHTTP(content) {
     try {
-        const response = await axios.post(`/api/requirements/sessions/${currentSessionId}/send-message`, {
+        const response = await axios.post(`/api/requirements/sessions/${currentSessionId}/messages`, {
             content: content
         });
         
         if (response.data.code === 200) {
             const data = response.data.data;
             
-            // 显示用户消息
-            displayMessage(data.user_message);
+            // 显示用户消息（仅当不是激活消息时）
+            if (data.user_message) {
+                displayMessage(data.user_message);
+            }
             
             // 显示AI响应
             if (data.ai_message) {
@@ -830,24 +830,8 @@ focus: 执行深度需求澄清，生成高质量PRD、Epic和用户故事
 
 现在请以Alex的身份问好并运行 *help 命令。`;
         
-        // 检测环境并选择通信方式
-        if (isVercelEnvironment()) {
-            await sendMessageViaHTTP(activationMessage);
-            startMessagePolling(); // 开始轮询新消息
-        } else {
-            // 本地环境使用WebSocket
-            socket.emit('requirements_message', {
-                session_id: currentSessionId,
-                content: activationMessage
-            });
-        }
-        
-        // 显示用户的连接请求
-        displayMessage({
-            message_type: 'user',
-            content: '连接AI助手Alex...',
-            created_at: new Date().toISOString()
-        });
+        // 使用HTTP发送激活消息
+        await sendMessageViaHTTP(activationMessage);
         
         // 显示AI思考状态
         showAiTyping();
@@ -943,24 +927,8 @@ async function sendMessage() {
     showAiTyping();
     
     try {
-        if (isVercelEnvironment()) {
-            // Vercel环境使用HTTP API
-            await sendMessageViaHTTP(content);
-        } else {
-            // 本地环境使用WebSocket
-            // 显示用户消息
-            displayMessage({
-                message_type: 'user',
-                content: content,
-                created_at: new Date().toISOString()
-            });
-            
-            // 发送到服务器
-            socket.emit('requirements_message', {
-                session_id: currentSessionId,
-                content: content
-            });
-        }
+        // 使用HTTP发送消息
+        await sendMessageViaHTTP(content);
     } catch (error) {
         console.error('发送消息失败:', error);
         hideAiTyping();
@@ -986,7 +954,14 @@ function displayMessage(message) {
     `;
     
     messagesArea.appendChild(messageEl);
-    messagesArea.scrollTop = messagesArea.scrollHeight;
+    
+    // 平滑滚动到底部，避免突然跳转
+    setTimeout(() => {
+        messagesArea.scrollTo({
+            top: messagesArea.scrollHeight,
+            behavior: 'smooth'
+        });
+    }, 100);
 }
 
 // 加载会话消息

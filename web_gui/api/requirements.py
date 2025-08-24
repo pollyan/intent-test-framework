@@ -173,7 +173,7 @@ def get_messages(session_id):
 @require_json
 @log_api_call
 def send_message(session_id):
-    """发送消息到会话"""
+    """发送消息到会话（HTTP轮询模式）"""
     try:
         # 验证会话是否存在
         session = RequirementsSession.query.get(session_id)
@@ -192,27 +192,114 @@ def send_message(session_id):
         if len(content) > 2000:
             raise ValidationError("消息内容不能超过2000字符")
         
-        # 创建用户消息
+        # 检查是否是激活消息（包含Alex激活指令）
+        is_activation_message = "智能需求分析师Alex" in content and "请按照以下激活指令执行" in content
+        
+        # 创建用户消息（激活消息标记为system类型，不显示给用户）
         user_message = RequirementsMessage(
             session_id=session_id,
-            message_type="user",
+            message_type="system" if is_activation_message else "user",
             content=content,
             message_metadata=json.dumps({
                 "stage": session.current_stage,
-                "char_count": len(content)
+                "char_count": len(content),
+                "source": "http",
+                "is_activation": is_activation_message
             })
         )
         
         db.session.add(user_message)
         db.session.commit()
         
-        # 触发AI处理（通过WebSocket异步处理）
-        # 这里返回用户消息，AI响应会通过WebSocket推送
+        # 立即调用AI服务处理消息
+        ai_svc = get_ai_service()
+        if ai_svc is None:
+            raise Exception("AI服务暂不可用，请稍后重试")
         
-        return standard_success_response(
-            data=user_message.to_dict(),
-            message="消息发送成功"
-        )
+        try:
+            # 构建会话上下文
+            session_context = {
+                'user_context': json.loads(session.user_context) if session.user_context else {},
+                'ai_context': json.loads(session.ai_context) if session.ai_context else {},
+                'consensus_content': json.loads(session.consensus_content) if session.consensus_content else {}
+            }
+            
+            # 调用Alex智能需求分析服务
+            ai_result = ai_svc.analyze_user_requirement(
+                user_message=content,
+                session_context=session_context,
+                project_name=session.project_name,
+                current_stage=session.current_stage
+            )
+            
+            # 创建AI响应消息
+            ai_message = RequirementsMessage(
+                session_id=session_id,
+                message_type='ai',
+                content=ai_result['ai_response'],
+                message_metadata=json.dumps({
+                    'stage': ai_result.get('stage', session.current_stage),
+                    'identified_requirements': ai_result.get('identified_requirements', []),
+                    'information_gaps': ai_result.get('information_gaps', []),
+                    'clarification_questions': ai_result.get('clarification_questions', []),
+                    'analysis_summary': ai_result.get('analysis_summary', ''),
+                    'alex_persona': ai_result.get('alex_persona', True),
+                    'source': 'http'
+                })
+            )
+            
+            # 更新会话上下文和共识内容
+            session.ai_context = json.dumps(ai_result.get('ai_context', session_context['ai_context']))
+            session.consensus_content = json.dumps(ai_result.get('consensus_content', {}))
+            session.current_stage = ai_result.get('stage', session.current_stage)
+            session.updated_at = datetime.utcnow()
+            
+            db.session.add(ai_message)
+            db.session.commit()
+            
+            # 返回结果，仅当不是激活消息时才返回用户消息
+            response_data = {
+                'ai_message': ai_message.to_dict(),
+                'consensus_content': ai_result.get('consensus_content', {}),
+                'identified_requirements': ai_result.get('identified_requirements', []),
+                'information_gaps': ai_result.get('information_gaps', []),
+                'clarification_questions': ai_result.get('clarification_questions', []),
+                'current_stage': session.current_stage
+            }
+            
+            # 只有非激活消息才返回用户消息
+            if not is_activation_message:
+                response_data['user_message'] = user_message.to_dict()
+            
+            return standard_success_response(
+                data=response_data,
+                message="消息处理成功"
+            )
+            
+        except Exception as ai_error:
+            print(f"❌ Alex AI服务调用失败: {str(ai_error)}")
+            # 创建AI服务错误消息
+            error_message = RequirementsMessage(
+                session_id=session_id,
+                message_type='system',
+                content=f"抱歉，AI分析服务遇到了问题：{str(ai_error)}。请稍后重试，或重新描述您的需求。",
+                message_metadata=json.dumps({
+                    'error_type': 'ai_service_error',
+                    'error_details': str(ai_error),
+                    'stage': session.current_stage
+                })
+            )
+            
+            db.session.add(error_message)
+            db.session.commit()
+            
+            return standard_success_response(
+                data={
+                    'user_message': user_message.to_dict() if not is_activation_message else None,
+                    'ai_message': error_message.to_dict()
+                },
+                message="消息处理完成（AI服务异常）"
+            )
         
     except (ValidationError, NotFoundError) as e:
         return standard_error_response(e.message, e.code if hasattr(e, 'code') else 400)
@@ -317,6 +404,55 @@ def get_welcome_message(session_id):
     except Exception as e:
         db.session.rollback()
         return standard_error_response(f"获取欢迎消息失败: {str(e)}", 500)
+
+
+
+@requirements_bp.route("/sessions/<session_id>/poll-messages", methods=["GET"])
+@log_api_call
+def poll_messages(session_id):
+    """轮询获取新消息（用于Vercel环境）"""
+    try:
+        # 验证会话是否存在
+        session = RequirementsSession.query.get(session_id)
+        if not session:
+            raise NotFoundError("会话不存在")
+        
+        # 获取查询参数
+        since = request.args.get("since")  # ISO时间戳
+        limit = min(int(request.args.get("limit", 10)), 50)  # 最大50条
+        
+        # 构建查询
+        query = RequirementsMessage.query.filter_by(session_id=session_id)
+        
+        # 过滤掉系统激活消息
+        query = query.filter(RequirementsMessage.message_type != 'system')
+        
+        if since:
+            try:
+                since_dt = datetime.fromisoformat(since.replace('Z', '+00:00'))
+                query = query.filter(RequirementsMessage.created_at > since_dt)
+            except ValueError:
+                pass  # 忽略无效的时间格式
+        
+        # 获取消息，按时间排序
+        messages = query.order_by(RequirementsMessage.created_at.asc()).limit(limit).all()
+        
+        return standard_success_response(
+            data={
+                "messages": [msg.to_dict() for msg in messages],
+                "count": len(messages),
+                "session_info": {
+                    "current_stage": session.current_stage,
+                    "session_status": session.session_status
+                }
+            },
+            message="轮询消息成功"
+        )
+        
+    except NotFoundError as e:
+        return standard_error_response(e.message, 404)
+    except Exception as e:
+        return standard_error_response(f"轮询消息失败: {str(e)}", 500)
 
 
 def register_requirements_socketio(socketio: SocketIO):
