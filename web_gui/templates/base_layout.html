@@ -47,6 +47,12 @@
             font-weight: 600;
             color: #333333;
             letter-spacing: -0.5px;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        
+        .nav-brand:hover {
+            color: #555555;
         }
 
         .nav-links {
@@ -487,8 +493,9 @@
     <!-- 顶部导航 -->
     <nav class="top-nav">
         <div class="nav-container">
-            <div class="nav-brand">AI4SE工具集</div>
+            <a href="/" class="nav-brand">AI4SE工具集</a>
             <div class="nav-links">
+                <a class="nav-link {% if request.endpoint in ['home', 'index'] or request.path == '/' %}active{% endif %}" data-page="">首页</a>
                 <div class="nav-dropdown">
                     <a class="nav-link nav-dropdown-trigger {% if request.endpoint in ['testcases', 'execution', 'local-proxy'] %}active{% endif %}">
                         意图测试工具
@@ -539,7 +546,10 @@
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     const page = this.dataset.page;
-                    if (page && page !== '{{ request.endpoint }}') {
+                    // 处理首页（空字符串）和其他页面
+                    if (page === '') {
+                        window.location.href = '/';
+                    } else if (page && page !== '{{ request.endpoint }}') {
                         window.location.href = '/' + page;
                     }
                 });

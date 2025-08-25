@@ -4,101 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI4SE工具集 - 智能化软件工程平台</title>
+    <link rel="stylesheet" href="assets/css/minimal-style.css">
     <style>
-        /* 基础重置 */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #ffffff;
-            color: #333333;
-            line-height: 1.6;
-            font-size: 14px;
-            min-height: 100vh;
-        }
-
-        /* 顶部导航 */
-        .top-nav {
-            background: #ffffff;
-            border-bottom: 1px solid #e8e8e8;
-            padding: 0 40px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .nav-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            max-width: 1200px;
-            margin: 0 auto;
-            height: 64px;
-        }
-
-        .nav-brand {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333333;
-            letter-spacing: -0.5px;
-            text-decoration: none;
-            transition: color 0.2s ease;
-        }
-        
-        .nav-brand:hover {
-            color: #555555;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 40px;
-        }
-
-        .nav-link {
-            color: #666666;
-            text-decoration: none;
-            font-weight: 400;
-            font-size: 14px;
-            transition: color 0.2s ease;
-            padding: 8px 0;
-            cursor: pointer;
-        }
-
-        .nav-link:hover {
-            color: #333333;
-        }
-
-        .nav-link.active {
-            color: #333333;
-            position: relative;
-        }
-
-        .nav-link.active::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: #333333;
-        }
-
-        .nav-user {
-            color: #666666;
-            font-size: 14px;
-        }
-
-        /* 主容器 */
-        .main-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px;
-        }
-
         /* 首页特有样式 */
         .hero-section {
             text-align: center;
@@ -155,65 +62,6 @@
             margin-bottom: 60px;
         }
 
-        .page-header {
-            margin-bottom: 40px;
-        }
-
-        .page-title {
-            font-size: 32px;
-            font-weight: 300;
-            color: #333333;
-            margin-bottom: 8px;
-            letter-spacing: -1px;
-        }
-
-        .page-subtitle {
-            font-size: 16px;
-            color: #666666;
-            font-weight: 400;
-        }
-
-        /* 网格布局 */
-        .grid {
-            display: grid;
-            gap: 24px;
-            margin-bottom: 40px;
-        }
-
-        .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
-        .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
-
-        /* 卡片样式 */
-        .card {
-            background: #ffffff;
-            border: 1px solid #e8e8e8;
-            border-radius: 4px;
-            padding: 24px;
-            transition: border-color 0.2s ease;
-        }
-
-        .card:hover {
-            border-color: #d0d0d0;
-        }
-
-        .card-title {
-            font-size: 16px;
-            font-weight: 500;
-            color: #333333;
-            margin-bottom: 8px;
-        }
-
-        .card-subtitle {
-            font-size: 13px;
-            color: #999999;
-            margin-bottom: 16px;
-        }
-
-        .card-content {
-            color: #666666;
-            line-height: 1.6;
-        }
-
         .module-card {
             border: 2px solid #e8e8e8;
             border-radius: 8px;
@@ -234,6 +82,8 @@
             padding: 24px;
             text-align: center;
         }
+
+
 
         .module-title {
             font-size: 20px;
@@ -269,6 +119,8 @@
             color: #666666;
         }
 
+
+
         .setup-guide {
             background: #f8f9fa;
             border-radius: 6px;
@@ -284,6 +136,8 @@
             display: flex;
             align-items: center;
         }
+
+
 
         .setup-steps {
             list-style: none;
@@ -321,54 +175,6 @@
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            border: 1px solid #e8e8e8;
-            background: #ffffff;
-            color: #333333;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 400;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn:hover {
-            background: #f8f8f8;
-            border-color: #d0d0d0;
-        }
-
-        .btn-primary {
-            background: #333333;
-            color: #ffffff;
-            border-color: #333333;
-        }
-
-        .btn-primary:hover {
-            background: #555555;
-            border-color: #555555;
-        }
-
-        .btn-small {
-            padding: 8px 16px;
-            font-size: 13px;
-        }
-
-        .btn-ghost {
-            background: transparent;
-            color: #666666;
-            border: 1px solid #e8e8e8;
-        }
-
-        .btn-ghost:hover {
-            background: #f8f8f8;
-            color: #333333;
         }
 
         .btn-large {
@@ -421,34 +227,7 @@
             color: #8b6914;
         }
 
-        /* 工具类 */
-        .text-center { text-align: center; }
-        .mb-1 { margin-bottom: 8px; }
-        .mb-2 { margin-bottom: 16px; }
-        .font-medium { font-weight: 500; }
-        .text-sm { font-size: 12px; }
-        .text-gray-600 { color: #666666; }
-        .mt-4 { margin-top: 32px; }
-
-        /* 响应式设计 */
         @media (max-width: 768px) {
-            .main-container {
-                padding: 20px;
-            }
-            
-            .nav-container {
-                padding: 0 20px;
-            }
-            
-            .nav-links {
-                display: none;
-            }
-            
-            .grid-cols-2,
-            .grid-cols-4 {
-                grid-template-columns: 1fr;
-            }
-            
             .hero-title {
                 font-size: 28px;
             }
@@ -472,13 +251,16 @@
     <!-- 顶部导航 -->
     <nav class="top-nav">
         <div class="nav-container">
-            <a href="/" class="nav-brand">AI4SE工具集</a>
+            <div class="nav-brand">
+                <a href="home.html" style="color: inherit; text-decoration: none;">AI4SE工具集</a>
+            </div>
             <div class="nav-links">
-                <a href="/" class="nav-link active">首页</a>
-                <a href="/testcases" class="nav-link">测试用例</a>
-                <a href="/execution" class="nav-link">执行控制台</a>
-                <a href="/requirements-analyzer" class="nav-link">需求分析</a>
-                <a href="/reports" class="nav-link">测试报告</a>
+                <a href="home.html" class="nav-link active">首页</a>
+                <a href="testcases.html" class="nav-link">测试用例</a>
+                <a href="execution.html" class="nav-link">执行控制台</a>
+                <a href="requirements-analyzer.html" class="nav-link">需求分析</a>
+                <a href="reports.html" class="nav-link">测试报告</a>
+                <a href="dashboard.html" class="nav-link">仪表板</a>
             </div>
             <div class="nav-user">系统首页</div>
         </div>
@@ -520,6 +302,7 @@
                 <!-- 意图驱动测试模块 -->
                 <div class="module-card">
                     <div class="module-header">
+
                         <div class="module-title">意图驱动测试</div>
                         <div class="module-tagline">AI自动化Web测试平台</div>
                     </div>
@@ -564,8 +347,8 @@
                         </div>
 
                         <div class="cta-buttons">
-                            <a href="/testcases" class="btn btn-primary btn-large">开始测试</a>
-                            <a href="/execution" class="btn btn-ghost btn-large">查看控制台</a>
+                            <a href="testcases.html" class="btn btn-primary btn-large">开始测试</a>
+                            <a href="execution.html" class="btn btn-ghost btn-large">查看控制台</a>
                         </div>
                     </div>
                 </div>
@@ -573,6 +356,7 @@
                 <!-- 智能需求分析模块 -->
                 <div class="module-card">
                     <div class="module-header">
+
                         <div class="module-title">智能需求分析</div>
                         <div class="module-tagline">AI需求分析助手Alex</div>
                     </div>
@@ -617,8 +401,8 @@
                         </div>
 
                         <div class="cta-buttons">
-                            <a href="/requirements-analyzer" class="btn btn-primary btn-large">开始分析</a>
-                            <a href="/reports" class="btn btn-ghost btn-large">查看报告</a>
+                            <a href="requirements-analyzer.html" class="btn btn-primary btn-large">开始分析</a>
+                            <a href="reports.html" class="btn btn-ghost btn-large">查看报告</a>
                         </div>
                     </div>
                 </div>
@@ -658,28 +442,28 @@
             <div class="card text-center">
                 <div class="card-title">本地代理下载</div>
                 <div class="card-content">
-                    <p class="text-sm text-gray-600 mb-2">配置本地测试环境</p>
-                    <a href="/download/local-proxy" class="btn btn-small">下载代理包</a>
+                    <p class="text-sm text-gray-600 mb-3">配置本地测试环境</p>
+                    <a href="#" class="btn btn-small">下载代理包</a>
                 </div>
             </div>
             <div class="card text-center">
                 <div class="card-title">使用文档</div>
                 <div class="card-content">
-                    <p class="text-sm text-gray-600 mb-2">详细的操作指南</p>
+                    <p class="text-sm text-gray-600 mb-3">详细的操作指南</p>
                     <a href="#" class="btn btn-small">查看文档</a>
                 </div>
             </div>
             <div class="card text-center">
                 <div class="card-title">视频教程</div>
                 <div class="card-content">
-                    <p class="text-sm text-gray-600 mb-2">分步骤操作演示</p>
+                    <p class="text-sm text-gray-600 mb-3">分步骤操作演示</p>
                     <a href="#" class="btn btn-small">观看教程</a>
                 </div>
             </div>
             <div class="card text-center">
                 <div class="card-title">技术支持</div>
                 <div class="card-content">
-                    <p class="text-sm text-gray-600 mb-2">遇到问题时的帮助</p>
+                    <p class="text-sm text-gray-600 mb-3">遇到问题时的帮助</p>
                     <a href="#" class="btn btn-small">联系支持</a>
                 </div>
             </div>
