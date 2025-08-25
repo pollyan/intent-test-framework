@@ -267,7 +267,7 @@ def set_default_config(config_id):
 @ai_configs_bp.route("/<int:config_id>/test", methods=["POST"])
 @log_api_call
 def test_config(config_id):
-    """测试AI配置连接"""
+    """测试AI配置连接 - 综合测试多个场景"""
     try:
         config = RequirementsAIConfig.query.get(config_id)
         if not config:
@@ -276,27 +276,127 @@ def test_config(config_id):
         # 导入AI服务进行测试
         try:
             from ..services.requirements_ai_service import RequirementsAIService
+            import time
             
             # 创建临时AI服务实例进行测试
             config_data = config.get_config_for_ai_service()
             temp_ai_service = RequirementsAIService(config=config_data)
             
-            # 发送测试消息
-            test_message = "你好，这是一个配置连接测试。请简单回复'测试成功'。"
-            response = temp_ai_service.send_message(test_message)
+            test_results = []
+            start_time = time.time()
             
-            if response and len(response.strip()) > 0:
-                return standard_success_response(
-                    data={
-                        "config_id": config_id,
-                        "test_success": True,
-                        "response_preview": response[:100] + "..." if len(response) > 100 else response,
-                        "tested_at": datetime.utcnow().isoformat()
+            # 测试场景1: 基础连通性测试
+            try:
+                basic_start = time.time()
+                test_message = "你好，请回复'连接正常'确认通信。"
+                response = temp_ai_service.send_message(test_message)
+                basic_duration = time.time() - basic_start
+                
+                basic_success = response and len(response.strip()) > 0
+                test_results.append({
+                    "test_name": "基础连通性",
+                    "test_type": "basic_connectivity", 
+                    "success": basic_success,
+                    "duration_ms": round(basic_duration * 1000, 2),
+                    "response_preview": (response[:80] + "...") if response and len(response) > 80 else (response or ""),
+                    "message": "连接正常" if basic_success else "无响应"
+                })
+            except Exception as e:
+                test_results.append({
+                    "test_name": "基础连通性",
+                    "test_type": "basic_connectivity",
+                    "success": False,
+                    "duration_ms": 0,
+                    "message": f"连接失败: {str(e)}"
+                })
+            
+            # 测试场景2: 理解能力测试
+            try:
+                understand_start = time.time()
+                understand_message = "请用一句话解释什么是人工智能？"
+                understand_response = temp_ai_service.send_message(understand_message)
+                understand_duration = time.time() - understand_start
+                
+                understand_success = (understand_response and 
+                                   len(understand_response.strip()) > 10 and
+                                   ("人工智能" in understand_response or "AI" in understand_response or "智能" in understand_response))
+                
+                test_results.append({
+                    "test_name": "理解能力", 
+                    "test_type": "understanding",
+                    "success": understand_success,
+                    "duration_ms": round(understand_duration * 1000, 2),
+                    "response_preview": (understand_response[:80] + "...") if understand_response and len(understand_response) > 80 else (understand_response or ""),
+                    "message": "理解正常" if understand_success else "理解能力异常"
+                })
+            except Exception as e:
+                test_results.append({
+                    "test_name": "理解能力",
+                    "test_type": "understanding", 
+                    "success": False,
+                    "duration_ms": 0,
+                    "message": f"测试失败: {str(e)}"
+                })
+            
+            # 测试场景3: 结构化输出测试  
+            try:
+                json_start = time.time()
+                json_message = "请以JSON格式返回一个简单的用户信息，包含name和age字段。仅返回JSON，不要其他解释。"
+                json_response = temp_ai_service.send_message(json_message)
+                json_duration = time.time() - json_start
+                
+                json_success = False
+                if json_response:
+                    try:
+                        # 尝试从响应中提取JSON
+                        import re
+                        json_match = re.search(r'\{.*\}', json_response, re.DOTALL)
+                        if json_match:
+                            json.loads(json_match.group())
+                            json_success = True
+                    except:
+                        pass
+                
+                test_results.append({
+                    "test_name": "结构化输出",
+                    "test_type": "structured_output",
+                    "success": json_success,
+                    "duration_ms": round(json_duration * 1000, 2),
+                    "response_preview": (json_response[:80] + "...") if json_response and len(json_response) > 80 else (json_response or ""),
+                    "message": "格式输出正常" if json_success else "结构化输出能力异常"
+                })
+            except Exception as e:
+                test_results.append({
+                    "test_name": "结构化输出",
+                    "test_type": "structured_output",
+                    "success": False,
+                    "duration_ms": 0,
+                    "message": f"测试失败: {str(e)}"
+                })
+            
+            total_duration = time.time() - start_time
+            success_count = sum(1 for result in test_results if result["success"])
+            total_tests = len(test_results)
+            overall_success = success_count == total_tests
+            
+            return standard_success_response(
+                data={
+                    "config_id": config_id,
+                    "config_name": config.config_name,
+                    "model_name": config.model_name,
+                    "overall_success": overall_success,
+                    "test_results": test_results,
+                    "summary": {
+                        "total_tests": total_tests,
+                        "passed_tests": success_count,
+                        "failed_tests": total_tests - success_count,
+                        "success_rate": f"{round(success_count/total_tests*100, 1)}%",
+                        "total_duration_ms": round(total_duration * 1000, 2)
                     },
-                    message="配置连接测试成功"
-                )
-            else:
-                return standard_error_response("AI服务返回空响应", 422)
+                    "tested_at": datetime.utcnow().isoformat()
+                },
+                message=f"综合测试完成: {success_count}/{total_tests} 项通过"
+            )
                 
         except Exception as e:
             return standard_error_response(f"连接测试失败: {str(e)}", 422)
@@ -305,6 +405,65 @@ def test_config(config_id):
         return standard_error_response(e.message, 404)
     except Exception as e:
         return standard_error_response(f"测试配置失败: {str(e)}", 500)
+
+
+@ai_configs_bp.route("/test-preview", methods=["POST"])
+@require_json
+@log_api_call
+def test_config_preview():
+    """测试配置预览 - 在保存前测试配置有效性"""
+    try:
+        data = request.get_json()
+        
+        # 验证必要字段
+        required_fields = ["config_name", "api_key", "base_url", "model_name"]
+        for field in required_fields:
+            if not data.get(field):
+                raise ValidationError(f"缺少必要字段: {field}")
+        
+        # 导入AI服务进行测试
+        try:
+            from ..services.requirements_ai_service import RequirementsAIService
+            import time
+            
+            # 创建临时配置数据
+            config_data = {
+                'api_key': data["api_key"].strip(),
+                'base_url': data["base_url"].strip(), 
+                'model_name': data["model_name"].strip()
+            }
+            
+            # 创建临时AI服务实例进行测试
+            temp_ai_service = RequirementsAIService(config=config_data)
+            
+            start_time = time.time()
+            
+            # 执行快速连通性测试
+            test_message = "你好，请回复'测试成功'确认连接。"
+            response = temp_ai_service.send_message(test_message)
+            duration = time.time() - start_time
+            
+            success = response and len(response.strip()) > 0
+            
+            return standard_success_response(
+                data={
+                    "config_name": data["config_name"],
+                    "model_name": data["model_name"],
+                    "test_success": success,
+                    "duration_ms": round(duration * 1000, 2),
+                    "response_preview": (response[:100] + "...") if response and len(response) > 100 else (response or ""),
+                    "tested_at": datetime.utcnow().isoformat()
+                },
+                message="预览测试完成" if success else "预览测试失败"
+            )
+                
+        except Exception as e:
+            return standard_error_response(f"预览测试失败: {str(e)}", 422)
+        
+    except ValidationError as e:
+        return standard_error_response(e.message, 400)
+    except Exception as e:
+        return standard_error_response(f"预览测试失败: {str(e)}", 500)
 
 
 @ai_configs_bp.route("/stats", methods=["GET"])
@@ -333,12 +492,16 @@ def get_config_stats():
 @ai_configs_bp.route("/test-all", methods=["POST"])
 @log_api_call
 def test_all_configs():
-    """批量测试所有配置连接"""
+    """批量测试所有配置连接 - 快速连通性测试"""
     try:
         configs = RequirementsAIConfig.get_all_active_configs()
         test_results = []
         
+        import time
+        batch_start_time = time.time()
+        
         for config in configs:
+            config_start_time = time.time()
             try:
                 # 导入AI服务进行测试
                 from ..services.requirements_ai_service import RequirementsAIService
@@ -346,25 +509,34 @@ def test_all_configs():
                 config_data = config.get_config_for_ai_service()
                 temp_ai_service = RequirementsAIService(config=config_data)
                 
-                # 发送简短测试消息
-                test_message = "测试"
+                # 发送快速测试消息
+                test_message = "Hi, please reply 'OK' to confirm connection."
                 response = temp_ai_service.send_message(test_message)
+                duration = time.time() - config_start_time
                 
+                success = response and len(response.strip()) > 0
                 test_results.append({
                     "config_id": config.id,
                     "config_name": config.config_name,
-                    "test_success": True,
-                    "message": "连接正常"
+                    "model_name": config.model_name,
+                    "test_success": success,
+                    "duration_ms": round(duration * 1000, 2),
+                    "response_preview": (response[:50] + "...") if response and len(response) > 50 else (response or ""),
+                    "message": "连接正常" if success else "连接失败"
                 })
                 
             except Exception as e:
+                duration = time.time() - config_start_time
                 test_results.append({
                     "config_id": config.id,
                     "config_name": config.config_name,
+                    "model_name": config.model_name,
                     "test_success": False,
+                    "duration_ms": round(duration * 1000, 2),
                     "message": f"连接失败: {str(e)}"
                 })
         
+        total_duration = time.time() - batch_start_time
         success_count = sum(1 for result in test_results if result["test_success"])
         total_count = len(test_results)
         
@@ -374,8 +546,12 @@ def test_all_configs():
                 "summary": {
                     "total": total_count,
                     "success": success_count,
-                    "failed": total_count - success_count
-                }
+                    "failed": total_count - success_count,
+                    "success_rate": f"{round(success_count/total_count*100, 1)}%" if total_count > 0 else "0%",
+                    "total_duration_ms": round(total_duration * 1000, 2),
+                    "avg_duration_ms": round(total_duration * 1000 / total_count, 2) if total_count > 0 else 0
+                },
+                "tested_at": datetime.utcnow().isoformat()
             },
             message=f"批量测试完成: {success_count}/{total_count} 配置连接正常"
         )
