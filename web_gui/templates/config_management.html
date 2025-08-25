@@ -514,18 +514,21 @@ async function loadConfigList() {
 // 渲染配置列表
 function renderConfigList(configs) {
     const configsList = document.getElementById('configsList');
-    const emptyState = document.getElementById('emptyState');
+    let emptyState = document.getElementById('emptyState');
     
     if (configs.length === 0) {
         renderEmptyState();
         return;
     }
     
-    // 隐藏空状态
-    emptyState.style.display = 'none';
+    // 隐藏或移除空状态
+    if (emptyState) {
+        emptyState.style.display = 'none';
+    }
     
-    // 清除现有内容
-    configsList.innerHTML = '';
+    // 清除现有内容（但保留emptyState元素）
+    const existingItems = configsList.querySelectorAll('.config-item');
+    existingItems.forEach(item => item.remove());
     
     configs.forEach(config => {
         const configItem = createConfigItem(config);
@@ -586,10 +589,28 @@ function createConfigItem(config) {
 // 渲染空状态
 function renderEmptyState() {
     const configsList = document.getElementById('configsList');
-    const emptyState = document.getElementById('emptyState');
+    let emptyState = document.getElementById('emptyState');
     
-    configsList.innerHTML = '';
-    configsList.appendChild(emptyState);
+    // 如果emptyState不存在，重新创建
+    if (!emptyState) {
+        emptyState = document.createElement('div');
+        emptyState.className = 'empty-state';
+        emptyState.id = 'emptyState';
+        emptyState.innerHTML = `
+            <div class="empty-state-icon">⚙️</div>
+            <div class="empty-state-title">暂无AI配置</div>
+            <div class="empty-state-desc">创建你的第一个AI配置来开始使用智能功能</div>
+        `;
+    }
+    
+    // 清除现有的配置项
+    const existingItems = configsList.querySelectorAll('.config-item');
+    existingItems.forEach(item => item.remove());
+    
+    // 显示空状态
+    if (!configsList.contains(emptyState)) {
+        configsList.appendChild(emptyState);
+    }
     emptyState.style.display = 'block';
 }
 
