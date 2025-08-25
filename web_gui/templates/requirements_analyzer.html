@@ -1903,8 +1903,22 @@ function showMessage(message, type) {
 
 // 页面加载时初始化
 document.addEventListener('DOMContentLoaded', async function() {
+    // 先检查是否有AI配置，如果没有则显示配置提示
+    await showConnectPrompt();
+    
     // 初始化现有功能
     await initializeAiConfig();
+    
+    // 监听配置变更事件
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'ai_config_changed') {
+            console.log('检测到AI配置变更，重新检查配置状态');
+            // 重新检查并显示连接提示
+            setTimeout(() => {
+                showConnectPrompt();
+            }, 500);
+        }
+    });
 });
 </script>
 {% endblock %}

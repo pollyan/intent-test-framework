@@ -641,6 +641,8 @@ async function selectConfig(configId) {
             // 重新加载配置列表和统计信息
             await loadConfigList();
             await updateConfigStats();
+            // 通知其他页面配置已更改
+            notifyConfigChange();
         } else {
             showMessage('选用失败: ' + response.data.message, 'error');
         }
@@ -664,6 +666,8 @@ async function deleteConfig(configId) {
             // 重新加载配置列表和统计信息
             await loadConfigList();
             await updateConfigStats();
+            // 通知其他页面配置已更改
+            notifyConfigChange();
         } else {
             showMessage('删除失败: ' + response.data.message, 'error');
         }
@@ -881,6 +885,8 @@ async function handleAiConfigSubmit(event) {
             // 重新加载配置列表和统计信息
             await loadConfigList();
             await updateConfigStats();
+            // 通知其他页面配置已更改
+            notifyConfigChange();
             
             // 清空表单
             clearForm();
@@ -922,6 +928,20 @@ function showMessage(message, type = 'info') {
             document.body.removeChild(messageEl);
         }
     }, 3000);
+}
+
+// 通知其他页面配置已更改
+function notifyConfigChange() {
+    // 使用LocalStorage来通知其他页面
+    localStorage.setItem('ai_config_changed', Date.now().toString());
+    
+    // 触发storage事件（用于同一浏览器的其他标签页）
+    window.dispatchEvent(new StorageEvent('storage', {
+        key: 'ai_config_changed',
+        newValue: Date.now().toString()
+    }));
+    
+    console.log('已通知其他页面AI配置已更改');
 }
 
 // 页面加载时初始化配置管理

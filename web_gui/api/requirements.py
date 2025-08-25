@@ -30,25 +30,25 @@ except ImportError:
 ai_service = None
 
 def get_ai_service():
-    """获取AI服务实例，延迟初始化避免应用上下文问题"""
+    """获取AI服务实例，每次重新检查配置避免缓存问题"""
     global ai_service
-    if ai_service is None:
-        try:
-            from ..models import RequirementsAIConfig
-            
-            # 获取默认AI配置
-            default_config = RequirementsAIConfig.get_default_config()
-            if default_config:
-                config_data = default_config.get_config_for_ai_service()
-                ai_service = RequirementsAIService(config=config_data)
-                print(f"✅ 需求分析AI服务初始化成功，使用配置: {default_config.config_name}")
-            else:
-                # 如果没有默认配置，使用环境变量
-                ai_service = RequirementsAIService()
-                print("✅ 需求分析AI服务初始化成功，使用环境变量")
-        except Exception as e:
-            print(f"⚠️ 需求分析AI服务初始化失败: {e}")
+    try:
+        from ..models import RequirementsAIConfig
+        
+        # 每次都重新获取默认AI配置，避免缓存问题
+        default_config = RequirementsAIConfig.get_default_config()
+        if default_config:
+            config_data = default_config.get_config_for_ai_service()
+            # 重新创建AI服务实例
+            ai_service = RequirementsAIService(config=config_data)
+            print(f"✅ 需求分析AI服务初始化成功，使用配置: {default_config.config_name}")
+        else:
+            # 如果没有默认配置，返回None而不是使用环境变量
+            print("⚠️ 未找到默认AI配置")
             ai_service = None
+    except Exception as e:
+        print(f"⚠️ 需求分析AI服务初始化失败: {e}")
+        ai_service = None
     
     return ai_service
 
