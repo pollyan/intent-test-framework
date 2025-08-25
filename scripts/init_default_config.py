@@ -4,202 +4,155 @@
 """
 默认AI配置初始化脚本
 在本地开发环境启动时自动创建和更新默认AI配置
-通过API调用来确保与Flask应用使用相同数据库
+直接操作本地SQLite数据库，确保与Flask应用使用相同数据源
 """
 
 import os
 import sys
-import requests
-import time
-import json
+import sqlite3
 from datetime import datetime
 
 # 添加项目根目录到Python路径
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 
-def wait_for_flask_server(base_url="http://localhost:5001", timeout=30, check_interval=2):
-    """等待Flask服务器启动"""
-    print(f"⏳ 等待Flask服务器启动 ({base_url})...")
-    
-    start_time = time.time()
-    while time.time() - start_time < timeout:
-        try:
-            response = requests.get(f"{base_url}/api/status", timeout=5)
-            if response.status_code == 200:
-                print("✅ Flask服务器已就绪")
-                return True
-        except requests.exceptions.RequestException:
-            pass
-        
-        time.sleep(check_interval)
-    
-    print(f"❌ Flask服务器启动超时 ({timeout}秒)")
-    return False
 
-def get_existing_configs(base_url="http://localhost:5001"):
-    """获取现有AI配置"""
-    try:
-        response = requests.get(f"{base_url}/api/ai-configs", timeout=10)
-        if response.status_code == 200:
-            data = response.json()
-            return data.get("data", {}).get("configs", [])
-        else:
-            print(f"⚠️ 获取配置列表失败: HTTP {response.status_code}")
-            return []
-    except requests.exceptions.RequestException as e:
-        print(f"⚠️ 获取配置列表失败: {e}")
-        return []
 
-def create_qwen_config(base_url="http://localhost:5001"):
-    """创建Qwen配置"""
-    config_data = {
-        "config_name": "Qwen",
-        "api_key": "sk-0b7ca376cfce4e2f82986eb5fea5124d",
-        "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        "model_name": "qwen-plus"
-    }
+def get_local_db_path():
+    """获取本地SQLite数据库路径"""
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    db_path = os.path.join(base_dir, "instance", "intent_test_framework.db")
     
-    try:
-        response = requests.post(
-            f"{base_url}/api/ai-configs",
-            json=config_data,
-            timeout=10,
-            headers={"Content-Type": "application/json"}
-        )
-        
-        if response.status_code in [200, 201]:
-            print("✅ Qwen配置创建成功")
-            return response.json()
-        else:
-            print(f"❌ Qwen配置创建失败: HTTP {response.status_code}")
-            print(f"响应内容: {response.text}")
-            return None
-            
-    except requests.exceptions.RequestException as e:
-        print(f"❌ Qwen配置创建失败: {e}")
-        return None
-
-def update_qwen_config(config_id, base_url="http://localhost:5001"):
-    """更新现有Qwen配置"""
-    config_data = {
-        "config_name": "Qwen",
-        "api_key": "sk-0b7ca376cfce4e2f82986eb5fea5124d", 
-        "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        "model_name": "qwen-plus"
-    }
+    # 确保instance目录存在
+    instance_dir = os.path.dirname(db_path)
+    os.makedirs(instance_dir, exist_ok=True)
     
-    try:
-        response = requests.put(
-            f"{base_url}/api/ai-configs/{config_id}",
-            json=config_data,
-            timeout=10,
-            headers={"Content-Type": "application/json"}
-        )
-        
-        if response.status_code == 200:
-            print("🔄 Qwen配置更新成功")
-            return response.json()
-        else:
-            print(f"❌ Qwen配置更新失败: HTTP {response.status_code}")
-            print(f"响应内容: {response.text}")
-            return None
-            
-    except requests.exceptions.RequestException as e:
-        print(f"❌ Qwen配置更新失败: {e}")
-        return None
-
-def set_default_config(config_id, base_url="http://localhost:5001"):
-    """设置配置为默认"""
-    try:
-        response = requests.post(
-            f"{base_url}/api/ai-configs/{config_id}/set-default",
-            timeout=10
-        )
-        
-        if response.status_code == 200:
-            print("🎯 已设置为默认配置")
-            return True
-        else:
-            print(f"⚠️ 设置默认配置失败: HTTP {response.status_code}")
-            return False
-            
-    except requests.exceptions.RequestException as e:
-        print(f"⚠️ 设置默认配置失败: {e}")
-        return False
+    return db_path
 
 def init_default_ai_config():
-    """初始化默认AI配置 - 通过API调用"""
+    """初始化默认AI配置 - 直接操作SQLite数据库"""
     
-    base_url = "http://localhost:5001"
+    db_path = get_local_db_path()
+    print(f"🗄️ 使用本地数据库: {db_path}")
     
-    # 等待Flask服务器启动
-    if not wait_for_flask_server(base_url):
-        print("⚠️ Flask服务器未就绪，跳过AI配置初始化")
-        return False
+    # 默认配置
+    default_config = {
+        'config_name': 'Qwen',
+        'api_key': 'sk-0b7ca376cfce4e2f82986eb5fea5124d',
+        'base_url': 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+        'model_name': 'qwen-plus',
+        'is_default': True,
+        'is_active': True
+    }
     
     try:
-        # 获取现有配置
-        existing_configs = get_existing_configs(base_url)
-        print(f"📋 发现现有配置: {len(existing_configs)} 个")
+        # 连接数据库
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
         
-        # 查找是否已存在Qwen配置
-        qwen_config = None
-        for config in existing_configs:
-            if config.get("config_name") == "Qwen":
-                qwen_config = config
-                break
+        # 检查表是否存在
+        cursor.execute("""
+            SELECT name FROM sqlite_master 
+            WHERE type='table' AND name='requirements_ai_configs'
+        """)
         
-        if qwen_config:
-            # 更新现有Qwen配置
-            config_id = qwen_config.get("id")
-            print(f"✅ 发现现有 Qwen 配置 (ID: {config_id})")
+        if not cursor.fetchone():
+            print("⚠️ requirements_ai_configs 表不存在，将创建表...")
             
-            result = update_qwen_config(config_id, base_url)
-            if result:
-                # 设置为默认配置
-                set_default_config(config_id, base_url)
-                print(f"🎯 Qwen配置已更新并设为默认")
-            else:
-                print("⚠️ Qwen配置更新失败")
-                return False
+            # 创建表
+            cursor.execute("""
+                CREATE TABLE requirements_ai_configs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    config_name VARCHAR(255) NOT NULL,
+                    api_key TEXT NOT NULL,
+                    base_url VARCHAR(500) NOT NULL,
+                    model_name VARCHAR(100) NOT NULL,
+                    is_default BOOLEAN DEFAULT FALSE,
+                    is_active BOOLEAN DEFAULT TRUE,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            print("✅ requirements_ai_configs 表创建成功")
+        
+        # 检查是否已存在Qwen配置
+        cursor.execute("""
+            SELECT id, config_name, is_default FROM requirements_ai_configs 
+            WHERE config_name = ?
+        """, (default_config['config_name'],))
+        
+        existing_qwen = cursor.fetchone()
+        
+        if existing_qwen:
+            config_id, name, is_default = existing_qwen
+            print(f"✅ 发现现有 {name} 配置 (ID: {config_id})")
+            
+            # 更新现有配置
+            cursor.execute("""
+                UPDATE requirements_ai_configs 
+                SET api_key = ?, base_url = ?, model_name = ?, 
+                    is_default = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            """, (
+                default_config['api_key'],
+                default_config['base_url'], 
+                default_config['model_name'],
+                default_config['is_default'],
+                default_config['is_active'],
+                config_id
+            ))
+            print(f"🔄 已更新 {name} 配置")
         else:
-            # 创建新的Qwen配置
             print("🆕 创建新的 Qwen 配置...")
-            result = create_qwen_config(base_url)
-            if result:
-                config_id = result.get("data", {}).get("id")
-                if config_id:
-                    # 设置为默认配置
-                    set_default_config(config_id, base_url)
-                    print(f"🎯 Qwen配置已创建并设为默认 (ID: {config_id})")
-                else:
-                    print("⚠️ 无法获取新创建配置的ID")
-                    return False
-            else:
-                print("⚠️ Qwen配置创建失败")
-                return False
+            # 插入新配置
+            cursor.execute("""
+                INSERT INTO requirements_ai_configs 
+                (config_name, api_key, base_url, model_name, is_default, is_active, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            """, (
+                default_config['config_name'],
+                default_config['api_key'],
+                default_config['base_url'],
+                default_config['model_name'],
+                default_config['is_default'],
+                default_config['is_active']
+            ))
+            print(f"✅ 已创建 {default_config['config_name']} 配置")
         
-        # 验证最终结果
-        final_configs = get_existing_configs(base_url)
-        default_config = None
-        for config in final_configs:
-            if config.get("is_default"):
-                default_config = config
-                break
+        # 如果设置为默认，取消其他配置的默认状态
+        if default_config['is_default']:
+            cursor.execute("""
+                UPDATE requirements_ai_configs 
+                SET is_default = FALSE, updated_at = CURRENT_TIMESTAMP
+                WHERE config_name != ?
+            """, (default_config['config_name'],))
         
-        if default_config and default_config.get("config_name") == "Qwen":
-            print(f"🎉 Qwen配置初始化成功！")
-            print(f"   配置名称: {default_config.get('config_name')}")
-            print(f"   模型: {default_config.get('model_name')}")
-            print(f"   默认配置: {default_config.get('is_default')}")
-            return True
+        # 提交更改
+        conn.commit()
+        
+        # 验证配置
+        cursor.execute("""
+            SELECT config_name, model_name, is_default, is_active 
+            FROM requirements_ai_configs 
+            WHERE is_default = TRUE
+        """)
+        
+        default_cfg = cursor.fetchone()
+        if default_cfg:
+            name, model, is_default, is_active = default_cfg
+            print(f"🎯 默认配置已设置: {name} ({model}) - 默认: {bool(is_default)}, 激活: {bool(is_active)}")
         else:
-            print("⚠️ Qwen配置未正确设置为默认")
-            return False
-            
+            print("⚠️ 未找到默认配置")
+        
+        conn.close()
+        print("✅ AI配置初始化完成")
+        return True
+        
+    except sqlite3.Error as e:
+        print(f"❌ 数据库操作失败: {e}")
+        return False
     except Exception as e:
-        print(f"❌ AI配置初始化失败: {e}")
+        print(f"❌ 初始化失败: {e}")
         return False
 
 if __name__ == "__main__":

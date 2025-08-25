@@ -60,13 +60,20 @@ class DatabaseConfig:
 
             return database_url
 
-        # Supabase特定配置
+        # Supabase特定配置（仅生产环境）
         supabase_url = os.getenv("SUPABASE_DATABASE_URL")
-        if supabase_url:
+        if supabase_url and self._is_production():
             return supabase_url
 
-        # 使用线上PostgreSQL数据库，增加连接稳定性参数
-        return "postgresql://postgres.jzmqsuxphksbulrbhebp:Shunlian04@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?sslmode=require&connect_timeout=15&application_name=local-dev"
+        # 本地开发环境默认使用SQLite
+        if not self._is_production():
+            # 使用项目根目录下的SQLite数据库
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            db_path = os.path.join(base_dir, "instance", "intent_test_framework.db")
+            return f"sqlite:///{db_path}"
+
+        # 生产环境才使用PostgreSQL（如果没有其他配置）
+        return "postgresql://postgres.jzmqsuxphksbulrbhebp:Shunlian04@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?sslmode=require&connect_timeout=15&application_name=prod"
 
     def _is_production(self) -> bool:
         """判断是否为生产环境"""
