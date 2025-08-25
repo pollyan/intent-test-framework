@@ -493,6 +493,98 @@ def poll_messages(session_id):
         return standard_error_response(f"轮询消息失败: {str(e)}", 500)
 
 
+@requirements_bp.route("/sessions/<session_id>/messages/<message_id>/refresh", methods=["POST"])
+@log_api_call
+def refresh_message(session_id, message_id):
+    """刷新AI消息内容，重新生成完整回复"""
+    try:
+        # 验证会话是否存在
+        session = RequirementsSession.query.get(session_id)
+        if not session:
+            raise NotFoundError("会话不存在")
+        
+        # 验证消息是否存在且为AI消息
+        message = RequirementsMessage.query.filter_by(
+            id=message_id, 
+            session_id=session_id,
+            message_type='ai'
+        ).first()
+        
+        if not message:
+            raise NotFoundError("AI消息不存在")
+        
+        # 获取AI服务实例
+        ai_service_instance = get_ai_service()
+        if not ai_service_instance:
+            return standard_error_response("AI服务未初始化", 500)
+        
+        # 获取该消息之前的所有历史消息（用于重新生成上下文）
+        previous_messages = RequirementsMessage.query.filter(
+            RequirementsMessage.session_id == session_id,
+            RequirementsMessage.created_at <= message.created_at,
+            RequirementsMessage.id != message_id  # 排除当前要刷新的消息
+        ).order_by(RequirementsMessage.created_at.asc()).all()
+        
+        # 找到触发该AI消息的用户消息
+        user_message = None
+        for prev_msg in reversed(previous_messages):
+            if prev_msg.message_type == 'user':
+                user_message = prev_msg
+                break
+        
+        if not user_message:
+            raise ValidationError("找不到对应的用户消息")
+        
+        # 重新调用AI服务生成回复
+        try:
+            ai_result = ai_service_instance.analyze_user_requirement(
+                user_message.content,
+                session_context={},  # 空上下文，使用全历史模式
+                project_name=session.project_name or "刷新项目",
+                current_stage="refresh",
+                session_id=session_id
+            )
+            
+            if ai_result and 'ai_response' in ai_result:
+                # 更新消息内容
+                message.content = ai_result['ai_response']
+                
+                # 在metadata中记录刷新时间
+                refresh_time = datetime.utcnow()
+                metadata = json.loads(message.message_metadata or '{}')
+                metadata['refreshed_at'] = refresh_time.isoformat()
+                metadata['refresh_count'] = metadata.get('refresh_count', 0) + 1
+                message.message_metadata = json.dumps(metadata)
+                
+                # 提交数据库更改
+                db.session.commit()
+                
+                # 构造返回的消息数据
+                message_dict = message.to_dict()
+                message_dict['updated_at'] = refresh_time.isoformat()  # 前端需要的时间戳
+                
+                return standard_success_response(
+                    data={
+                        "message": message_dict,
+                        "refresh_time": refresh_time.isoformat()
+                    },
+                    message="AI消息刷新成功"
+                )
+            else:
+                raise Exception("AI服务返回无效响应")
+                
+        except Exception as ai_error:
+            raise Exception(f"AI服务调用失败: {str(ai_error)}")
+            
+    except NotFoundError as e:
+        return standard_error_response(e.message, 404)
+    except ValidationError as e:
+        return standard_error_response(e.message, 400)
+    except Exception as e:
+        db.session.rollback()
+        return standard_error_response(f"刷新消息失败: {str(e)}", 500)
+
+
 def register_requirements_socketio(socketio: SocketIO):
     """注册需求分析相关的WebSocket事件处理器"""
     

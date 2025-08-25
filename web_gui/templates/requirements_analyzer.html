@@ -525,6 +525,61 @@
     text-decoration: underline;
 }
 
+/* 消息结构调整 */
+.message-body {
+    flex: 1;
+}
+
+.message-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+}
+
+/* AI消息刷新按钮 */
+.refresh-message-btn {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    color: #6c757d;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.refresh-message-btn:hover {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.refresh-message-btn:disabled {
+    background: #e9ecef;
+    color: #adb5bd;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.refresh-message-btn.refreshing {
+    background: #ffc107;
+    color: #212529;
+    border-color: #ffc107;
+}
+
+.refresh-message-btn.refreshing::after {
+    content: " ...";
+    animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+    0% { content: " "; }
+    33% { content: " ."; }
+    66% { content: " .."; }
+    100% { content: " ..."; }
+}
+
 /* AI处理中动效 */
 .ai-processing {
     display: none;
@@ -1367,6 +1422,7 @@ function displayMessage(message) {
     const messagesArea = document.getElementById('messagesArea');
     const messageEl = document.createElement('div');
     messageEl.className = `message ${message.message_type}`;
+    messageEl.dataset.messageId = message.id; // 添加消息ID，用于刷新时定位
     
     const avatar = message.message_type === 'user' ? '你' : 'AI';
     const time = new Date(message.created_at).toLocaleTimeString();
@@ -1376,11 +1432,19 @@ function displayMessage(message) {
         ? parseMarkdown(message.content) 
         : escapeHtml(message.content);
     
+    // 为AI消息添加刷新按钮
+    const refreshButton = (message.message_type === 'ai' || message.message_type === 'assistant') 
+        ? `<button class="refresh-message-btn" onclick="refreshAIMessage('${message.id}')" title="重新获取AI回复">刷新</button>` 
+        : '';
+    
     messageEl.innerHTML = `
         <div class="message-avatar">${avatar}</div>
-        <div>
+        <div class="message-body">
             <div class="message-content ${message.message_type === 'ai' || message.message_type === 'assistant' ? 'ai-formatted' : ''}">${contentHtml}</div>
-            <div class="message-time">${time}</div>
+            <div class="message-footer">
+                <div class="message-time">${time}</div>
+                ${refreshButton}
+            </div>
         </div>
     `;
     
@@ -1393,6 +1457,61 @@ function displayMessage(message) {
             behavior: 'smooth'
         });
     }, 100);
+}
+
+// 刷新AI消息内容
+async function refreshAIMessage(messageId) {
+    if (!currentSessionId || !messageId) {
+        showMessage('刷新失败：缺少必要参数', 'error');
+        return;
+    }
+    
+    // 找到目标消息元素
+    const messageEl = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (!messageEl) {
+        showMessage('刷新失败：找不到目标消息', 'error');
+        return;
+    }
+    
+    const refreshBtn = messageEl.querySelector('.refresh-message-btn');
+    const messageContent = messageEl.querySelector('.message-content');
+    
+    try {
+        // 更新按钮状态
+        refreshBtn.disabled = true;
+        refreshBtn.classList.add('refreshing');
+        refreshBtn.textContent = '刷新中';
+        
+        // 调用刷新API
+        const response = await axios.post(`/api/requirements/sessions/${currentSessionId}/messages/${messageId}/refresh`);
+        
+        if (response.data.code === 200) {
+            const updatedMessage = response.data.data.message;
+            
+            // 更新消息内容
+            const newContentHtml = parseMarkdown(updatedMessage.content);
+            messageContent.innerHTML = newContentHtml;
+            
+            // 更新时间戳
+            const timeEl = messageEl.querySelector('.message-time');
+            if (timeEl) {
+                timeEl.textContent = new Date(updatedMessage.updated_at || updatedMessage.created_at).toLocaleTimeString();
+            }
+            
+            showMessage('AI回复已更新', 'success');
+        } else {
+            throw new Error(response.data.message || '刷新失败');
+        }
+        
+    } catch (error) {
+        console.error('刷新AI消息失败:', error);
+        showMessage(`刷新失败: ${error.message}`, 'error');
+    } finally {
+        // 恢复按钮状态
+        refreshBtn.disabled = false;
+        refreshBtn.classList.remove('refreshing');
+        refreshBtn.textContent = '刷新';
+    }
 }
 
 // 加载会话消息
