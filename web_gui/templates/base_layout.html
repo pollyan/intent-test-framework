@@ -516,12 +516,14 @@
     <!-- 主内容 -->
     <main class="main-container">
         <!-- 页面标题 -->
+        {% if self.page_title() %}
         <div class="page-header">
             <h1 class="page-title">{% block page_title %}AI4SE工具集{% endblock %}</h1>
             {% if self.page_subtitle() %}
                 <p class="page-subtitle">{% block page_subtitle %}{% endblock %}</p>
             {% endif %}
         </div>
+        {% endif %}
 
         <!-- 页面内容 -->
         {% block content %}{% endblock %}
