@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}AI测试用例管理系统{% endblock %}</title>
+    <title>{% block title %}AI4SE工具集{% endblock %}</title>
     
     <!-- 极简风格样式 -->
     <style>
@@ -86,6 +86,71 @@
         .nav-user {
             color: #666666;
             font-size: 14px;
+        }
+
+        /* 下拉菜单样式 */
+        .nav-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .nav-dropdown-trigger {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dropdown-arrow {
+            font-size: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        .nav-dropdown:hover .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .nav-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #ffffff;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            min-width: 160px;
+            padding: 8px 0;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+
+        .nav-dropdown:hover .nav-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .nav-dropdown-item {
+            display: block;
+            padding: 8px 16px;
+            color: #666666;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .nav-dropdown-item:hover {
+            background: #f8f8f8;
+            color: #333333;
+        }
+
+        .nav-dropdown-item.active {
+            background: #f0f0f0;
+            color: #333333;
+            font-weight: 500;
         }
 
         /* 主容器 */
@@ -422,15 +487,20 @@
     <!-- 顶部导航 -->
     <nav class="top-nav">
         <div class="nav-container">
-            <div class="nav-brand">意图测试平台</div>
+            <div class="nav-brand">AI4SE工具集</div>
             <div class="nav-links">
-                <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" data-page="dashboard">仪表板</a>
-                <a class="nav-link {% if request.endpoint == 'testcases' %}active{% endif %}" data-page="testcases">测试用例</a>
-                <a class="nav-link {% if request.endpoint == 'execution' %}active{% endif %}" data-page="execution">执行控制台</a>
-                <a class="nav-link {% if request.endpoint == 'reports' %}active{% endif %}" data-page="reports">报告</a>
-                <a class="nav-link {% if request.endpoint == 'templates' %}active{% endif %}" data-page="templates">模板库</a>
+                <div class="nav-dropdown">
+                    <a class="nav-link nav-dropdown-trigger {% if request.endpoint in ['testcases', 'execution', 'local-proxy'] %}active{% endif %}">
+                        意图测试工具
+                        <span class="dropdown-arrow">▼</span>
+                    </a>
+                    <div class="nav-dropdown-menu">
+                        <a class="nav-dropdown-item {% if request.endpoint == 'testcases' %}active{% endif %}" data-page="testcases">测试用例</a>
+                        <a class="nav-dropdown-item {% if request.endpoint == 'execution' %}active{% endif %}" data-page="execution">执行控制台</a>
+                        <a class="nav-dropdown-item {% if request.endpoint == 'local-proxy' %}active{% endif %}" data-page="local-proxy">本地代理</a>
+                    </div>
+                </div>
                 <a class="nav-link {% if request.endpoint == 'requirements_analyzer_page' %}active{% endif %}" data-page="requirements-analyzer">智能需求分析</a>
-                <a class="nav-link {% if request.endpoint == 'local-proxy' %}active{% endif %}" data-page="local-proxy">本地代理</a>
             </div>
             <div class="nav-user">用户</div>
         </div>
@@ -440,7 +510,7 @@
     <main class="main-container">
         <!-- 页面标题 -->
         <div class="page-header">
-            <h1 class="page-title">{% block page_title %}AI测试用例管理系统{% endblock %}</h1>
+            <h1 class="page-title">{% block page_title %}AI4SE工具集{% endblock %}</h1>
             {% if self.page_subtitle() %}
                 <p class="page-subtitle">{% block page_subtitle %}{% endblock %}</p>
             {% endif %}
@@ -463,9 +533,22 @@
                 axios.defaults.timeout = 180000; // 3分钟 = 180秒 * 1000毫秒
                 console.log('已设置axios全局超时为3分钟');
             }
-            const navLinks = document.querySelectorAll('.nav-link');
+            // 处理普通导航链接
+            const navLinks = document.querySelectorAll('.nav-link[data-page]');
             navLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = this.dataset.page;
+                    if (page && page !== '{{ request.endpoint }}') {
+                        window.location.href = '/' + page;
+                    }
+                });
+            });
+
+            // 处理下拉菜单项
+            const dropdownItems = document.querySelectorAll('.nav-dropdown-item');
+            dropdownItems.forEach(item => {
+                item.addEventListener('click', function(e) {
                     e.preventDefault();
                     const page = this.dataset.page;
                     if (page && page !== '{{ request.endpoint }}') {

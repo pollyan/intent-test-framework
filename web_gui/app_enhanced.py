@@ -524,6 +524,28 @@ def setup_routes(app, socketio):
         )
         return send_from_directory(screenshot_dir, filename)
 
+    @app.route("/api/download-proxy")
+    def api_download_proxy():
+        """API端点：下载本地代理包 - 复用线上实现"""
+        try:
+            # 导入线上环境的实现
+            import sys
+            import os
+            
+            # 添加 api 目录到 Python 路径
+            api_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "api")
+            if api_dir not in sys.path:
+                sys.path.insert(0, api_dir)
+            
+            # 导入线上的下载函数
+            from index import download_local_proxy
+            
+            # 直接调用线上的实现
+            return download_local_proxy()
+        
+        except Exception as e:
+            return jsonify({"success": False, "error": f"下载失败: {str(e)}"}), 500
+
     # ==================== WebSocket事件处理 ====================
 
     @socketio.on("connect")
