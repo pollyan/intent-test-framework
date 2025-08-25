@@ -284,9 +284,10 @@ def test_config(config_id):
             
             start_time = time.time()
             
-            # 发送简单的测试消息
-            test_message = "你好"
-            response = temp_ai_service.send_message(test_message)
+            # 使用与需求分析助手相同的方式调用AI模型
+            system_prompt = "你是一个AI助手测试程序。"
+            user_prompt = "你好"
+            response = temp_ai_service._call_ai_model(system_prompt, user_prompt)
             duration = time.time() - start_time
             
             if response and len(response.strip()) > 0:
@@ -320,11 +321,7 @@ def test_config(config_id):
                 "error_traceback": traceback.format_exc()
             }
             
-            return standard_error_response(
-                f"连接测试失败: {str(e)}",
-                422,
-                error_details
-            )
+            return standard_error_response(f"连接测试失败: {str(e)}", 422)
         
     except NotFoundError as e:
         return standard_error_response(e.message, 404)
@@ -363,9 +360,10 @@ def test_config_preview():
             
             start_time = time.time()
             
-            # 发送简单测试消息
-            test_message = "你好"
-            response = temp_ai_service.send_message(test_message)
+            # 使用与需求分析助手相同的方式调用AI模型
+            system_prompt = "你是一个AI助手测试程序。"
+            user_prompt = "你好"
+            response = temp_ai_service._call_ai_model(system_prompt, user_prompt)
             duration = time.time() - start_time
             
             if response and len(response.strip()) > 0:
@@ -398,11 +396,7 @@ def test_config_preview():
                 "error_traceback": traceback.format_exc()
             }
             
-            return standard_error_response(
-                f"预览测试失败: {str(e)}",
-                422,
-                error_details
-            )
+            return standard_error_response(f"预览测试失败: {str(e)}", 422)
         
     except ValidationError as e:
         return standard_error_response(e.message, 400)
@@ -453,9 +447,10 @@ def test_all_configs():
                 config_data = config.get_config_for_ai_service()
                 temp_ai_service = RequirementsAIService(config=config_data)
                 
-                # 发送简单测试消息
-                test_message = "你好"
-                response = temp_ai_service.send_message(test_message)
+                # 使用与需求分析助手相同的方式调用AI模型
+                system_prompt = "你是一个AI助手测试程序。"
+                user_prompt = "你好"
+                response = temp_ai_service._call_ai_model(system_prompt, user_prompt)
                 duration = time.time() - config_start_time
                 
                 success = response and len(response.strip()) > 0
