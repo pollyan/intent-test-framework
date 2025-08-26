@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI需求分析助手 - 加载动画设计</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #fafafa;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .demo-container {
+            background: white;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 800px;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #f8f8f8;
+            color: #333333;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e8e8e8;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+            background: #ffffff;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            display: flex;
+            gap: 12px;
+            max-width: 80%;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+        }
+
+        .message-content {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .user .message-content {
+            background: #f0f0f0;
+            color: #333333;
+        }
+
+        .assistant .message-content {
+            background: #ffffff;
+            color: #333333;
+            border: 1px solid #e8e8e8;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        .user .avatar {
+            background: #333333;
+            color: white;
+        }
+
+        .assistant .avatar {
+            background: #f0f0f0;
+            color: #666666;
+        }
+
+        /* AI正在处理的加载动画 */
+        .ai-thinking {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
+            max-width: 80%;
+        }
+
+        .ai-thinking .avatar {
+            background: #f0f0f0;
+            color: #666666;
+        }
+
+        .thinking-bubble {
+            background: none;
+            border: none;
+            padding: 0;
+            flex: 1;
+        }
+
+        .thinking-text {
+            color: #666666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        /* 三点跳动动画 */
+        .dots-animation {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #666666;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        .dot:nth-child(3) { animation-delay: 0s; }
+
+        /* 控制按钮 */
+        .controls {
+            background: #f8f8f8;
+            padding: 16px 20px;
+            border-top: 1px solid #e8e8e8;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #333333;
+            color: white;
+            border-color: #333333;
+        }
+
+        .btn-primary:hover {
+            background: #555555;
+            border-color: #555555;
+        }
+
+        .btn-secondary {
+            background: #ffffff;
+            color: #666666;
+            border-color: #e8e8e8;
+        }
+
+        .btn-secondary:hover {
+            background: #f0f0f0;
+            border-color: #d0d0d0;
+        }
+
+        /* 动画效果 */
+        @keyframes bounce {
+            0%, 80%, 100% {
+                opacity: 0.3;
+                transform: scale(0.8);
+            }
+            40% {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+        }
+
+        /* 隐藏状态 */
+        .hidden {
+            display: none;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .demo-container {
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .message-content,
+            .thinking-bubble {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="header">
+            与AI助手Alex对话 - 加载动画效果演示
+        </div>
+        
+        <div class="chat-container" id="chatContainer">
+            <!-- 用户消息 -->
+            <div class="message user">
+                <div class="avatar">我</div>
+                <div class="message-content">
+                    我想开发一个在线教育平台，主要是帮助学生学习编程，需要包含课程管理、作业提交、在线编译器等功能。
+                </div>
+            </div>
+
+            <!-- AI思考中状态 -->
+            <div class="ai-thinking" id="aiThinking">
+                <div class="avatar">AI</div>
+                <div class="thinking-bubble">
+                    <div class="thinking-text">Alex正在处理您的请求</div>
+                    
+                    <div class="dots-animation">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI回复 (初始隐藏) -->
+            <div class="message assistant hidden" id="aiResponse">
+                <div class="avatar">AI</div>
+                <div class="message-content">
+                    很好！我理解您想要开发一个综合性的在线编程教育平台。让我来帮您详细分析这个项目的需求。
+
+                    <br><br>首先，我想了解几个关键问题：
+
+                    <br><br>1. <strong>目标用户群体</strong>：主要面向哪个年龄段的学习者？是中小学生、大学生还是职场人士？
+
+                    <br><br>2. <strong>编程语言范围</strong>：计划支持哪些编程语言？Python、Java、JavaScript还是更多选择？
+
+                    <br><br>3. <strong>平台规模</strong>：预期同时在线用户数大概是多少？这会影响技术架构的选择...
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="showThinking()">演示：用户发送消息</button>
+            <button class="btn btn-secondary" onclick="showResponse()">演示：显示AI回复</button>
+            <button class="btn btn-secondary" onclick="reset()">重置演示</button>
+        </div>
+    </div>
+
+    <script>
+        function showThinking() {
+            const aiThinking = document.getElementById('aiThinking');
+            const aiResponse = document.getElementById('aiResponse');
+            
+            // 隐藏AI回复，显示思考状态
+            aiResponse.classList.add('hidden');
+            aiThinking.classList.remove('hidden');
+            
+            // 滚动到底部
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // 简化状态文字，不需要循环
+            const thinkingText = document.querySelector('.thinking-text');
+            thinkingText.textContent = "Alex正在处理您的请求";
+        }
+
+        function showResponse() {
+            const aiThinking = document.getElementById('aiThinking');
+            const aiResponse = document.getElementById('aiResponse');
+            
+            // 隐藏思考状态，显示AI回复
+            aiThinking.classList.add('hidden');
+            aiResponse.classList.remove('hidden');
+            
+            // 滚动到底部
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function reset() {
+            const aiThinking = document.getElementById('aiThinking');
+            const aiResponse = document.getElementById('aiResponse');
+            
+            // 隐藏所有AI回复状态
+            aiThinking.classList.add('hidden');
+            aiResponse.classList.add('hidden');
+            
+            // 重置状态文字
+            const thinkingText = document.querySelector('.thinking-text');
+            thinkingText.textContent = "Alex正在处理您的请求";
+        }
+
+        // 页面加载后默认显示思考状态
+        document.addEventListener('DOMContentLoaded', function() {
+            reset(); // 初始状态：隐藏AI相关内容
+        });
+    </script>
+</body>
+</html>

@@ -582,40 +582,49 @@
 /* AI处理中动效 */
 .ai-processing {
     display: none;
-    padding: 16px;
-    text-align: center;
-    color: #666666;
-    font-size: 14px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border: 1px dashed #dee2e6;
-    margin: 12px 0;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+    gap: 12px;
+    max-width: 80%;
+    margin: 16px 0;
+    align-items: flex-start;
 }
 
 .ai-processing.show {
     display: flex;
 }
 
+.ai-processing .message-avatar {
+    background: #f0f0f0;
+    color: #666666;
+    border-radius: 50%;
+}
+
+.thinking-content {
+    flex: 1;
+}
+
+.thinking-text {
+    color: #666666;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
 .processing-dots {
     display: flex;
     gap: 4px;
-    margin-left: 8px;
+    align-items: center;
 }
 
 .processing-dot {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: #007bff;
+    background: #666666;
     animation: processingPulse 1.4s infinite ease-in-out;
 }
 
-.processing-dot:nth-child(1) { animation-delay: 0s; }
-.processing-dot:nth-child(2) { animation-delay: 0.2s; }
-.processing-dot:nth-child(3) { animation-delay: 0.4s; }
+.processing-dot:nth-child(1) { animation-delay: -0.32s; }
+.processing-dot:nth-child(2) { animation-delay: -0.16s; }
+.processing-dot:nth-child(3) { animation-delay: 0s; }
 
 @keyframes processingPulse {
     0%, 80%, 100% {
@@ -631,18 +640,18 @@
 /* 连接按钮加载动效 */
 .connect-btn.loading {
     position: relative;
-    color: transparent;
     pointer-events: none;
+    padding-left: 35px;
 }
 
-.connect-btn.loading::after {
+.connect-btn.loading::before {
     content: '';
     position: absolute;
     top: 50%;
-    left: 50%;
+    left: 12px;
     width: 16px;
     height: 16px;
-    margin: -8px 0 0 -8px;
+    margin: -8px 0 0 0;
     border: 2px solid #ffffff40;
     border-top-color: #ffffff;
     border-radius: 50%;
@@ -828,11 +837,14 @@
         <div class="messages-area" id="messagesArea">
             <!-- 消息将动态加载到这里 -->
             <div class="ai-processing" id="aiProcessing">
-                <span>Alex正在分析和思考中</span>
-                <div class="processing-dots">
-                    <div class="processing-dot"></div>
-                    <div class="processing-dot"></div>
-                    <div class="processing-dot"></div>
+                <div class="message-avatar">AI</div>
+                <div class="thinking-content">
+                    <div class="thinking-text">Alex正在处理您的请求</div>
+                    <div class="processing-dots">
+                        <div class="processing-dot"></div>
+                        <div class="processing-dot"></div>
+                        <div class="processing-dot"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -923,6 +935,7 @@
 let socket = null;
 let currentSessionId = null;
 let isConnected = false;
+let isAIAssistantInitialized = false;
 
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
@@ -936,6 +949,8 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeUI();
     initializeAiConfig();
     createSession();
+    // 初始化发送按钮状态（AI助手未初始化时禁用）
+    updateSendButtonState();
 });
 
 // 环境检测 - 现在所有环境都使用HTTP轮询，不再使用WebSocket
@@ -945,7 +960,7 @@ function isVercelEnvironment() {
 }
 
 // HTTP方式发送消息（替代WebSocket）
-async function sendMessageViaHTTP(content) {
+async function sendMessageViaHTTP(content, showProcessing = true) {
     try {
         const response = await axios.post(`/api/requirements/sessions/${currentSessionId}/messages`, {
             content: content
@@ -959,11 +974,17 @@ async function sendMessageViaHTTP(content) {
                 hideAiProcessing();
                 displayMessage(data.ai_message);
                 
+                // 确保AI回复显示后滚动到底部
+                scrollToBottom();
+                
                 // 如果是AI消息且包含Alex的回应，更新连接状态
                 if (data.ai_message.message_type === 'ai' && data.ai_message.content.includes('Alex')) {
                     updateConnectionStatus('connected', 'AI助手Alex已激活');
                     // 激活后禁用连接按钮
                     setConnectButtonState('activated');
+                    // 设置AI助手已初始化
+                    isAIAssistantInitialized = true;
+                    updateSendButtonState();
                 }
             }
             
@@ -1009,6 +1030,9 @@ function startMessagePolling() {
                     if (message.message_type === 'ai' && message.content.includes('Alex')) {
                         updateConnectionStatus('connected', 'AI助手Alex已激活');
                         hideAiTyping();
+                        // 设置AI助手已初始化
+                        isAIAssistantInitialized = true;
+                        updateSendButtonState();
                     }
                 });
             }
@@ -1066,6 +1090,9 @@ function initializeWebSocket() {
         // 如果是AI消息且包含Alex的回应，更新连接状态
         if (data.message.message_type === 'ai' && data.message.content.includes('Alex')) {
             updateConnectionStatus('connected', 'AI助手Alex已激活');
+            // 设置AI助手已初始化
+            isAIAssistantInitialized = true;
+            updateSendButtonState();
         }
     });
     
@@ -1073,6 +1100,42 @@ function initializeWebSocket() {
         console.log('共识更新:', data);
         updateConsensusDisplay(data.consensus);
     });
+}
+
+// 滚动消息区域到底部
+function scrollToBottom(delay = 100) {
+    setTimeout(() => {
+        const messagesArea = document.getElementById('messagesArea');
+        if (messagesArea) {
+            messagesArea.scrollTo({
+                top: messagesArea.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+    }, delay);
+}
+
+// 统一控制发送按钮状态
+function updateSendButtonState() {
+    const sendBtn = document.getElementById('sendBtn');
+    const messageInput = document.getElementById('messageInput');
+    
+    if (!sendBtn || !messageInput) return;
+    
+    // 只有AI助手已初始化且输入框有内容时才启用发送按钮
+    const hasContent = messageInput.value.trim().length > 0;
+    const canSend = isAIAssistantInitialized && hasContent;
+    
+    sendBtn.disabled = !canSend;
+    
+    // 更新按钮文字提示
+    if (!isAIAssistantInitialized) {
+        sendBtn.title = 'AI助手尚未初始化';
+    } else if (!hasContent) {
+        sendBtn.title = '请输入消息内容';
+    } else {
+        sendBtn.title = '发送消息';
+    }
 }
 
 // 初始化UI事件
@@ -1090,8 +1153,7 @@ function initializeUI() {
         charCount.textContent = this.value.length;
         
         // 控制发送按钮状态
-        const sendBtn = document.getElementById('sendBtn');
-        sendBtn.disabled = !this.value.trim();
+        updateSendButtonState();
     });
     
     // 支持Shift+Enter换行，Enter发送
@@ -1226,8 +1288,8 @@ async function connectAIAssistant() {
         // 从完整的bundle文件中获取激活消息
         const activationMessage = await loadAlexBundleContent();
         
-        // 使用HTTP发送激活消息
-        await sendMessageViaHTTP(activationMessage);
+        // 使用HTTP发送激活消息（初始化时不显示处理动画）
+        await sendMessageViaHTTP(activationMessage, false);
         
     } catch (error) {
         console.error('连接AI助手失败:', error);
@@ -1275,6 +1337,7 @@ function setConnectButtonState(state) {
                         case 'loading':
                             btn.classList.add('loading');
                             btn.disabled = true;
+                            btn.textContent = '正在初始化Alex...';
                             break;
                         case 'activated':
                             btn.classList.add('disabled');
@@ -1402,10 +1465,12 @@ async function sendMessage() {
     messageInput.value = '';
     messageInput.style.height = 'auto';
     document.getElementById('charCount').textContent = '0';
-    document.getElementById('sendBtn').disabled = true;
+    updateSendButtonState();
     
-    // 显示AI处理动效
-    showAiProcessing('Alex正在分析您的消息...');
+    // 延迟显示AI处理动效，确保用户消息先完成渲染和滚动
+    setTimeout(() => {
+        showAiProcessing('Alex正在处理您的请求');
+    }, 200);
     
     try {
         // 使用HTTP发送消息
@@ -1454,12 +1519,7 @@ function displayMessage(message) {
     messagesArea.appendChild(messageEl);
     
     // 平滑滚动到底部，避免突然跳转
-    setTimeout(() => {
-        messagesArea.scrollTo({
-            top: messagesArea.scrollHeight,
-            behavior: 'smooth'
-        });
-    }, 100);
+    scrollToBottom();
 }
 
 // 刷新AI消息内容
@@ -1565,41 +1625,50 @@ function updateConnectionStatus(status, text) {
 }
 
 // 显示AI处理动效
-function showAiProcessing(text = 'Alex正在分析和思考中') {
-    const aiProcessing = document.getElementById('aiProcessing');
-    
-    if (!aiProcessing) {
-        console.warn('未找到AI处理动效元素');
+function showAiProcessing(text = 'Alex正在处理您的请求') {
+    const messagesArea = document.getElementById('messagesArea');
+    if (!messagesArea) {
+        console.warn('未找到消息区域');
         return;
     }
     
-    const textSpan = aiProcessing.querySelector('span');
-    if (textSpan) {
-        textSpan.textContent = text;
+    // 移除现有的AI处理元素（如果存在）
+    let existingAiProcessing = document.getElementById('aiProcessing');
+    if (existingAiProcessing) {
+        existingAiProcessing.remove();
     }
     
-    if (aiProcessing.classList) {
-        aiProcessing.classList.add('show');
-    }
+    // 创建新的AI处理元素并添加到消息区域末尾
+    const aiProcessing = document.createElement('div');
+    aiProcessing.id = 'aiProcessing';
+    aiProcessing.className = 'ai-processing show';
+    aiProcessing.innerHTML = `
+        <div class="message-avatar">AI</div>
+        <div class="thinking-content">
+            <div class="thinking-text">${text}</div>
+            <div class="processing-dots">
+                <div class="processing-dot"></div>
+                <div class="processing-dot"></div>
+                <div class="processing-dot"></div>
+            </div>
+        </div>
+    `;
     
-    // 滚动到动效位置
-    setTimeout(() => {
-        if (aiProcessing && typeof aiProcessing.scrollIntoView === 'function') {
-            aiProcessing.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'end' 
-            });
-        }
-    }, 100);
+    // 确保添加到消息区域的最后位置
+    messagesArea.appendChild(aiProcessing);
+    
+    // 滚动到消息区域底部
+    scrollToBottom(150);
 }
 
 // 隐藏AI处理动效
 function hideAiProcessing() {
     const aiProcessing = document.getElementById('aiProcessing');
-    if (aiProcessing && aiProcessing.classList) {
-        aiProcessing.classList.remove('show');
+    if (aiProcessing) {
+        // 完全移除AI处理动画元素，而不仅仅是隐藏
+        aiProcessing.remove();
     } else {
-        console.warn('未找到AI处理动效元素或缺少classList方法');
+        console.warn('未找到AI处理动效元素');
     }
 }
 
