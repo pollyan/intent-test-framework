@@ -5,7 +5,9 @@ API测试配置文件
 
 import pytest
 import json
-from api.index import app as main_app
+import os
+import sys
+from flask import Flask
 from web_gui.models import db, TestCase, ExecutionHistory, StepExecution, Template
 
 # 移除单元测试相关导入
@@ -14,8 +16,22 @@ from web_gui.models import db, TestCase, ExecutionHistory, StepExecution, Templa
 @pytest.fixture(scope="function") 
 def api_app():
     """创建API测试应用实例"""
+    # 创建独立的测试Flask应用，避免与主应用的SQLAlchemy实例冲突
+    # 添加项目根目录到Python路径
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.dirname(os.path.dirname(current_dir))
+    template_dir = os.path.join(parent_dir, "web_gui", "templates")
+    static_dir = os.path.join(parent_dir, "web_gui", "static")
+    
+    test_app = Flask(
+        __name__,
+        template_folder=template_dir,
+        static_folder=static_dir,
+        static_url_path="/static",
+    )
+    
     # 配置测试环境
-    main_app.config.update({
+    test_app.config.update({
         "TESTING": True,
         "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
         "SQLALCHEMY_TRACK_MODIFICATIONS": False,
@@ -23,11 +39,15 @@ def api_app():
         "WTF_CSRF_ENABLED": False,
     })
 
-    # 重新初始化数据库以使用新的配置
-    db.init_app(main_app)
+    # 初始化数据库到测试应用
+    db.init_app(test_app)
+    
+    # 注册API路由到测试应用
+    from web_gui.api import register_api_routes
+    register_api_routes(test_app)
     
     # 确保应用上下文  
-    with main_app.app_context():
+    with test_app.app_context():
         # 启用SQLite外键约束
         from sqlalchemy import event
         from sqlalchemy.engine import Engine
@@ -41,7 +61,7 @@ def api_app():
         # 创建所有表
         db.create_all()
 
-        yield main_app
+        yield test_app
 
         # 清理
         db.session.remove()

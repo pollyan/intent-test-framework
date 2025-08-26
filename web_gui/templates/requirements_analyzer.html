@@ -809,13 +809,44 @@
     }
     
     .messages-area {
-        min-height: 200px;
+        min-height: 300px;
     }
     
     .chat-container {
-        height: 50vh;
-        max-height: 400px;
-        min-height: 300px;
+        height: 65vh;
+        max-height: 500px;
+        min-height: 400px;
+    }
+}
+
+/* 720p全屏优化 (1280x720) */
+@media (min-width: 1200px) and (max-height: 800px) {
+    .chat-container {
+        height: 75vh;
+        max-height: 650px;
+        min-height: 500px;
+    }
+    
+    .messages-area {
+        min-height: 450px;
+    }
+    
+    .requirements-layout {
+        gap: 20px;
+        padding: 16px;
+    }
+}
+
+/* 大屏幕通用优化 */
+@media (min-width: 769px) {
+    .chat-container {
+        height: 65vh;
+        max-height: 600px;
+        min-height: 450px;
+    }
+    
+    .messages-area {
+        min-height: 350px;
     }
 }
 
