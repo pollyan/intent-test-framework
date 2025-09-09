@@ -9,11 +9,31 @@
     grid-template-columns: repeat(5, 1fr); 
 }
 
-.requirements-layout {
+/* 桌面端主布局：左右分栏 */
+.desktop-layout {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    height: calc(100vh - 140px); /* 最大化可用高度 */
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+/* 左侧对话面板 - 辅助区域 */
+.chat-panel {
+    flex: 0 0 35%; /* 固定35%宽度 */
     display: flex;
     flex-direction: column;
-    gap: 24px;
-    min-height: calc(100vh - 200px);
+    min-width: 400px; /* 最小宽度确保可用性 */
+    max-width: 500px; /* 最大宽度避免过宽 */
+}
+
+/* 右侧分析面板 - 主要区域 */
+.analysis-panel {
+    flex: 1; /* 占据剩余所有空间 */
+    display: flex;
+    flex-direction: column;
+    min-width: 600px; /* 确保分析成果有足够显示空间 */
 }
 
 .chat-container {
@@ -21,10 +41,9 @@
     flex-direction: column;
     background: #ffffff;
     border: 1px solid #e8e8e8;
-    border-radius: 4px;
-    height: 65vh;
-    max-height: 600px;
-    min-height: 400px;
+    border-radius: 8px;
+    height: 100%; /* 充满父容器高度 */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .chat-header {
@@ -37,8 +56,8 @@
 }
 
 .chat-title {
-    font-size: 16px;
-    font-weight: 500;
+    font-size: 15px;
+    font-weight: 600;
     color: #333333;
 }
 
@@ -67,7 +86,7 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-    min-height: 250px;
+    min-height: 400px;
 }
 
 .message {
@@ -207,8 +226,9 @@
     flex-direction: column;
     background: #ffffff;
     border: 1px solid #e8e8e8;
-    border-radius: 4px;
-    max-height: 400px;
+    border-radius: 8px;
+    height: 100%; /* 充满父容器高度 */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .consensus-header {
@@ -222,7 +242,7 @@
 
 .consensus-title {
     font-size: 16px;
-    font-weight: 500;
+    font-weight: 600;
     color: #333333;
 }
 
@@ -794,46 +814,17 @@
     justify-content: flex-end;
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
-    .requirements-layout {
-        gap: 16px;
-    }
-    
-    .consensus-container {
-        max-height: 300px;
-    }
-    
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .messages-area {
-        min-height: 300px;
-    }
-    
-    .chat-container {
-        height: 65vh;
-        max-height: 500px;
-        min-height: 400px;
-    }
-}
+/* 桌面端专用样式优化 */
 
-/* 720p全屏优化 (1280x720) */
-@media (min-width: 1200px) and (max-height: 800px) {
-    .chat-container {
-        height: 75vh;
-        max-height: 650px;
-        min-height: 500px;
+/* 针对不同屏幕尺寸的布局优化 */
+@media (min-width: 1400px) {
+    .desktop-layout {
+        padding: 20px;
+        gap: 24px;
     }
     
-    .messages-area {
-        min-height: 450px;
-    }
-    
-    .requirements-layout {
-        gap: 20px;
-        padding: 16px;
+    .chat-panel {
+        max-width: 600px;
     }
 }
 
@@ -981,100 +972,90 @@
     margin-bottom: 4px;
 }
 
-/* 响应式调整 */
-@media (max-width: 768px) {
-    .analysis-results-content {
-        font-size: 13px;
-    }
-    
-    .analysis-results-content h1 {
-        font-size: 16px;
-        padding: 10px 12px;
-    }
-    
-    .analysis-results-content h2 {
-        font-size: 15px;
-        padding: 6px 10px;
-    }
-    
-    .analysis-results-content h3 {
-        font-size: 14px;
-        padding: 4px 8px;
-    }
+/* 分析成果内容优化 */
+.analysis-results-content {
+    font-size: 14px;
+    line-height: 1.6;
 }
 
-/* 大屏幕通用优化 */
-@media (min-width: 769px) {
-    .chat-container {
-        height: 65vh;
-        max-height: 600px;
-        min-height: 450px;
-    }
-    
-    .messages-area {
-        min-height: 350px;
-    }
+.analysis-results-content h1 {
+    font-size: 20px;
+    padding: 16px 20px;
+}
+
+.analysis-results-content h2 {
+    font-size: 18px;
+    padding: 12px 16px;
+}
+
+.analysis-results-content h3 {
+    font-size: 16px;
+    padding: 10px 14px;
 }
 
 
 {% endblock %}
 
 {% block content %}
-<div class="requirements-layout">
-    <!-- 对话区域 -->
-    <div class="chat-container">
-        <div class="chat-header">
-            <div class="chat-title">与AI助手Alex对话</div>
-            <div class="chat-status">
-                <div class="status-dot" id="connectionStatus"></div>
-                <span class="status-text" id="statusText">连接中...</span>
+<div class="desktop-layout">
+    <!-- 左侧：对话区域 -->
+    <div class="chat-panel">
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="chat-title">与AI助手Alex对话</div>
+                <div class="chat-status">
+                    <div class="status-dot" id="connectionStatus"></div>
+                    <span class="status-text" id="statusText">连接中...</span>
+                </div>
             </div>
-        </div>
-        
-        <div class="messages-area" id="messagesArea">
-            <!-- 消息将动态加载到这里 -->
-            <div class="ai-processing" id="aiProcessing">
-                <div class="message-avatar">AI</div>
-                <div class="thinking-content">
-                    <div class="thinking-text">Alex正在处理您的请求</div>
-                    <div class="processing-dots">
-                        <div class="processing-dot"></div>
-                        <div class="processing-dot"></div>
-                        <div class="processing-dot"></div>
+            
+            <div class="messages-area" id="messagesArea">
+                <!-- 消息将动态加载到这里 -->
+                <div class="ai-processing" id="aiProcessing">
+                    <div class="message-avatar">AI</div>
+                    <div class="thinking-content">
+                        <div class="thinking-text">Alex正在处理您的请求</div>
+                        <div class="processing-dots">
+                            <div class="processing-dot"></div>
+                            <div class="processing-dot"></div>
+                            <div class="processing-dot"></div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="input-area">
-            <form class="input-form" id="messageForm">
-                <div class="input-wrapper">
-                    <textarea 
-                        class="message-input" 
-                        id="messageInput" 
-                        placeholder="请描述你的项目需求或想法..."
-                        maxlength="2000"
-                        rows="1"
-                    ></textarea>
-                    <div class="char-counter">
-                        <span id="charCount">0</span>/2000
+            
+            <div class="input-area">
+                <form class="input-form" id="messageForm">
+                    <div class="input-wrapper">
+                        <textarea 
+                            class="message-input" 
+                            id="messageInput" 
+                            placeholder="请描述你的项目需求或想法..."
+                            maxlength="2000"
+                            rows="1"
+                        ></textarea>
+                        <div class="char-counter">
+                            <span id="charCount">0</span>/2000
+                        </div>
                     </div>
-                </div>
-                <button type="submit" class="send-btn" id="sendBtn">发送</button>
-            </form>
+                    <button type="submit" class="send-btn" id="sendBtn">发送</button>
+                </form>
+            </div>
         </div>
     </div>
     
-    <!-- 分析成果区域 -->
-    <div class="consensus-container">
-        <div class="consensus-header">
-            <div class="consensus-title">分析成果</div>
-            <button class="config-btn" onclick="openAiConfig()">配置</button>
-        </div>
-        
-        <div class="consensus-content" id="consensusContent">
-            <div class="empty-state">
-                开始对话后，这里将显示AI分析的需求要点和共识内容
+    <!-- 右侧：分析成果区域（主要区域） -->
+    <div class="analysis-panel">
+        <div class="consensus-container">
+            <div class="consensus-header">
+                <div class="consensus-title">需求分析成果</div>
+                <button class="config-btn" onclick="openAiConfig()">配置</button>
+            </div>
+            
+            <div class="consensus-content" id="consensusContent">
+                <div class="empty-state">
+                    开始与AI助手Alex对话后，这里将实时显示结构化的需求分析成果
+                </div>
             </div>
         </div>
     </div>
