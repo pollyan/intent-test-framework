@@ -364,57 +364,6 @@ def update_session_status(session_id):
         return standard_error_response(f"更新会话状态失败: {str(e)}", 500)
 
 
-@requirements_bp.route("/sessions/<session_id>/welcome", methods=["GET"])
-@log_api_call
-def get_welcome_message(session_id):
-    """获取Alex的欢迎消息"""
-    try:
-        session = RequirementsSession.query.get(session_id)
-        if not session:
-            raise NotFoundError("会话不存在")
-            
-        ai_svc = get_ai_service()
-        if ai_svc is None:
-            raise Exception("AI服务暂不可用")
-        
-        # 调用Alex生成欢迎消息
-        welcome_result = ai_svc.generate_welcome_message(session.project_name)
-        
-        # 创建欢迎消息记录
-        welcome_message = RequirementsMessage(
-            session_id=session_id,
-            message_type='ai',
-            content=welcome_result['ai_response'],
-            message_metadata=json.dumps({
-                'message_type': 'welcome',
-                'alex_persona': welcome_result.get('alex_persona', True),
-                'analysis_summary': welcome_result.get('analysis_summary', ''),
-                'stage': 'initial'
-            })
-        )
-        
-        # 初始化会话的共识内容
-        session.consensus_content = json.dumps(welcome_result.get('consensus_content', {}))
-        session.current_stage = 'initial'
-        
-        db.session.add(welcome_message)
-        db.session.commit()
-        
-        return standard_success_response(
-            data={
-                'message': welcome_message.to_dict(),
-                'consensus_content': welcome_result.get('consensus_content', {}),
-                'information_gaps': welcome_result.get('information_gaps', []),
-                'clarification_questions': welcome_result.get('clarification_questions', [])
-            },
-            message="Alex欢迎消息生成成功"
-        )
-        
-    except NotFoundError as e:
-        return standard_error_response(e.message, 404)
-    except Exception as e:
-        db.session.rollback()
-        return standard_error_response(f"获取欢迎消息失败: {str(e)}", 500)
 
 
 

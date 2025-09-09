@@ -284,10 +284,12 @@ def test_config(config_id):
             
             start_time = time.time()
             
-            # 使用与需求分析助手相同的方式调用AI模型
-            system_prompt = "你是一个AI助手测试程序。"
-            user_prompt = "你好"
-            response = temp_ai_service._call_ai_model(system_prompt, user_prompt)
+            # 使用消息格式测试AI模型
+            messages = [
+                {"role": "system", "content": "你是一个AI助手测试程序。"},
+                {"role": "user", "content": "你好"}
+            ]
+            response = temp_ai_service._call_ai_model_with_messages(messages)
             duration = time.time() - start_time
             
             if response and len(response.strip()) > 0:
@@ -360,10 +362,12 @@ def test_config_preview():
             
             start_time = time.time()
             
-            # 使用与需求分析助手相同的方式调用AI模型
-            system_prompt = "你是一个AI助手测试程序。"
-            user_prompt = "你好"
-            response = temp_ai_service._call_ai_model(system_prompt, user_prompt)
+            # 使用消息格式测试AI模型
+            messages = [
+                {"role": "system", "content": "你是一个AI助手测试程序。"},
+                {"role": "user", "content": "你好"}
+            ]
+            response = temp_ai_service._call_ai_model_with_messages(messages)
             duration = time.time() - start_time
             
             if response and len(response.strip()) > 0:
@@ -447,10 +451,12 @@ def test_all_configs():
                 config_data = config.get_config_for_ai_service()
                 temp_ai_service = RequirementsAIService(config=config_data)
                 
-                # 使用与需求分析助手相同的方式调用AI模型
-                system_prompt = "你是一个AI助手测试程序。"
-                user_prompt = "你好"
-                response = temp_ai_service._call_ai_model(system_prompt, user_prompt)
+                # 使用消息格式测试AI模型
+                messages = [
+                    {"role": "system", "content": "你是一个AI助手测试程序。"},
+                    {"role": "user", "content": "你好"}
+                ]
+                response = temp_ai_service._call_ai_model_with_messages(messages)
                 duration = time.time() - config_start_time
                 
                 success = response and len(response.strip()) > 0

@@ -145,51 +145,7 @@ class RequirementsAIService:
             logger.error(f"Alex需求分析AI服务调用失败: {str(e)}")
             raise
 
-    def _build_alex_system_prompt(self, project_name: str, current_stage: str) -> str:
-        """构建Alex系统提示词"""
-        # 将Alex的完整persona作为系统指令，同时添加项目特定上下文
-        alex_instructions = f"""你的关键操作指令已附在下方，请严格按照指令中的persona执行，不要打破角色设定。
 
-{self.alex_persona}
-
-=== 当前项目上下文 ===
-项目名称: {project_name}
-当前阶段: {current_stage}
-
-=== 特殊指令 ===
-由于你现在是在Web应用中工作，而不是在聊天界面，请注意：
-1. 请使用智能澄清方法分析用户需求
-2. 生成的回应应该是自然的对话，但也要包含结构化的共识信息
-3. 遵循BMAD架构原则，完全自主决策
-4. 当需要澄清时，提供具体的澄清问题
-
-请以Alex的身份响应用户需求，提供专业的需求分析和澄清引导。"""
-        
-        return alex_instructions
-
-    def _build_alex_user_prompt(self, user_message: str, session_context: Dict[str, Any]) -> str:
-        """构建Alex用户提示词"""
-        context_str = ""
-        
-        # 添加会话历史上下文（以Alex可理解的方式）
-        if session_context.get('user_context') or session_context.get('ai_context') or session_context.get('consensus_content'):
-            context_str += "\n=== 对话历史上下文 ===\n"
-            
-            if session_context.get('consensus_content'):
-                context_str += f"当前已达成的共识：\n{json.dumps(session_context['consensus_content'], ensure_ascii=False, indent=2)}\n"
-            
-            if session_context.get('user_context'):
-                context_str += f"用户历史上下文：\n{json.dumps(session_context['user_context'], ensure_ascii=False, indent=2)}\n"
-                
-            if session_context.get('ai_context'):
-                context_str += f"AI分析历史：\n{json.dumps(session_context['ai_context'], ensure_ascii=False, indent=2)}\n"
-
-        return f"""用户当前输入：
-{user_message}
-{context_str}
-请作为智能需求分析师Alex，分析这条用户输入，结合历史上下文，提供专业的需求分析和澄清引导。
-
-请直接以对话方式回应，但同时识别和提取关键的需求信息。"""
 
     def _call_ai_with_full_history(self, user_message: str, session_id: str) -> str:
         """
@@ -216,10 +172,9 @@ class RequirementsAIService:
                     elif msg.message_type == 'ai':
                         messages.append({"role": "assistant", "content": msg.content})
             
-            # 确保有系统提示
+            # 如果没有系统消息，直接使用Alex persona
             if not any(msg["role"] == "system" for msg in messages):
-                alex_system_prompt = "你是Alex，智能需求分析师。你专门帮助用户澄清和完善项目需求。请保持专业、友好的态度。"
-                messages.insert(0, {"role": "system", "content": alex_system_prompt})
+                messages.insert(0, {"role": "system", "content": self.alex_persona})
             
             # 检查当前用户消息是否已经是最后一条消息
             # 如果不是，说明需要添加（例如首次对话或者其他情况）
@@ -231,8 +186,7 @@ class RequirementsAIService:
             
         except Exception as e:
             logger.error(f"发送完整历史调用AI失败: {str(e)}")
-            # 降级到简单调用
-            return self._call_ai_model("你是Alex，智能需求分析师。", user_message)
+            raise
 
     def _call_ai_model_with_messages(self, messages: List[Dict[str, str]]) -> str:
         """使用消息列表调用AI模型"""
@@ -304,207 +258,5 @@ class RequirementsAIService:
             logger.error(f"调用AI模型失败: {str(e)}")
             raise
 
-    def _call_ai_model(self, system_prompt: str, user_prompt: str) -> str:
-        """调用AI模型API"""
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
-        
-        data = {
-            "model": self.model_name,
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            "temperature": 0.7,
-            "max_tokens": 2000
-        }
-        
-        try:
-            # 处理base_url的尾部斜杠，避免双斜杠
-            base_url = self.base_url.rstrip('/')
-            api_url = f"{base_url}/chat/completions"
-            
-            logger.info(f"调用AI API: {api_url}, 模型: {self.model_name}")
-            
-            response = requests.post(
-                api_url,
-                headers=headers,
-                json=data,
-                timeout=180  # 增加到3分钟，避免长回复被截断
-            )
-            
-            if response.status_code != 200:
-                raise Exception(f"AI API调用失败，状态码: {response.status_code}, 响应: {response.text}")
-            
-            result = response.json()
-            logger.info(f"AI API响应结构: {json.dumps(result, ensure_ascii=False, indent=2)}")
-            
-            # 尝试提取AI响应内容，支持不同API格式
-            try:
-                # OpenAI格式
-                if 'choices' in result and result['choices'] and 'message' in result['choices'][0]:
-                    message = result['choices'][0]['message']
-                    if 'content' in message and message['content']:
-                        ai_message = message['content'].strip()
-                    else:
-                        # Gemini API可能返回空content或缺少content字段
-                        logger.warning(f"AI响应message缺少content或content为空: {message}")
-                        ai_message = "AI响应内容为空，请重新尝试。"
-                elif 'candidates' in result:
-                    # Google AI格式
-                    ai_message = result['candidates'][0]['content']['parts'][0]['text'].strip()
-                else:
-                    # 未识别的格式
-                    logger.error(f"未知的API响应格式: {result}")
-                    raise Exception(f"无法解析AI响应格式，未找到choices或candidates字段")
-            except (KeyError, IndexError, TypeError) as e:
-                logger.error(f"AI响应解析异常: {str(e)}, 响应结构: {result}")
-                raise Exception(f"AI响应解析失败: {str(e)}")
-            
-            logger.info(f"AI模型调用成功，返回内容长度: {len(ai_message)}")
-            return ai_message
-            
-        except requests.exceptions.RequestException as e:
-            logger.error(f"AI API网络请求失败: {str(e)}")
-            raise Exception(f"AI服务网络异常: {str(e)}")
-        except Exception as e:
-            logger.error(f"AI API调用异常: {str(e)}")
-            raise
 
-    def _parse_alex_response(self, ai_response: str, user_message: str) -> Dict[str, Any]:
-        """
-        简化版Alex响应解析 - 专注于数据传输，所有逻辑由Alex persona处理
-        
-        按照纯传输模式，我们只负责将Alex的回应包装成前端需要的格式
-        """
-        try:
-            # Alex的回应就是自然对话，直接传输
-            ai_response_content = ai_response.strip()
-            
-            # 构建最简化的传输格式
-            # 所有分析逻辑都在Alex persona中完成，Web层只做数据包装
-            return {
-                'ai_response': ai_response_content,
-                'identified_requirements': [],  # Alex在对话中自然表达，不需要结构化提取
-                'information_gaps': [],  # Alex在对话中自然询问，不需要预处理
-                'clarification_questions': [],  # Alex在对话中自然提问，不需要单独提取  
-                'consensus_content': {
-                    'analysis_method': 'Alex智能需求分析师',
-                    'last_user_input': user_message,
-                    'conversation_active': True
-                },
-                'analysis_summary': 'Alex已处理用户输入'
-            }
-            
-        except Exception as e:
-            logger.error(f"Alex响应传输时出现异常: {str(e)}")
-            # 返回安全的错误恢复结果
-            return {
-                'ai_response': ai_response if ai_response else "抱歉，我遇到了一些技术问题，请您重新发送消息。",
-                'identified_requirements': [],
-                'information_gaps': [],
-                'clarification_questions': [],
-                'consensus_content': {
-                    'analysis_status': '传输异常，需要重新发送',
-                    'error_info': str(e)
-                },
-                'analysis_summary': '传输过程中出现异常'
-            }
 
-    def _determine_next_stage(self, parsed_result: Dict[str, Any], current_stage: str) -> str:
-        """
-        简化版阶段判断 - Alex会在对话中自然体现进展，无需复杂逻辑
-        """
-        # 在纯传输模式下，阶段变更也应该由Alex在对话中自然表达
-        # Web层只需保持一个简单的进展标记即可
-        return current_stage  # 保持当前阶段，让Alex在对话中自然推进
-
-    def generate_welcome_message(self, project_name: str) -> Dict[str, Any]:
-        """
-        使用Alex persona为新会话生成欢迎消息
-        
-        Args:
-            project_name: 项目名称
-            
-        Returns:
-            包含Alex欢迎消息和初始分析的字典
-        """
-        try:
-            # 构建Alex的欢迎场景系统提示词
-            system_prompt = f"""你的关键操作指令已附在下方，请严格按照指令中的persona执行。
-
-{self.alex_persona}
-
-=== 当前场景 ===
-用户刚刚创建了一个名为"{project_name}"的需求分析会话，这是你们的第一次接触。
-
-=== 特殊指令 ===
-请以智能需求分析师Alex的身份：
-1. 生成一个专业、温暖的欢迎消息
-2. 简要介绍你的能力和分析方法
-3. 引导用户开始描述需求
-4. 体现出你的专业性和对需求分析的深度理解
-
-请直接以对话方式回应，不要使用JSON格式。"""
-
-            user_prompt = f"""用户创建了项目"{project_name}"的需求分析会话。
-
-请作为智能需求分析师Alex，为这个新会话生成欢迎消息。"""
-            
-            # 调用Alex生成欢迎消息
-            alex_welcome_response = self._call_ai_model(system_prompt, user_prompt)
-            
-            # 为欢迎场景构建结构化返回结果
-            result = {
-                'ai_response': alex_welcome_response,
-                'identified_requirements': [],
-                'information_gaps': [
-                    '需要了解项目基本目标',
-                    '需要了解目标用户群体', 
-                    '需要了解功能需求范围',
-                    '需要了解技术约束条件'
-                ],
-                'clarification_questions': [
-                    '请简要描述这个项目想要解决什么核心问题？',
-                    '项目的主要目标用户是谁？',
-                    '您希望实现哪些主要功能？'
-                ],
-                'consensus_content': {
-                    'project_name': project_name,
-                    'analysis_method': 'Alex智能需求分析师',
-                    'session_status': '已开始',
-                    'understanding_level': 'initial'
-                },
-                'analysis_summary': 'Alex已准备好开始需求分析',
-                'alex_persona': True
-            }
-            
-            logger.info(f"Alex为项目 {project_name} 生成了欢迎消息")
-            return result
-            
-        except Exception as e:
-            logger.error(f"Alex生成欢迎消息失败: {str(e)}")
-            # 返回Alex风格的默认欢迎消息
-            return {
-                'ai_response': f'你好！我是智能需求分析师Alex，专门帮助澄清和完善项目需求。很高兴为项目"{project_name}"提供需求分析服务。\n\n我会运用多维度分析方法，通过深入的专业提问来帮助你将模糊的想法逐步转化为清晰、可执行的需求规格。\n\n请告诉我，这个项目的核心目标是什么？你希望解决什么问题？',
-                'identified_requirements': [],
-                'information_gaps': [
-                    '需要了解项目基本目标',
-                    '需要了解目标用户群体',
-                    '需要了解功能需求范围'
-                ],
-                'clarification_questions': [
-                    '请简要描述这个项目想要解决什么核心问题？',
-                    '项目的主要目标用户是谁？',
-                    '您希望实现哪些主要功能？'
-                ],
-                'consensus_content': {
-                    'project_name': project_name,
-                    'analysis_method': 'Alex智能需求分析师',
-                    'session_status': '已开始（默认模式）'
-                },
-                'analysis_summary': 'Alex默认欢迎模式（服务异常恢复）',
-                'alex_persona': True
-            }
