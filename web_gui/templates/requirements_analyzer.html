@@ -1695,16 +1695,28 @@ function displayMessage(message) {
     // AI消息处理：提取进展内容并渲染，用户消息使用普通HTML转义
     let contentHtml;
     if (message.message_type === 'ai' || message.message_type === 'assistant') {
+        console.log('处理AI消息，原始长度:', message.content.length);
+        console.log('原始内容预览:', message.content.substring(0, 200) + '...');
+        
         // 从AI消息中提取进展总结内容
         const extracted = extractProgressContent(message.content);
         
+        console.log('提取结果:', {
+            hasProgress: extracted.hasProgress,
+            progressContentLength: extracted.progressContent.length,
+            cleanedContentLength: extracted.cleanedContent.length
+        });
+        
         // 如果有进展内容，更新分析成果区域
         if (extracted.hasProgress) {
+            console.log('更新分析成果区域');
             updateAnalysisResults(extracted.progressContent);
         }
         
         // 使用清理后的内容进行markdown解析和显示
         contentHtml = parseMarkdown(extracted.cleanedContent);
+        
+        console.log('最终显示内容长度:', extracted.cleanedContent.length);
     } else {
         contentHtml = escapeHtml(message.content);
     }
@@ -2060,28 +2072,37 @@ function escapeHtml(text) {
  * @returns {Object} {hasProgress: boolean, progressContent: string, cleanedContent: string}
  */
 function extractProgressContent(content) {
-    const startMarker = '=== REQUIREMENTS_PROGRESS_START ===';
-    const endMarker = '=== REQUIREMENTS_PROGRESS_END ===';
+    // 支持多种标记格式
+    const markers = [
+        { start: '=== REQUIREMENTS_PROGRESS_START ===', end: '=== REQUIREMENTS_PROGRESS_END ===' },
+        { start: 'REQUIREMENTS_PROGRESS_START', end: 'REQUIREMENTS_PROGRESS_END' },
+        { start: '--- REQUIREMENTS_PROGRESS_START ---', end: '--- REQUIREMENTS_PROGRESS_END ---' }
+    ];
     
-    const startIndex = content.indexOf(startMarker);
-    const endIndex = content.indexOf(endMarker);
-    
-    if (startIndex !== -1 && endIndex !== -1) {
-        // 提取进展内容（去掉标记）
-        const progressContent = content.substring(
-            startIndex + startMarker.length, 
-            endIndex
-        ).trim();
+    for (const marker of markers) {
+        const startIndex = content.indexOf(marker.start);
+        const endIndex = content.indexOf(marker.end);
         
-        // 清理后的对话内容（移除整个进展块）
-        const cleanedContent = content.substring(0, startIndex) + 
-                              content.substring(endIndex + endMarker.length);
-        
-        return {
-            hasProgress: true,
-            progressContent,
-            cleanedContent: cleanedContent.trim()
-        };
+        if (startIndex !== -1 && endIndex !== -1) {
+            // 提取进展内容（去掉标记）
+            const progressContent = content.substring(
+                startIndex + marker.start.length, 
+                endIndex
+            ).trim();
+            
+            // 清理后的对话内容（移除整个进展块）
+            const cleanedContent = content.substring(0, startIndex) + 
+                                  content.substring(endIndex + marker.end.length);
+            
+            console.log('检测到进展内容，标记格式:', marker.start);
+            console.log('提取的进展内容:', progressContent.substring(0, 200) + '...');
+            
+            return {
+                hasProgress: true,
+                progressContent,
+                cleanedContent: cleanedContent.trim()
+            };
+        }
     }
     
     return {
@@ -2092,13 +2113,13 @@ function extractProgressContent(content) {
 }
 
 /**
- * 将进展markdown内容渲染到分析成果区域
- * @param {string} progressMarkdown - 进展总结的markdown内容
+ * 将进展内容渲染到分析成果区域
+ * @param {string} progressContent - 进展总结内容（可能是markdown或JSON格式）
  */
-function updateAnalysisResults(progressMarkdown) {
+function updateAnalysisResults(progressContent) {
     const consensusContent = document.getElementById('consensusContent');
     
-    if (!progressMarkdown) {
+    if (!progressContent) {
         consensusContent.innerHTML = `
             <div class="empty-state">
                 开始对话后，这里将显示AI分析的需求要点和共识内容
@@ -2107,8 +2128,18 @@ function updateAnalysisResults(progressMarkdown) {
         return;
     }
     
-    // 使用现有的parseMarkdown函数处理内容
-    const htmlContent = parseMarkdown(progressMarkdown);
+    let htmlContent = '';
+    
+    try {
+        // 尝试解析为JSON
+        const jsonData = JSON.parse(progressContent);
+        htmlContent = formatProgressJSON(jsonData);
+        console.log('解析JSON格式的进展内容');
+    } catch (e) {
+        // 如果不是JSON，则按markdown处理
+        htmlContent = parseMarkdown(progressContent);
+        console.log('解析markdown格式的进展内容');
+    }
     
     // 应用分析成果专用的CSS类
     consensusContent.innerHTML = `
@@ -2117,7 +2148,93 @@ function updateAnalysisResults(progressMarkdown) {
         </div>
     `;
     
-    console.log('分析成果已更新:', progressMarkdown.substring(0, 100) + '...');
+    console.log('分析成果已更新');
+}
+
+/**
+ * 将JSON格式的进展数据转换为用户友好的HTML
+ * @param {Object} jsonData - 进展数据对象
+ * @returns {string} HTML内容
+ */
+function formatProgressJSON(jsonData) {
+    let html = '';
+    
+    // 当前阶段
+    if (jsonData.current_step) {
+        html += `
+            <div class="current-phase">
+                <h2>📍 当前阶段</h2>
+                <p><strong>${jsonData.current_step}</strong></p>
+            </div>
+        `;
+    }
+    
+    // 电梯演讲阶段
+    if (jsonData.elevator_pitch) {
+        const ep = jsonData.elevator_pitch;
+        html += `<div class="consensus-section">
+            <h3>🎤 电梯演讲 - 价值定位澄清</h3>`;
+        
+        if (ep.for_target_customer) html += `<p><strong>目标用户：</strong>${ep.for_target_customer}</p>`;
+        if (ep.who_need_statement) html += `<p><strong>需求描述：</strong>${ep.who_need_statement}</p>`;
+        if (ep.product_name) html += `<p><strong>产品名称：</strong>${ep.product_name}</p>`;
+        if (ep.is_a_product_category) html += `<p><strong>产品类别：</strong>${ep.is_a_product_category}</p>`;
+        if (ep.that_key_benefit) html += `<p><strong>核心价值：</strong>${ep.that_key_benefit}</p>`;
+        if (ep.unlike_competitor) html += `<p><strong>竞争优势：</strong>${ep.unlike_competitor}</p>`;
+        if (ep.our_product_differentiation) html += `<p><strong>差异化：</strong>${ep.our_product_differentiation}</p>`;
+        
+        html += `</div>`;
+    }
+    
+    // 用户画像阶段
+    if (jsonData.user_personas && jsonData.user_personas.length > 0) {
+        html += `
+            <div class="consensus-section">
+                <h3>👤 用户画像 - 目标用户分析</h3>
+                <ul>
+                    ${jsonData.user_personas.map(persona => `<li>${persona}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+    }
+    
+    // 用户旅程阶段
+    if (jsonData.user_journeys && jsonData.user_journeys.length > 0) {
+        html += `
+            <div class="consensus-section">
+                <h3>🗺️ 用户旅程 - 痛点挖掘与机会识别</h3>
+                <ul>
+                    ${jsonData.user_journeys.map(journey => `<li>${journey}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+    }
+    
+    // BRD阶段
+    if (jsonData.brd) {
+        const brd = jsonData.brd;
+        html += `
+            <div class="consensus-section">
+                <h3>📋 业务需求文档</h3>
+        `;
+        
+        if (brd.product_name) html += `<p><strong>产品名称：</strong>${brd.product_name}</p>`;
+        if (brd.target_market) html += `<p><strong>目标市场：</strong>${brd.target_market}</p>`;
+        if (brd.business_model) html += `<p><strong>商业模式：</strong>${brd.business_model}</p>`;
+        
+        html += `</div>`;
+    }
+    
+    // 如果没有内容，显示默认信息
+    if (!html) {
+        html = `
+            <div class="empty-state">
+                需求分析正在进行中，请继续对话...
+            </div>
+        `;
+    }
+    
+    return html;
 }
 
 // 增强的Markdown解析函数，结合marked.js和Alex特殊格式
