@@ -24,7 +24,7 @@ class IntelligentAssistantService:
             'bundle_file': 'intelligent-requirements-analyst-bundle.txt'
         },
         'song': {
-            'name': 'Song Liu', 
+            'name': 'Lisa Song', 
             'title': '测试分析师',
             'bundle_file': 'testmaster-song-bundle.txt'
         }
@@ -127,7 +127,7 @@ class IntelligentAssistantService:
 请始终以专业、友好的方式与用户交互。"""
         
         elif self.assistant_type == 'song':
-            return """你是AI测试分析师Song，专门帮助用户进行测试策略分析和测试用例设计。
+            return """你是AI测试分析师Lisa Song，专门帮助用户进行测试策略分析和测试用例设计。
 
 你的职责：
 1. 分析功能需求，确定测试范围

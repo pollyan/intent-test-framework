@@ -4,7 +4,7 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 
 Project overview
 - Intent Test Framework: an AI-driven web automation testing platform with a Flask Web UI and a Node.js AI engine (MidSceneJS) for visual/NL-based testing. Real-time status via Socket.IO; layered architecture with API-first design.
-- Two intelligent agents: Requirements Analysis Agent (Alex Chen) and Test Analysis Agent (Song Liu) for structured workflow guidance.
+- Two intelligent agents: Requirements Analysis Agent (Alex Chen) and Test Analysis Agent (Lisa Song) for structured workflow guidance.
 - See README.md for a fuller feature list and quickstart.
 
 Conventions and important rules (from CLAUDE.md and repo)
@@ -108,7 +108,7 @@ Key architecture and flow
   - Requirements Analysis Agent (Alex Chen): web_gui/services/requirements_ai_service.py provides IntelligentAssistantService for structured requirements clarification.
     - Four-step methodology: Elevator Pitch → User Persona → User Journey → Business Requirements Document (BRD)
     - Persona bundle: intelligent-requirements-analyzer/dist/intelligent-requirements-analyst-bundle.txt
-  - Test Analysis Agent (Song Liu): Same service architecture, focused on test strategy and test case generation.
+  - Test Analysis Agent (Lisa Song): Same service architecture, focused on test strategy and test case generation.
     - Four-step methodology: Test Scope Analysis → Test Strategy Design → Test Case Generation → Test Plan Document (TPD)
     - Persona bundle: intelligent-requirements-analyzer/dist/testmaster-song-bundle.txt
   - Agent configuration: intelligent-requirements-analyzer/config.yaml defines document locations and workflow settings.
@@ -147,7 +147,7 @@ Intelligent Agents Usage
   - Access: http://localhost:5001/requirements
   - Commands: *start (full workflow), *elevator (step 1), *persona (step 2), *journey (step 3), *help
   - Output: Structured BRD (Business Requirements Document) with progress tracking
-- Test Analysis Agent (Song Liu) - 4-step test analysis:
+- Test Analysis Agent (Lisa Song) - 4-step test analysis:
   - Commands: *start (full workflow), *scope (step 1), *strategy (step 2), *cases (step 3), *help
   - Output: Comprehensive TPD (Test Plan Document) with test case generation
 - Both agents maintain session state via RequirementsSession/RequirementsMessage models

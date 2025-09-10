@@ -14,7 +14,6 @@
     --dynamic-height: calc(100vh - 180px);
     display: flex;
     flex-direction: row;
-    gap: 20px;
     height: var(--dynamic-height);
     padding: 0 20px 20px 20px; /* 顶部无padding，左右下有padding */
     box-sizing: border-box;
@@ -25,11 +24,88 @@
 
 /* 左侧对话面板 - 辅助区域 */
 .chat-panel {
-    flex: 0 0 35%; /* 固定35%宽度 */
+    width: 600px; /* 调整初始宽度到600px */
+    flex: none;
     display: flex;
     flex-direction: column;
-    min-width: 350px; /* 减小最小宽度以适应更多分辨率 */
-    max-width: none; /* 移除最大宽度限制 */
+    min-width: 300px;
+    max-width: none;
+}
+
+/* 可拖拽分隔条 */
+.resize-handle {
+    width: 12px;
+    background: transparent;
+    cursor: col-resize;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.resize-handle:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.resize-handle-line {
+    width: 1px;
+    height: 60%;
+    background: #d0d0d0;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+/* 添加三点提示 */
+.resize-handle-line::before,
+.resize-handle-line::after {
+    content: '';
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: #999999;
+    border-radius: 50%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.resize-handle-line::before {
+    top: 30%;
+}
+
+.resize-handle-line::after {
+    bottom: 30%;
+}
+
+/* hover时显示提示点 */
+.resize-handle:hover .resize-handle-line {
+    background: #999999;
+}
+
+.resize-handle:hover .resize-handle-line::before,
+.resize-handle:hover .resize-handle-line::after {
+    opacity: 1;
+}
+
+/* 拖拽时的样式 */
+.desktop-layout.resizing {
+    user-select: none;
+}
+
+.desktop-layout.resizing .resize-handle {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.desktop-layout.resizing .resize-handle-line {
+    background: #999999;
+}
+
+.desktop-layout.resizing .resize-handle-line::before,
+.desktop-layout.resizing .resize-handle-line::after {
+    opacity: 1;
 }
 
 /* 右侧分析面板 - 主要区域 */
@@ -37,7 +113,9 @@
     flex: 1; /* 占据剩余所有空间 */
     display: flex;
     flex-direction: column;
-    min-width: 500px; /* 减小最小宽度以适应更多分辨率 */
+    min-width: 300px;
+    max-width: none;
+    width: 0; /* 让flex正常工作 */
 }
 
 .chat-container {
@@ -75,7 +153,7 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #28a745;
+    background: #dc3545;
 }
 
 .status-text {
@@ -91,6 +169,7 @@
     flex-direction: column;
     gap: 16px;
     min-height: 400px;
+    position: relative; /* 支持绝对定位的遮罩 */
 }
 
 .message {
@@ -545,48 +624,6 @@
     margin-top: 8px;
 }
 
-/* AI消息刷新按钮 */
-.refresh-message-btn {
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    color: #6c757d;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.refresh-message-btn:hover {
-    background: #007bff;
-    color: white;
-    border-color: #007bff;
-}
-
-.refresh-message-btn:disabled {
-    background: #e9ecef;
-    color: #adb5bd;
-    cursor: not-allowed;
-    opacity: 0.5;
-}
-
-.refresh-message-btn.refreshing {
-    background: #ffc107;
-    color: #212529;
-    border-color: #ffc107;
-}
-
-.refresh-message-btn.refreshing::after {
-    content: " ...";
-    animation: dots 1.5s infinite;
-}
-
-@keyframes dots {
-    0% { content: " "; }
-    33% { content: " ."; }
-    66% { content: " .."; }
-    100% { content: " ..."; }
-}
 
 /* AI处理中动效 */
 .ai-processing {
@@ -1028,7 +1065,7 @@
     align-items: center;
     justify-content: center;
     height: 100%;
-    padding: 40px 20px;
+    padding: 24px 20px;
 }
 
 .selector-content {
@@ -1038,30 +1075,30 @@
 }
 
 .selector-content h3 {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 600;
     color: #333;
-    margin: 0 0 16px 0;
+    margin: 0 0 12px 0;
 }
 
 .selector-content p {
-    font-size: 16px;
+    font-size: 15px;
     color: #666;
-    margin: 0 0 32px 0;
+    margin: 0 0 20px 0;
 }
 
 .assistant-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-    margin-bottom: 32px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
 }
 
 .assistant-card {
     background: #ffffff;
     border: 2px solid #e8e8e8;
-    border-radius: 12px;
-    padding: 24px;
+    border-radius: 8px;
+    padding: 16px;
     cursor: pointer;
     transition: all 0.2s ease;
     text-align: left;
@@ -1079,8 +1116,8 @@
 }
 
 .assistant-avatar {
-    width: 48px;
-    height: 48px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     display: flex;
@@ -1088,8 +1125,8 @@
     justify-content: center;
     color: white;
     font-weight: 600;
-    font-size: 18px;
-    margin-bottom: 16px;
+    font-size: 16px;
+    margin-bottom: 12px;
 }
 
 .assistant-card.alex .assistant-avatar {
@@ -1101,23 +1138,23 @@
 }
 
 .assistant-name {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     color: #333;
-    margin: 0 0 8px 0;
+    margin: 0 0 4px 0;
 }
 
 .assistant-title {
-    font-size: 14px;
+    font-size: 13px;
     color: #4f46e5;
     font-weight: 500;
-    margin: 0 0 12px 0;
+    margin: 0 0 8px 0;
 }
 
 .assistant-description {
-    font-size: 14px;
+    font-size: 13px;
     color: #666;
-    line-height: 1.5;
+    line-height: 1.4;
     margin: 0;
 }
 
@@ -1142,6 +1179,94 @@
     font-size: 14px;
     color: #9ca3af;
     margin: 0;
+}
+
+/* 连接加载遮罩样式 */
+.connection-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    border-radius: 8px;
+}
+
+.connection-loading-overlay.show {
+    display: flex;
+}
+
+.connection-loading-content {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.connection-loading-text {
+    font-size: 16px;
+    color: #333333;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.connection-loading-dots {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.connection-loading-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #333333;
+    animation: connectionDotJump 1.4s infinite ease-in-out;
+}
+
+.connection-loading-dot:nth-child(1) { animation-delay: -0.32s; }
+.connection-loading-dot:nth-child(2) { animation-delay: -0.16s; }
+.connection-loading-dot:nth-child(3) { animation-delay: 0s; }
+
+@keyframes connectionDotJump {
+    0%, 80%, 100% {
+        opacity: 0.4;
+        transform: translateY(0);
+    }
+    40% {
+        opacity: 1;
+        transform: translateY(-8px);
+    }
+}
+
+.connection-success {
+    color: #28a745;
+    font-weight: 500;
+}
+
+.connection-error {
+    color: #dc3545;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+.connection-retry-btn {
+    background: none;
+    border: 1px solid #333333;
+    color: #333333;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.connection-retry-btn:hover {
+    background: #333333;
+    color: white;
 }
 
 /* 系统消息样式 */
@@ -1179,13 +1304,27 @@
                     <span id="chatTitle">请选择智能助手</span>
                     <button class="assistant-switch-btn" id="assistantSwitchBtn" style="display: none;">切换助手</button>
                 </div>
-                <div class="chat-status">
+                <div class="chat-status" title="助手连接状态">
                     <div class="status-dot" id="connectionStatus"></div>
-                    <span class="status-text" id="statusText">就绪</span>
+                    <span class="status-text" id="statusText">未连接</span>
                 </div>
             </div>
             
             <div class="messages-area" id="messagesArea">
+                <!-- 连接加载遮罩 -->
+                <div class="connection-loading-overlay" id="connectionLoadingOverlay">
+                    <div class="connection-loading-content">
+                        <div class="connection-loading-text" id="connectionLoadingText">正在初始化...</div>
+                        <div class="connection-loading-dots" id="connectionLoadingDots">
+                            <div class="connection-loading-dot"></div>
+                            <div class="connection-loading-dot"></div>
+                            <div class="connection-loading-dot"></div>
+                        </div>
+                        <div class="connection-error" id="connectionError" style="display: none;"></div>
+                        <button class="connection-retry-btn" id="connectionRetryBtn" style="display: none;" onclick="retryConnection()">重试</button>
+                    </div>
+                </div>
+                
                 <!-- 助手选择器界面 -->
                 <div class="assistant-selector" id="assistantSelector">
                     <div class="selector-content">
@@ -1236,6 +1375,11 @@
         </div>
     </div>
     
+    <!-- 可拖拽分隔条 -->
+    <div class="resize-handle" id="resizeHandle">
+        <div class="resize-handle-line"></div>
+    </div>
+    
     <!-- 右侧：分析成果区域（主要区域） -->
     <div class="analysis-panel">
         <div class="consensus-container">
@@ -1267,6 +1411,8 @@ let isConnected = false;
 let isAIAssistantInitialized = false;
 let currentAssistant = null;
 let availableAssistants = [];
+let connectionRetryCount = 0;
+let maxRetries = 3;
 
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
@@ -1278,6 +1424,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 初始化响应式布局
     initializeResponsiveLayout();
+    
+    // 初始化拖拽功能
+    initializeResize();
     
     initializeWebSocket();
     initializeUI();
@@ -1312,14 +1461,14 @@ async function sendMessageViaHTTP(content, showProcessing = true) {
                 // 确保AI回复显示后滚动到底部
                 scrollToBottom();
                 
-                // 如果是AI消息且包含Alex的回应，更新连接状态
-                if (data.ai_message.message_type === 'ai' && data.ai_message.content.includes('Alex')) {
-                    updateConnectionStatus('connected', 'AI助手Alex已激活');
-                    // 激活后禁用连接按钮
-                    setConnectButtonState('activated');
+                // 如果是AI消息且助手已初始化，更新连接状态
+                if (data.ai_message.message_type === 'ai' && currentAssistant) {
+                    const assistantName = currentAssistant.name;
+                    updateConnectionStatus('connected', `AI助手${assistantName}已激活`);
                     // 设置AI助手已初始化
                     isAIAssistantInitialized = true;
                     updateSendButtonState();
+                    console.log(`助手${assistantName}已激活并更新连接状态`);
                 }
             }
             
@@ -1361,9 +1510,10 @@ function startMessagePolling() {
                     displayMessage(message);
                     lastMessageTimestamp = message.created_at;
                     
-                    // 如果是AI消息且包含Alex的回应，更新连接状态
-                    if (message.message_type === 'ai' && message.content.includes('Alex')) {
-                        updateConnectionStatus('connected', 'AI助手Alex已激活');
+                    // 如果是AI消息且助手已初始化，更新连接状态
+                    if (message.message_type === 'ai' && currentAssistant) {
+                        const assistantName = currentAssistant.name;
+                        updateConnectionStatus('connected', `AI助手${assistantName}已激活`);
                         hideAiTyping();
                         // 设置AI助手已初始化
                         isAIAssistantInitialized = true;
@@ -1422,9 +1572,10 @@ function initializeWebSocket() {
         displayMessage(data.message);
         hideAiTyping();
         
-        // 如果是AI消息且包含Alex的回应，更新连接状态
-        if (data.message.message_type === 'ai' && data.message.content.includes('Alex')) {
-            updateConnectionStatus('connected', 'AI助手Alex已激活');
+        // 如果是AI消息且助手已初始化，更新连接状态
+        if (data.message.message_type === 'ai' && currentAssistant) {
+            const assistantName = currentAssistant.name;
+            updateConnectionStatus('connected', `AI助手${assistantName}已激活`);
             // 设置AI助手已初始化
             isAIAssistantInitialized = true;
             updateSendButtonState();
@@ -1621,22 +1772,47 @@ function renderAssistantSelector() {
 // 选择助手
 async function selectAssistant(assistant) {
     currentAssistant = assistant;
+    connectionRetryCount = 0; // 重置重试次数
     
     // 更新UI
     document.getElementById('chatTitle').textContent = `与${assistant.title}${assistant.name}对话`;
     document.getElementById('assistantSwitchBtn').style.display = 'inline-block';
     document.getElementById('thinkingText').textContent = `${assistant.name}正在处理您的请求`;
     
+    // 更新右侧分析面板标题
+    const consensusTitle = document.querySelector('.consensus-title');
+    if (consensusTitle) {
+        if (assistant.id === 'alex') {
+            consensusTitle.textContent = '需求分析成果';
+        } else if (assistant.id === 'song') {
+            consensusTitle.textContent = '测试分析成果';
+        } else {
+            consensusTitle.textContent = '分析成果';
+        }
+    }
+    
     // 隐藏选择器，显示聊天界面
     document.getElementById('assistantSelector').style.display = 'none';
     
-    // 创建会话
-    await createSessionWithAssistant(assistant.id);
+    // 显示连接加载动画
+    showConnectionLoading('正在创建会话...');
     
-    // 初始化助手
-    await initializeSelectedAssistant();
-    
-    console.log(`已选择助手: ${assistant.title}${assistant.name}`);
+    try {
+        // 创建会话
+        await createSessionWithAssistant(assistant.id);
+        
+        // 更新加载文本
+        showConnectionLoading('正在初始化助手...');
+        
+        // 初始化助手
+        await initializeSelectedAssistant();
+        
+        console.log(`已选择助手: ${assistant.title}${assistant.name}`);
+        
+    } catch (error) {
+        console.error('选择助手失败:', error);
+        showConnectionError('初始化助手失败: ' + error.message);
+    }
 }
 
 // 切换助手
@@ -1645,6 +1821,10 @@ function switchAssistant() {
     currentAssistant = null;
     currentSessionId = null;
     isAIAssistantInitialized = false;
+    connectionRetryCount = 0;
+    
+    // 隐藏连接加载动画
+    hideConnectionLoading();
     
     // 清空消息区域
     const messagesArea = document.getElementById('messagesArea');
@@ -1656,6 +1836,23 @@ function switchAssistant() {
     document.getElementById('chatTitle').textContent = '请选择智能助手';
     document.getElementById('assistantSwitchBtn').style.display = 'none';
     
+    // 重置右侧分析面板标题和内容
+    const consensusTitle = document.querySelector('.consensus-title');
+    const consensusContent = document.getElementById('consensusContent');
+    if (consensusTitle) {
+        consensusTitle.textContent = '分析成果';
+    }
+    if (consensusContent) {
+        consensusContent.innerHTML = `
+            <div class="empty-state">
+                开始与AI助手对话后，这里将实时显示结构化的分析成果
+            </div>
+        `;
+    }
+    
+    // 重置连接状态
+    updateConnectionStatus('disconnected', '未连接');
+    
     // 更新发送按钮状态
     updateSendButtonState();
     
@@ -1664,27 +1861,21 @@ function switchAssistant() {
 
 // 使用指定助手创建会话
 async function createSessionWithAssistant(assistantType) {
-    try {
-        console.log(`开始创建${assistantType}助手会话...`);
-        
-        const response = await axios.post('/api/requirements/sessions', {
-            project_name: `${assistantType.toUpperCase()}助手会话`,
-            assistant_type: assistantType
-        });
-        
-        console.log('创建会话API响应:', response.data);
-        
-        if (response.data.code === 200) {
-            currentSessionId = response.data.data.id;
-            console.log(`会话创建成功，ID: ${currentSessionId}, 助手类型: ${assistantType}`);
-            updateConnectionStatus(true);
-        } else {
-            throw new Error(response.data.message || '创建会话失败');
-        }
-    } catch (error) {
-        console.error('创建会话失败:', error);
-        displaySystemMessage('创建会话失败: ' + error.message, 'error');
-        updateConnectionStatus(false);
+    console.log(`开始创建${assistantType}助手会话...`);
+    
+    const response = await axios.post('/api/requirements/sessions', {
+        project_name: `${assistantType.toUpperCase()}助手会话`,
+        assistant_type: assistantType
+    });
+    
+    console.log('创建会话 API响应:', response.data);
+    
+    if (response.data.code === 200) {
+        currentSessionId = response.data.data.id;
+        console.log(`会话创建成功，ID: ${currentSessionId}, 助手类型: ${assistantType}`);
+        updateConnectionStatus('ready', '就绪');
+    } else {
+        throw new Error(response.data.message || '创建会话失败');
     }
 }
 
@@ -1693,8 +1884,9 @@ async function initializeSelectedAssistant() {
     console.log('开始初始化助手...', { currentAssistant, currentSessionId });
     
     if (!currentAssistant || !currentSessionId) {
-        console.error('助手或会话未初始化');
-        displaySystemMessage('助手或会话未初始化', 'error');
+        const errorMsg = '助手或会话未初始化';
+        console.error(errorMsg);
+        showConnectionError(errorMsg);
         return;
     }
     
@@ -1711,6 +1903,9 @@ async function initializeSelectedAssistant() {
             
             console.log('Bundle内容长度:', bundleContent.length);
             
+            // 更新加载状态
+            showConnectionLoading('正在建立连接...');
+            
             // 发送bundle激活消息
             console.log('发送bundle激活消息...');
             await sendBundleMessage(bundleContent);
@@ -1718,13 +1913,17 @@ async function initializeSelectedAssistant() {
             isAIAssistantInitialized = true;
             updateSendButtonState();
             
+            // 显示成功动画
+            showConnectionSuccess(currentAssistant.name);
+            
             console.log('助手初始化完成');
         } else {
             throw new Error('获取bundle失败: ' + bundleResponse.data.message);
         }
     } catch (error) {
         console.error('初始化助手失败:', error);
-        displaySystemMessage('助手初始化失败: ' + error.message, 'error');
+        showConnectionError('助手初始化失败: ' + error.message);
+        throw error; // 重新抛出错误供上层处理
     }
 }
 
@@ -1747,6 +1946,13 @@ async function sendBundleMessage(bundleContent) {
             if (data.ai_message) {
                 displayMessage(data.ai_message);
                 scrollToBottom();
+                
+                // 立即更新连接状态
+                if (currentAssistant) {
+                    const assistantName = currentAssistant.name;
+                    updateConnectionStatus('connected', `AI助手${assistantName}已激活`);
+                    console.log(`Bundle激活成功，更新状态为已连接`);
+                }
             }
             
             return true;
@@ -1814,54 +2020,44 @@ async function createSession() {
     }
 }
 
-// 加载完整的Alex Bundle内容
-async function loadAlexBundleContent() {
+// 加载完整的AI助手Bundle内容
+async function loadAssistantBundleContent() {
     try {
-        const response = await axios.get('/api/requirements/alex-bundle');
+        const assistantId = currentAssistant ? currentAssistant.id : 'alex';
+        const response = await axios.get(`/api/requirements/assistants/${assistantId}/bundle`);
         if (response.data.code === 200) {
             return response.data.data.bundle_content;
         } else {
             // 如果API不可用，使用fallback bundle
-            return getFallbackAlexBundle();
+            return getFallbackAssistantBundle();
         }
     } catch (error) {
         console.warn('无法加载完整bundle，使用fallback版本:', error);
-        return getFallbackAlexBundle();
+        return getFallbackAssistantBundle();
     }
 }
 
-// 获取fallback的Alex bundle（简化版）
-function getFallbackAlexBundle() {
+// 获取fallback的AI助手 bundle（简化版）
+function getFallbackAssistantBundle() {
+    const assistantName = currentAssistant ? currentAssistant.name : 'AI助手';
+    const assistantTitle = currentAssistant ? currentAssistant.title : '智能助手';
+    
     return `你的关键操作指令已附在下方，请严格按照指令中的persona执行，不要打破角色设定。
 
-你是Alex，智能需求分析师。请按照以下激活指令执行：
+你是${assistantName}，${assistantTitle}。请按照以下激活指令执行：
 
-STEP 1: 采用智能需求分析师Alex的身份
-STEP 2: 以Alex的身份向用户问好
+STEP 1: 采用${assistantTitle}${assistantName}的身份
+STEP 2: 以${assistantName}的身份向用户问好
 STEP 3: 立即运行 *help 命令显示所有可用功能
 STEP 4: 等待用户选择功能或直接描述需求
 
 === 你的身份 ===
-name: Alex
-title: 智能需求分析师  
-role: 深度需求挖掘专家与产品定义大师
-focus: 执行深度需求澄清，生成高质量PRD、Epic和用户故事
+name: ${assistantName}
+title: ${assistantTitle}
+role: 专业的AI助手
+focus: 为用户提供专业的帮助和指导
 
-=== 核心功能 ===
-- 🔍 智能需求澄清：通过多维度系统化澄清，将模糊需求转化为清晰规格
-- 📋 自动PRD生成：基于澄清结果生成完整的产品需求文档  
-- 📚 Epic智能分解：将需求分解为可管理的开发单元
-- 📝 Story自动创建：生成符合INVEST原则的用户故事
-
-=== 可用命令 ===
-*help - 显示完整帮助信息
-*analyze - 开始智能需求澄清过程
-*create-prd - 生成产品需求文档
-*create-epics - 将PRD分解为Epic
-*create-stories - 创建用户故事
-*validate - 验证需求完整性
-
-现在请以Alex的身份问好并运行 *help 命令。`;
+现在请以${assistantName}的身份问好并运行 *help 命令。`;
 }
 
 // 防重复连接标志
@@ -1877,12 +2073,13 @@ async function connectAIAssistant() {
     isConnecting = true;
     
     try {
-        updateConnectionStatus('connecting', '正在激活AI助手Alex...');
+        const assistantName = currentAssistant ? currentAssistant.name : 'AI助手';
+        updateConnectionStatus('connecting', `正在激活${assistantName}...`);
         // 立即设置按钮状态，内部已有延迟处理
         setConnectButtonState('loading');
         
         // 从完整的bundle文件中获取激活消息
-        const activationMessage = await loadAlexBundleContent();
+        const activationMessage = await loadAssistantBundleContent();
         
         // 使用HTTP发送激活消息（初始化时不显示处理动画）
         await sendMessageViaHTTP(activationMessage, false);
@@ -1929,21 +2126,22 @@ function setConnectButtonState(state) {
                     // 安全地移除类
                     btn.classList.remove('loading', 'disabled');
                     
+                    const assistantName = currentAssistant ? currentAssistant.name : 'AI助手';
                     switch(state) {
                         case 'loading':
                             btn.classList.add('loading');
                             btn.disabled = true;
-                            btn.textContent = '正在初始化Alex...';
+                            btn.textContent = `正在初始化${assistantName}...`;
                             break;
                         case 'activated':
                             btn.classList.add('disabled');
                             btn.disabled = true;
-                            btn.textContent = 'AI助手Alex已激活';
+                            btn.textContent = `${assistantName}已激活`;
                             break;
                         case 'normal':
                         default:
                             btn.disabled = false;
-                            btn.textContent = '连接AI助手Alex';
+                            btn.textContent = `连接${assistantName}`;
                             break;
                     }
                 } catch (innerError) {
@@ -2027,7 +2225,8 @@ async function sendMessage() {
     
     // 延迟显示AI处理动效，确保用户消息先完成渲染和滚动
     setTimeout(() => {
-        showAiProcessing('Alex正在处理您的请求');
+        const assistantName = currentAssistant ? currentAssistant.name : 'AI助手';
+        showAiProcessing(`${assistantName}正在处理您的请求`);
     }, 200);
     
     try {
@@ -2082,10 +2281,8 @@ function displayMessage(message) {
         contentHtml = escapeHtml(message.content);
     }
     
-    // 为AI消息添加刷新按钮
-    const refreshButton = (message.message_type === 'ai' || message.message_type === 'assistant') 
-        ? `<button class="refresh-message-btn" onclick="refreshAIMessage('${message.id}')" title="重新获取AI回复">刷新</button>` 
-        : '';
+    // 移除了AI消息刷新功能
+    const refreshButton = '';
     
     messageEl.innerHTML = `
         <div class="message-avatar">${avatar}</div>
@@ -2104,60 +2301,6 @@ function displayMessage(message) {
     scrollToBottom();
 }
 
-// 刷新AI消息内容
-async function refreshAIMessage(messageId) {
-    if (!currentSessionId || !messageId) {
-        showMessage('刷新失败：缺少必要参数', 'error');
-        return;
-    }
-    
-    // 找到目标消息元素
-    const messageEl = document.querySelector(`[data-message-id="${messageId}"]`);
-    if (!messageEl) {
-        showMessage('刷新失败：找不到目标消息', 'error');
-        return;
-    }
-    
-    const refreshBtn = messageEl.querySelector('.refresh-message-btn');
-    const messageContent = messageEl.querySelector('.message-content');
-    
-    try {
-        // 更新按钮状态
-        refreshBtn.disabled = true;
-        refreshBtn.classList.add('refreshing');
-        refreshBtn.textContent = '刷新中';
-        
-        // 调用刷新API
-        const response = await axios.post(`/api/requirements/sessions/${currentSessionId}/messages/${messageId}/refresh`);
-        
-        if (response.data.code === 200) {
-            const updatedMessage = response.data.data.message;
-            
-            // 更新消息内容
-            const newContentHtml = parseMarkdown(updatedMessage.content);
-            messageContent.innerHTML = newContentHtml;
-            
-            // 更新时间戳
-            const timeEl = messageEl.querySelector('.message-time');
-            if (timeEl) {
-                timeEl.textContent = new Date(updatedMessage.updated_at || updatedMessage.created_at).toLocaleTimeString();
-            }
-            
-            showMessage('AI回复已更新', 'success');
-        } else {
-            throw new Error(response.data.message || '刷新失败');
-        }
-        
-    } catch (error) {
-        console.error('刷新AI消息失败:', error);
-        showMessage(`刷新失败: ${error.message}`, 'error');
-    } finally {
-        // 恢复按钮状态
-        refreshBtn.disabled = false;
-        refreshBtn.classList.remove('refreshing');
-        refreshBtn.textContent = '刷新';
-    }
-}
 
 // 加载会话消息
 async function loadSessionMessages() {
@@ -2178,36 +2321,288 @@ async function loadSessionMessages() {
     }
 }
 
+// ================================
+// 拖拽分隔条功能
+// ================================
+
+let isResizing = false;
+let startX = 0;
+let startLeftWidth = 0;
+
+// 初始化拖拽功能
+function initializeResize() {
+    const resizeHandle = document.getElementById('resizeHandle');
+    const desktopLayout = document.querySelector('.desktop-layout');
+    const chatPanel = document.querySelector('.chat-panel');
+    const analysisPanel = document.querySelector('.analysis-panel');
+    
+    if (!resizeHandle || !desktopLayout || !chatPanel || !analysisPanel) {
+        console.warn('拖拽功能初始化失败：找不到必要元素', {
+            resizeHandle: !!resizeHandle,
+            desktopLayout: !!desktopLayout,
+            chatPanel: !!chatPanel,
+            analysisPanel: !!analysisPanel
+        });
+        return;
+    }
+    
+    console.log('拖拽功能初始化: 找到所有必要元素');
+    
+    // 鼠标按下事件
+    resizeHandle.addEventListener('mousedown', function(e) {
+        isResizing = true;
+        startX = e.clientX;
+        
+        // 获取当前宽度
+        const chatRect = chatPanel.getBoundingClientRect();
+        startLeftWidth = chatRect.width;
+        
+        // 添加拖拽状态样式
+        desktopLayout.classList.add('resizing');
+        
+        // 禁用文本选择
+        document.body.style.userSelect = 'none';
+        
+        e.preventDefault();
+        
+        const containerWidth = desktopLayout.getBoundingClientRect().width;
+        console.log(`开始拖拽: startX=${startX}, startLeftWidth=${startLeftWidth}px, 容器宽度=${containerWidth}px`);
+    });
+    
+    // 鼠标移动事件
+    document.addEventListener('mousemove', function(e) {
+        if (!isResizing) return;
+        
+        const currentX = e.clientX;
+        const deltaX = currentX - startX;
+        let newLeftWidth = startLeftWidth + deltaX;
+        
+        // 设置最小/最大宽度限制
+        const minWidth = 300;
+        const containerRect = desktopLayout.getBoundingClientRect();
+        const containerPadding = 40; // 20px 左右 padding
+        const actualContainerWidth = containerRect.width - containerPadding;
+        const handleWidth = 12;
+        const rightMinWidth = 300;
+        const maxWidth = actualContainerWidth - handleWidth - rightMinWidth;
+        
+        // 添加安全边距，确保不会卡住
+        const safetyMargin = 10;
+        const safeMaxWidth = Math.max(minWidth + safetyMargin, maxWidth - safetyMargin);
+        
+        newLeftWidth = Math.max(minWidth, Math.min(newLeftWidth, safeMaxWidth));
+        
+        // 调试: 显示计算结果
+        if (deltaX !== 0) {
+            console.log(`容器: ${containerRect.width}px, 实际: ${actualContainerWidth}px, 理论最大: ${maxWidth}px, 安全最大: ${safeMaxWidth}px, 当前: ${newLeftWidth}px`);
+        }
+        
+        // 直接设置宽度
+        chatPanel.style.width = newLeftWidth + 'px';
+        chatPanel.style.flex = 'none';
+        
+        
+        e.preventDefault();
+    });
+    
+    // 鼠标释放事件
+    document.addEventListener('mouseup', function(e) {
+        if (!isResizing) return;
+        
+        isResizing = false;
+        
+        // 移除拖拽状态样式
+        desktopLayout.classList.remove('resizing');
+        
+        // 恢复文本选择
+        document.body.style.userSelect = '';
+        
+        // 获取最终宽度
+        const finalWidth = chatPanel.getBoundingClientRect().width;
+        console.log(`拖拽结束: 最终宽度=${finalWidth}px, 变化=${finalWidth - startLeftWidth}px`);
+    });
+    
+    // 触摸支持（移动设备）
+    resizeHandle.addEventListener('touchstart', function(e) {
+        const touch = e.touches[0];
+        isResizing = true;
+        startX = touch.clientX;
+        
+        const chatRect = chatPanel.getBoundingClientRect();
+        startLeftWidth = chatRect.width;
+        
+        desktopLayout.classList.add('resizing');
+        e.preventDefault();
+    });
+    
+    document.addEventListener('touchmove', function(e) {
+        if (!isResizing) return;
+        
+        const touch = e.touches[0];
+        const deltaX = touch.clientX - startX;
+        let newLeftWidth = startLeftWidth + deltaX;
+        
+        const minWidth = 300;
+        const containerRect = desktopLayout.getBoundingClientRect();
+        const containerPadding = 40;
+        const actualContainerWidth = containerRect.width - containerPadding;
+        const handleWidth = 12;
+        const rightMinWidth = 300;
+        const maxWidth = actualContainerWidth - handleWidth - rightMinWidth;
+        
+        // 添加安全边距，确保不会卡住
+        const safetyMargin = 10;
+        const safeMaxWidth = Math.max(minWidth + safetyMargin, maxWidth - safetyMargin);
+        
+        newLeftWidth = Math.max(minWidth, Math.min(newLeftWidth, safeMaxWidth));
+        
+        chatPanel.style.width = newLeftWidth + 'px';
+        chatPanel.style.flex = 'none';
+        
+        e.preventDefault();
+    });
+    
+    document.addEventListener('touchend', function(e) {
+        if (!isResizing) return;
+        
+        isResizing = false;
+        desktopLayout.classList.remove('resizing');
+    });
+    
+    console.log('拖拽分隔条功能初始化完成');
+}
+
+// ================================
+// 连接加载动画控制函数
+// ================================
+
+// 显示连接加载动画
+function showConnectionLoading(text = '正在初始化...') {
+    const overlay = document.getElementById('connectionLoadingOverlay');
+    const loadingText = document.getElementById('connectionLoadingText');
+    const loadingDots = document.getElementById('connectionLoadingDots');
+    const errorElement = document.getElementById('connectionError');
+    const retryBtn = document.getElementById('connectionRetryBtn');
+    
+    if (!overlay) {
+        console.warn('找不到连接加载遮罩元素');
+        return;
+    }
+    
+    // 设置加载状态
+    loadingText.textContent = text;
+    loadingDots.style.display = 'inline-flex';
+    errorElement.style.display = 'none';
+    retryBtn.style.display = 'none';
+    
+    // 显示遮罩
+    overlay.classList.add('show');
+    
+    console.log('显示连接加载动画:', text);
+}
+
+// 隐藏连接加载动画
+function hideConnectionLoading() {
+    const overlay = document.getElementById('connectionLoadingOverlay');
+    
+    if (overlay) {
+        overlay.classList.remove('show');
+        console.log('隐藏连接加载动画');
+    }
+}
+
+// AI响应后直接隐藏连接动画
+function showConnectionSuccess(assistantName) {
+    // 直接隐藏加载遮罩，不显示成功信息
+    hideConnectionLoading();
+}
+
+// 显示连接错误
+function showConnectionError(errorMessage) {
+    const loadingText = document.getElementById('connectionLoadingText');
+    const loadingDots = document.getElementById('connectionLoadingDots');
+    const errorElement = document.getElementById('connectionError');
+    const retryBtn = document.getElementById('connectionRetryBtn');
+    
+    if (loadingText && loadingDots && errorElement && retryBtn) {
+        loadingText.textContent = '连接失败';
+        loadingText.className = 'connection-loading-text connection-error';
+        loadingDots.style.display = 'none';
+        errorElement.textContent = errorMessage;
+        errorElement.style.display = 'block';
+        
+        // 显示重试按钮（如果未超过最大重试次数）
+        if (connectionRetryCount < maxRetries) {
+            retryBtn.style.display = 'inline-block';
+        }
+        
+        console.log('显示连接错误:', errorMessage);
+    }
+}
+
+// 重试连接
+function retryConnection() {
+    if (connectionRetryCount >= maxRetries) {
+        console.log('已超过最大重试次数');
+        return;
+    }
+    
+    connectionRetryCount++;
+    console.log(`第${connectionRetryCount}次重试连接`);
+    
+    // 重新初始化助手
+    if (currentAssistant) {
+        initializeSelectedAssistant();
+    }
+}
+
 // 更新连接状态
 function updateConnectionStatus(status, text) {
     const statusDot = document.getElementById('connectionStatus');
     const statusText = document.getElementById('statusText');
     
+    if (!statusDot || !statusText) {
+        console.warn('找不到状态显示元素');
+        return;
+    }
+    
+    // 重置状态点的基础样式
     statusDot.className = 'status-dot';
+    
+    // 根据状态设置颜色和文本
     switch(status) {
         case 'connected':
+        case true:  // 兼容旧版本
             statusDot.style.background = '#28a745';
+            statusText.textContent = text || '已连接';
+            console.log('状态更新为已连接:', text);
             break;
         case 'connecting':
             statusDot.style.background = '#ffc107';
+            statusText.textContent = text || '连接中';
             break;
         case 'ready':
             statusDot.style.background = '#17a2b8';
+            statusText.textContent = text || '就绪';
             break;
         case 'config-needed':
             statusDot.style.background = '#6c757d';
+            statusText.textContent = text || '需要配置';
             break;
+        case 'disconnected':
         case 'error':
+        case false:  // 兼容旧版本
         default:
             statusDot.style.background = '#dc3545';
+            statusText.textContent = text || '未连接';
             break;
     }
     
-    statusText.textContent = text;
+    console.log(`状态更新: ${status} -> ${statusText.textContent}`);
 }
 
 // 显示AI处理动效
-function showAiProcessing(text = 'Alex正在处理您的请求') {
+function showAiProcessing(text = 'AI助手正在处理您的请求') {
     const messagesArea = document.getElementById('messagesArea');
     if (!messagesArea) {
         console.warn('未找到消息区域');
@@ -2340,11 +2735,16 @@ function escapeHtml(text) {
  * @returns {Object} {hasProgress: boolean, progressContent: string, cleanedContent: string}
  */
 function extractProgressContent(content) {
-    // 支持多种标记格式
+    // 支持多种标记格式，包括需求分析师和测试分析师的标记
     const markers = [
+        // 需求分析师标记
         { start: '=== REQUIREMENTS_PROGRESS_START ===', end: '=== REQUIREMENTS_PROGRESS_END ===' },
         { start: 'REQUIREMENTS_PROGRESS_START', end: 'REQUIREMENTS_PROGRESS_END' },
-        { start: '--- REQUIREMENTS_PROGRESS_START ---', end: '--- REQUIREMENTS_PROGRESS_END ---' }
+        { start: '--- REQUIREMENTS_PROGRESS_START ---', end: '--- REQUIREMENTS_PROGRESS_END ---' },
+        // 测试分析师标记
+        { start: '=== TEST_ANALYSIS_PROGRESS_START ===', end: '=== TEST_ANALYSIS_PROGRESS_END ===' },
+        { start: 'TEST_ANALYSIS_PROGRESS_START', end: 'TEST_ANALYSIS_PROGRESS_END' },
+        { start: '--- TEST_ANALYSIS_PROGRESS_START ---', end: '--- TEST_ANALYSIS_PROGRESS_END ---' }
     ];
     
     for (const marker of markers) {
@@ -2388,9 +2788,17 @@ function updateAnalysisResults(progressContent) {
     const consensusContent = document.getElementById('consensusContent');
     
     if (!progressContent) {
+        // 根据当前助手类型显示不同的默认文本
+        let defaultText = '开始对话后，这里将显示分析成果';
+        if (currentAssistant && currentAssistant.id === 'alex') {
+            defaultText = '开始对话后，这里将显示需求分析的要点和共识内容';
+        } else if (currentAssistant && currentAssistant.id === 'song') {
+            defaultText = '开始对话后，这里将显示测试分析的成果和进展内容';
+        }
+        
         consensusContent.innerHTML = `
             <div class="empty-state">
-                开始对话后，这里将显示AI分析的需求要点和共识内容
+                ${defaultText}
             </div>
         `;
         return;
@@ -2399,12 +2807,12 @@ function updateAnalysisResults(progressContent) {
     let htmlContent = '';
     
     try {
-        // 尝试解析为JSON
+        // 尝试解析为JSON（仅限需求分析师）
         const jsonData = JSON.parse(progressContent);
         htmlContent = formatProgressJSON(jsonData);
-        console.log('解析JSON格式的进展内容');
+        console.log('解析需求分析JSON格式的进展内容');
     } catch (e) {
-        // 如果不是JSON，则按markdown处理
+        // 如果不是JSON（包括测试分析师的markdown），则按markdown处理
         htmlContent = parseMarkdown(progressContent);
         console.log('解析markdown格式的进展内容');
     }
@@ -2505,7 +2913,7 @@ function formatProgressJSON(jsonData) {
     return html;
 }
 
-// 增强的Markdown解析函数，结合marked.js和Alex特殊格式
+// 增强的Markdown解析函数，结合marked.js和AI助手特殊格式
 function parseMarkdown(text) {
     if (!text) return '';
     
@@ -2515,15 +2923,15 @@ function parseMarkdown(text) {
         return parseMarkdownSimple(text);
     }
     
-    // 先处理Alex的特殊格式，再交给marked.js处理标准markdown
+    // 先处理AI助手的特殊格式，再交给marked.js处理标准markdown
     let processedText = text;
     
-    // 1. 预处理Alex特有的格式，转换为标准markdown或保留标记
+    // 1. 预处理AI助手特有的格式，转换为标准markdown或保留标记
     processedText = processedText
-        // Alex标题格式转为标准markdown标题
+        // AI助手标题格式转为标准markdown标题
         .replace(/^=== (.*?) ===/gm, '### $1')
         
-        // Alex命令项转为代码块+描述
+        // AI助手命令项转为代码块+描述
         .replace(/^(\d+)\.\s+`([^`]+)`\s*$/gm, '$1. `$2`')
         
         // 带描述的命令项
@@ -2545,7 +2953,7 @@ function parseMarkdown(text) {
         
         let html = marked.parse(processedText);
         
-        // 3. 应用Alex特定的CSS类
+        // 3. 应用AI助手特定的CSS类
         html = html
             .replace(/<h3>/g, '<h3 class="ai-title">')
             .replace(/<h4>/g, '<h4 class="ai-subtitle">')
@@ -2582,7 +2990,7 @@ function parseMarkdownSimple(text) {
         .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
         .replace(/^# (.*?)$/gm, '<h1>$1</h1>')
         
-        // Alex特殊格式
+        // AI助手特殊格式
         .replace(/^=== (.*?) ===/gm, '<h3 class="ai-title">$1</h3>')
         .replace(/^(\d+)\.\s+`([^`]+)`\s*$/gm, '<div class="ai-command-item"><span class="ai-command-num">$1.</span><code class="ai-command">$2</code></div>')
         
