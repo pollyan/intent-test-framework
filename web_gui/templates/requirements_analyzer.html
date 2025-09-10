@@ -250,21 +250,6 @@
     color: #333333;
 }
 
-.config-btn {
-    padding: 6px 12px;
-    background: transparent;
-    border: 1px solid #e8e8e8;
-    border-radius: 4px;
-    color: #666666;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.config-btn:hover {
-    background: #f0f0f0;
-    border-color: #d0d0d0;
-}
 
 .consensus-content {
     flex: 1;
@@ -1267,46 +1252,6 @@
     </div>
 </div>
 
-<!-- AI配置模态框 -->
-<div class="modal-overlay" id="aiConfigModal">
-    <div class="modal">
-        <div class="modal-header">
-            <div class="modal-title">AI服务配置</div>
-            <div class="modal-subtitle">配置你的AI助手连接设置</div>
-        </div>
-        
-        <form id="aiConfigForm">
-            <div class="form-group">
-                <label class="form-label">配置名称</label>
-                <input type="text" class="form-input" id="configName" name="config_name" placeholder="给你的AI配置起个名字，如：我的OpenAI配置" required>
-            </div>
-            
-            <div class="form-grid">
-                <div class="form-group">
-                    <label class="form-label">API密钥</label>
-                    <input type="password" class="form-input" id="apiKey" name="api_key" placeholder="输入你的API密钥" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">模型名称</label>
-                    <input type="text" class="form-input" id="modelName" name="model_name" placeholder="如: gpt-4o, qwen-vl-max-latest" required>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">API基础URL</label>
-                <input type="url" class="form-input" id="baseUrl" name="base_url" placeholder="如: https://api.openai.com/v1" required>
-            </div>
-            
-            <div class="modal-actions">
-                <button type="button" class="btn btn-ghost" onclick="closeAiConfig()">取消</button>
-                <button type="button" class="btn" onclick="testAiConfig()">测试连接</button>
-                <button type="submit" class="btn btn-primary">保存配置</button>
-            </div>
-        </form>
-
-
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -1336,7 +1281,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     initializeWebSocket();
     initializeUI();
-    initializeAiConfig();
     loadAvailableAssistants();
     // 先不创建会话，等用户选择助手后再创建
     // createSession();
@@ -2378,99 +2322,6 @@ function getStageDisplayName(stage) {
     return stageNames[stage] || stage;
 }
 
-// AI配置相关函数
-async function initializeAiConfig() {
-    const form = document.getElementById('aiConfigForm');
-    form.addEventListener('submit', handleAiConfigSubmit);
-    
-    // 加载已有的AI配置到表单中
-    await loadExistingConfig();
-}
-
-// 加载已有的AI配置
-async function loadExistingConfig() {
-    try {
-        const response = await axios.get('/api/ai-configs');
-        
-        if (response.data.code === 200 && response.data.data.configs.length > 0) {
-            // 查找默认配置或第一个配置
-            const configs = response.data.data.configs;
-            const defaultConfig = configs.find(config => config.is_default) || configs[0];
-            
-            if (defaultConfig) {
-                // 填充表单字段
-                document.getElementById('configName').value = defaultConfig.config_name || '';
-                document.getElementById('baseUrl').value = defaultConfig.base_url || '';
-                document.getElementById('modelName').value = defaultConfig.model_name || '';
-                // API密钥不显示，保持为空（安全考虑）
-                
-                console.log('已加载AI配置:', defaultConfig.config_name);
-            }
-        }
-    } catch (error) {
-        console.error('加载AI配置失败:', error);
-        // 不显示错误消息，因为可能是第一次使用没有配置
-    }
-}
-
-async function openAiConfig() {
-    document.getElementById('aiConfigModal').classList.add('show');
-    // 每次打开弹窗时重新加载配置
-    await loadExistingConfig();
-}
-
-function closeAiConfig() {
-    document.getElementById('aiConfigModal').classList.remove('show');
-}
-
-function testAiConfig() {
-    const configName = document.getElementById('configName').value;
-    const apiKey = document.getElementById('apiKey').value;
-    const baseUrl = document.getElementById('baseUrl').value;
-    const modelName = document.getElementById('modelName').value;
-    
-    if (!configName || !apiKey || !baseUrl || !modelName) {
-        showMessage('请填写完整的配置信息', 'error');
-        return;
-    }
-    
-    // 简单的配置验证
-    if (!baseUrl.startsWith('http')) {
-        showMessage('API基础URL必须以http://或https://开头', 'error');
-        return;
-    }
-    
-    showMessage('配置格式验证通过！', 'success');
-}
-
-async function handleAiConfigSubmit(event) {
-    event.preventDefault();
-    
-    const formData = new FormData(event.target);
-    const configData = {
-        config_name: formData.get('config_name'),
-        api_key: formData.get('api_key'),
-        base_url: formData.get('base_url'),
-        model_name: formData.get('model_name'),
-        is_default: true // 新创建的配置设为默认
-    };
-    
-    try {
-        const response = await axios.post('/api/ai-configs', configData);
-        
-        if (response.data.code === 200) {
-            showMessage('AI配置保存成功！现在可以开始使用AI助手了', 'success');
-            closeAiConfig();
-            // 重新显示连接提示，这次应该显示连接按钮
-            showConnectPrompt();
-        } else {
-            showMessage('保存失败: ' + response.data.message, 'error');
-        }
-    } catch (error) {
-        console.error('保存AI配置失败:', error);
-        showMessage('保存失败: ' + (error.response?.data?.message || error.message), 'error');
-    }
-}
 
 // 工具函数
 function escapeHtml(text) {
@@ -2783,24 +2634,5 @@ function showMessage(message, type) {
     }, 3000);
 }
 
-// 页面加载时初始化
-document.addEventListener('DOMContentLoaded', async function() {
-    // 先检查是否有AI配置，如果没有则显示配置提示
-    await showConnectPrompt();
-    
-    // 初始化现有功能
-    await initializeAiConfig();
-    
-    // 监听配置变更事件
-    window.addEventListener('storage', function(e) {
-        if (e.key === 'ai_config_changed') {
-            console.log('检测到AI配置变更，重新检查配置状态');
-            // 重新检查并显示连接提示
-            setTimeout(() => {
-                showConnectPrompt();
-            }, 500);
-        }
-    });
-});
 </script>
 {% endblock %}
