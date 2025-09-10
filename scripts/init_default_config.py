@@ -11,10 +11,21 @@ import os
 import sys
 import sqlite3
 from datetime import datetime
+from pathlib import Path
 
 # 添加项目根目录到Python路径
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
+
+# 加载环境变量（如果存在.env文件）
+try:
+    from dotenv import load_dotenv
+    env_path = Path(project_root) / '.env'
+    if env_path.exists():
+        load_dotenv(env_path)
+        print(f"📝 已加载环境变量: {env_path}")
+except ImportError:
+    print("⚠️ python-dotenv未安装，跳过.env文件加载")
 
 
 
@@ -29,21 +40,51 @@ def get_local_db_path():
     
     return db_path
 
+def get_default_config():
+    """从环境变量获取默认配置，避免硬编码"""
+    config = {
+        'config_name': os.getenv('DEFAULT_AI_CONFIG_NAME', 'Qwen'),
+        'api_key': os.getenv('OPENAI_API_KEY', ''),
+        'base_url': os.getenv('OPENAI_BASE_URL', 'https://dashscope.aliyuncs.com/compatible-mode/v1'),
+        'model_name': os.getenv('MIDSCENE_MODEL_NAME', 'qwen-vl-max-latest'),
+        'is_default': True,
+        'is_active': True
+    }
+    
+    # 验证必需的配置
+    if not config['api_key']:
+        print("⚠️ 未设置OPENAI_API_KEY环境变量")
+        return None
+        
+    return config
+
+def check_existing_config(cursor):
+    """检查现有配置，如果已有配置则不覆盖"""
+    cursor.execute("""
+        SELECT id, config_name, model_name, is_default, is_active 
+        FROM requirements_ai_configs 
+        WHERE is_default = TRUE AND is_active = TRUE
+    """)
+    
+    existing_config = cursor.fetchone()
+    if existing_config:
+        config_id, name, model, is_default, is_active = existing_config
+        print(f"✅ 发现现有默认配置: {name} ({model}) - ID: {config_id}")
+        print(f"🔒 保持现有配置不变，跳过初始化")
+        return True
+    return False
+
 def init_default_ai_config():
-    """初始化默认AI配置 - 直接操作SQLite数据库"""
+    """初始化默认AI配置 - 优先使用现有配置，避免覆盖用户自定义设置"""
     
     db_path = get_local_db_path()
     print(f"🗄️ 使用本地数据库: {db_path}")
     
-    # 默认配置
-    default_config = {
-        'config_name': 'Qwen',
-        'api_key': 'sk-0b7ca376cfce4e2f82986eb5fea5124d',
-        'base_url': 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-        'model_name': 'qwen-plus',
-        'is_default': True,
-        'is_active': True
-    }
+    # 从环境变量获取默认配置
+    default_config = get_default_config()
+    if not default_config:
+        print("❌ 无法获取默认配置（缺少必需的环境变量）")
+        return False
     
     try:
         # 连接数据库
@@ -75,35 +116,42 @@ def init_default_ai_config():
             """)
             print("✅ requirements_ai_configs 表创建成功")
         
-        # 检查是否已存在Qwen配置
+        # 检查是否已有默认激活的配置
+        if check_existing_config(cursor):
+            conn.close()
+            print("✅ AI配置检查完成")
+            return True
+        
+        print("🆕 未发现默认配置，开始创建...")
+        
+        # 检查是否已存在相同名称的配置
         cursor.execute("""
             SELECT id, config_name, is_default FROM requirements_ai_configs 
             WHERE config_name = ?
         """, (default_config['config_name'],))
         
-        existing_qwen = cursor.fetchone()
+        existing_config = cursor.fetchone()
         
-        if existing_qwen:
-            config_id, name, is_default = existing_qwen
+        if existing_config:
+            config_id, name, is_default = existing_config
             print(f"✅ 发现现有 {name} 配置 (ID: {config_id})")
             
-            # 更新现有配置
-            cursor.execute("""
-                UPDATE requirements_ai_configs 
-                SET api_key = ?, base_url = ?, model_name = ?, 
-                    is_default = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-            """, (
-                default_config['api_key'],
-                default_config['base_url'], 
-                default_config['model_name'],
-                default_config['is_default'],
-                default_config['is_active'],
-                config_id
-            ))
-            print(f"🔄 已更新 {name} 配置")
+            # 仅在没有默认配置时才更新
+            if not is_default:
+                cursor.execute("""
+                    UPDATE requirements_ai_configs 
+                    SET is_default = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                """, (
+                    default_config['is_default'],
+                    default_config['is_active'],
+                    config_id
+                ))
+                print(f"🔄 已将 {name} 设置为默认配置")
+            else:
+                print(f"📌 {name} 已经是默认配置")
         else:
-            print("🆕 创建新的 Qwen 配置...")
+            print(f"🆕 创建新的 {default_config['config_name']} 配置...")
             # 插入新配置
             cursor.execute("""
                 INSERT INTO requirements_ai_configs 
@@ -118,9 +166,8 @@ def init_default_ai_config():
                 default_config['is_active']
             ))
             print(f"✅ 已创建 {default_config['config_name']} 配置")
-        
-        # 如果设置为默认，取消其他配置的默认状态
-        if default_config['is_default']:
+            
+            # 取消其他配置的默认状态
             cursor.execute("""
                 UPDATE requirements_ai_configs 
                 SET is_default = FALSE, updated_at = CURRENT_TIMESTAMP
