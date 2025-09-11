@@ -253,7 +253,7 @@
 .message-input {
     width: 100%;
     min-height: 40px;
-    max-height: 120px;
+    max-height: 200px; /* 增加最大高度以适应更长文本 */
     padding: 12px 16px;
     border: 1px solid #e8e8e8;
     border-radius: 20px;
@@ -262,6 +262,7 @@
     font-size: 14px;
     line-height: 1.4;
     font-family: inherit;
+    transition: border-color 0.2s ease; /* 添加平滑边框过渡 */
 }
 
 .message-input:focus {
@@ -279,6 +280,15 @@
     right: 8px;
     font-size: 12px;
     color: #999999;
+    transition: color 0.2s ease;
+}
+
+.char-counter.warning {
+    color: #ff9800; /* 接近限制时显示橙色 */
+}
+
+.char-counter.danger {
+    color: #f44336; /* 超过限制时显示红色 */
 }
 
 .send-btn {
@@ -1361,12 +1371,12 @@
                         <textarea 
                             class="message-input" 
                             id="messageInput" 
-                            placeholder="请描述你的项目需求或想法..."
-                            maxlength="2000"
+                            placeholder="请描述你的项目需求或想法，可以粘贴完整的需求文档（最多10000字符）..."
+                            maxlength="10000"
                             rows="1"
                         ></textarea>
                         <div class="char-counter">
-                            <span id="charCount">0</span>/2000
+                            <span id="charCount">0</span>/10000
                         </div>
                     </div>
                     <button type="submit" class="send-btn" id="sendBtn">发送</button>
@@ -1674,8 +1684,20 @@ function initializeUI() {
         this.style.height = 'auto';
         this.style.height = this.scrollHeight + 'px';
         
-        // 更新字符计数
-        charCount.textContent = this.value.length;
+        // 更新字符计数和颜色反馈
+        const currentLength = this.value.length;
+        const maxLength = 10000;
+        charCount.textContent = currentLength;
+        
+        // 清除之前的样式类
+        charCount.classList.remove('warning', 'danger');
+        
+        // 根据字符数量添加适当的样式
+        if (currentLength >= maxLength) {
+            charCount.classList.add('danger');
+        } else if (currentLength >= maxLength * 0.8) { // 80%时显示警告
+            charCount.classList.add('warning');
+        }
         
         // 控制发送按钮状态
         updateSendButtonState();

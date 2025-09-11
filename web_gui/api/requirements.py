@@ -210,10 +210,10 @@ def send_message(session_id):
             ("```yaml" in content and "agent:" in content)
         )
         
-        # 字符长度限制：激活消息允许更长，常规消息限制2000字符
-        max_length = 50000 if is_activation_message else 2000
+        # 字符长度限制：激活消息允许更长，常规消息限制10000字符
+        max_length = 50000 if is_activation_message else 10000
         if len(content) > max_length:
-            message = f"激活消息内容不能超过{max_length}字符" if is_activation_message else "消息内容不能超过2000字符"
+            message = f"激活消息内容不能超过{max_length}字符" if is_activation_message else "消息内容不能超过10000字符"
             raise ValidationError(message)
         
         # 创建用户消息（激活消息标记为system类型，不显示给用户）
@@ -646,10 +646,10 @@ def register_requirements_socketio(socketio: SocketIO):
                 
             # 检查是否是激活消息
             is_activation_message = ("智能需求分析师" in content and "Bundle" in content) or len(content) > 10000
-            max_length = 50000 if is_activation_message else 2000
+            max_length = 50000 if is_activation_message else 10000
             
             if len(content) > max_length:
-                message = f"激活消息内容不能超过{max_length}字符" if is_activation_message else "消息内容不能超过2000字符"
+                message = f"激活消息内容不能超过{max_length}字符" if is_activation_message else "消息内容不能超过10000字符"
                 emit('error', {'message': message})
                 return
             
