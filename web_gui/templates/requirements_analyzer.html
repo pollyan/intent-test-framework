@@ -1923,11 +1923,7 @@ function showSwitchSelector() {
     // 修改选择器内容，添加取消按钮
     selectorContent.innerHTML = `
         <h3>切换智能助手</h3>
-        <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 16px; margin: 16px 0; color: #856404;">
-            <p><strong>当前助手：</strong>${currentName}</p>
-            ${messageCount > 0 ? `<p><strong>已有对话：</strong>${messageCount}条消息</p>` : ''}
-            <p style="color: #d63384; font-weight: 500;">⚠️ 切换助手将清空当前对话记录</p>
-        </div>
+        <p>请选择一位专业的AI助手开始对话：</p>
         
         <div class="assistant-cards" id="assistantCards">
             <!-- 助手卡片将动态加载 -->
