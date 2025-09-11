@@ -555,6 +555,7 @@ class RequirementsMessage(db.Model):
     )  # user, assistant, system
     content = db.Column(db.Text, nullable=False)
     message_metadata = db.Column(db.Text)  # JSON string - 额外的消息元数据
+    attached_files = db.Column(db.Text)  # JSON string - 文件附件信息
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # 索引优化
@@ -577,6 +578,7 @@ class RequirementsMessage(db.Model):
             "message_type": self.message_type,
             "content": self.content,
             "metadata": json.loads(self.message_metadata) if self.message_metadata else {},
+            "attached_files": json.loads(self.attached_files) if self.attached_files else None,
             "created_at": (
                 self.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
                 if self.created_at

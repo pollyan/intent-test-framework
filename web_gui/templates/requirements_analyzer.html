@@ -1314,6 +1314,187 @@
     font-weight: 500;
 }
 
+/* 文件附件预览区域 */
+.attachment-preview {
+    background: #f8f9fa;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    padding: 12px;
+}
+
+.attachment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #666;
+}
+
+.clear-all-btn {
+    background: none;
+    border: none;
+    color: #dc3545;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.clear-all-btn:hover {
+    background: #f5c6cb;
+}
+
+.attachment-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.attachment-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #ffffff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #e8e8e8;
+    font-size: 12px;
+}
+
+.attachment-icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #333333;
+    color: white;
+    border-radius: 3px;
+    font-size: 9px;
+    font-weight: 600;
+}
+
+.attachment-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.attachment-name {
+    color: #333333;
+    font-weight: 500;
+}
+
+.attachment-size {
+    color: #666666;
+    font-size: 10px;
+}
+
+.remove-attachment {
+    width: 14px;
+    height: 14px;
+    border: none;
+    background: #f0f0f0;
+    color: #999999;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-attachment:hover {
+    background: #ffebee;
+    color: #d32f2f;
+}
+
+/* 输入操作区域 */
+.input-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.file-btn {
+    background: #f8f9fa;
+    border: 1px solid #e8e8e8;
+    color: #666;
+    padding: 12px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.file-btn:hover {
+    background: #e9ecef;
+    border-color: #d6d9dd;
+}
+
+/* 拖拽效果 */
+.input-wrapper {
+    position: relative;
+}
+
+.drag-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(40, 167, 69, 0.1);
+    border: 2px dashed #28a745;
+    border-radius: 20px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 10;
+}
+
+.drag-overlay.active {
+    display: flex;
+}
+
+.drag-text {
+    color: #28a745;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.drag-subtext {
+    color: #666666;
+    font-size: 12px;
+}
+
+.message-input.drag-over {
+    border-color: #28a745;
+    background: rgba(40, 167, 69, 0.05);
+}
+
+/* 消息中的附件显示 */
+.message-attachments {
+    margin-top: 8px;
+    padding: 6px 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #666;
+}
+
+.attachment-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: 12px;
+}
+
 
 {% endblock %}
 
@@ -1379,21 +1560,47 @@
             </div>
             
             <div class="input-area">
+                <!-- 文件附件预览区域 -->
+                <div id="attachmentPreview" class="attachment-preview" style="display: none;">
+                    <div class="attachment-header">
+                        <span>已选择的文件</span>
+                        <button type="button" onclick="clearAllAttachments()" class="clear-all-btn">清除全部</button>
+                    </div>
+                    <div id="attachmentList" class="attachment-list"></div>
+                </div>
+                
                 <form class="input-form" id="messageForm">
                     <div class="input-wrapper">
                         <textarea 
                             class="message-input" 
                             id="messageInput" 
-                            placeholder="请描述项目需求或想法"
+                            placeholder="请描述项目需求或想法，也可以上传 txt/md 文档"
                             maxlength="10000"
                             rows="1"
                         ></textarea>
                         <div class="char-counter">
                             <span id="charCount">0</span>/10000
                         </div>
+                        <!-- 拖拽覆盖层 -->
+                        <div class="drag-overlay" id="dragOverlay">
+                            <div class="drag-text">释放文件即可上传</div>
+                            <div class="drag-subtext">仅支持 .txt 和 .md 格式</div>
+                        </div>
                     </div>
-                    <button type="submit" class="send-btn" id="sendBtn">发送</button>
+                    
+                    <div class="input-actions">
+                        <!-- 文件上传按钮 -->
+                        <button type="button" onclick="document.getElementById('fileInput').click()" class="file-btn">
+                            📎
+                        </button>
+                        
+                        <!-- 发送按钮 -->
+                        <button type="submit" class="send-btn" id="sendBtn">发送</button>
+                    </div>
                 </form>
+                
+                <!-- 隐藏的文件输入 -->
+                <input type="file" id="fileInput" multiple accept=".txt,.md" style="display: none;">
             </div>
         </div>
     </div>
@@ -1440,6 +1647,9 @@ let maxRetries = 3;
 // 保存切换前的状态
 let savedSwitchState = null;
 
+// 文件上传相关变量
+let attachedFiles = [];
+
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
     // 设置axios全局超时为3分钟，避免长AI回复被截断
@@ -1456,6 +1666,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     initializeWebSocket();
     initializeUI();
+    initializeFileUpload(); // 初始化文件上传功能
     loadAvailableAssistants();
     // 先不创建会话，等用户选择助手后再创建
     // createSession();
@@ -1504,6 +1715,72 @@ async function sendMessageViaHTTP(content, showProcessing = true) {
         }
     } catch (error) {
         console.error('HTTP发送消息失败:', error);
+        hideAiProcessing();
+        showMessage('发送消息失败: ' + (error.response?.data?.message || error.message), 'error');
+        return false;
+    }
+}
+
+// 支持文件上传的HTTP发送消息函数
+async function sendMessageWithFiles(content, files) {
+    console.log('📎 发送文件消息:', {
+        contentLength: content ? content.length : 0,
+        filesCount: files.length,
+        fileNames: files.map(f => f.name),
+        fileSizes: files.map(f => f.content.length)
+    });
+    
+    try {
+        // 构建 FormData
+        const formData = new FormData();
+        
+        if (content) {
+            formData.append('content', content);
+            console.log('📎 添加用户消息内容:', content.substring(0, 100) + '...');
+        }
+        
+        // 添加文件
+        files.forEach(fileInfo => {
+            const blob = new Blob([fileInfo.content], { type: 'text/plain' });
+            formData.append('files', blob, fileInfo.name);
+            console.log(`📎 添加文件 ${fileInfo.name}, 内容预览:`, fileInfo.content.substring(0, 100) + '...');
+        });
+        
+        // 发送请求
+        console.log('📎 即将发送请求到:', `/api/requirements/sessions/${currentSessionId}/messages`);
+        const response = await axios.post(`/api/requirements/sessions/${currentSessionId}/messages`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        
+        if (response.data.code === 200) {
+            const data = response.data.data;
+            
+            // 只显示AI响应（用户消息已在前端立即显示）
+            if (data.ai_message) {
+                hideAiProcessing();
+                displayMessage(data.ai_message);
+                
+                // 确俚AI回复显示后滚动到底部
+                scrollToBottom();
+                
+                // 如果是AI消息且助手已初始化，更新连接状态
+                if (data.ai_message.message_type === 'ai' && currentAssistant) {
+                    const assistantName = currentAssistant.name;
+                    updateConnectionStatus('connected', `AI助手${assistantName}已激活`);
+                    isAIAssistantInitialized = true;
+                    updateSendButtonState();
+                    console.log(`助手${assistantName}已激活并更新连接状态`);
+                }
+            }
+            
+            return true;
+        } else {
+            throw new Error(response.data.message || '发送失败');
+        }
+    } catch (error) {
+        console.error('HTTP文件上传发送消息失败:', error);
         hideAiProcessing();
         showMessage('发送消息失败: ' + (error.response?.data?.message || error.message), 'error');
         return false;
@@ -1635,8 +1912,9 @@ function updateSendButtonState() {
     
     if (!sendBtn || !messageInput) return;
     
-    // 只有AI助手已初始化且输入框有内容时才启用发送按钮
+    // 必须有文本内容才能发送（仅有附件不允许发送）
     const hasContent = messageInput.value.trim().length > 0;
+    const hasAttachments = attachedFiles && attachedFiles.length > 0;
     const canSend = isAIAssistantInitialized && hasContent;
     
     sendBtn.disabled = !canSend;
@@ -1645,9 +1923,9 @@ function updateSendButtonState() {
     if (!isAIAssistantInitialized) {
         sendBtn.title = 'AI助手尚未初始化';
     } else if (!hasContent) {
-        sendBtn.title = '请输入消息内容';
+        sendBtn.title = hasAttachments ? '请输入消息内容（仅有附件无法发送）' : '请输入消息内容';
     } else {
-        sendBtn.title = '发送消息';
+        sendBtn.title = hasAttachments ? '发送消息和附件' : '发送消息';
     }
     
     // 控制切换助手按钮状态
@@ -2422,7 +2700,14 @@ async function sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const content = messageInput.value.trim();
     
+    // 必须有文本内容才能发送（仅有附件不允许发送）
     if (!content || !currentSessionId || isSending) {
+        console.log('发送被阻止:', {
+            hasContent: !!content,
+            hasSession: !!currentSessionId,
+            isSending: isSending,
+            attachedFilesCount: attachedFiles.length
+        });
         return;
     }
     
@@ -2437,18 +2722,27 @@ async function sendMessage() {
         return;
     }
     
-    // 立即显示用户消息
+    // 保存当前附件副本，用于发送
+    const filesToSend = [...attachedFiles];
+    
+    // 立即显示用户消息（包含附件信息）
     const userMessage = {
         message_type: 'user',
         content: content,
+        attached_files: filesToSend.map(f => ({
+            filename: f.name,
+            size: f.size
+        })),
         created_at: new Date().toISOString()
     };
     displayMessage(userMessage);
     
-    // 清空输入框
+    // 清空输入框和附件
     messageInput.value = '';
     messageInput.style.height = 'auto';
     document.getElementById('charCount').textContent = '0';
+    attachedFiles = []; // 清空附件
+    updateAttachmentPreview(); // 更新附件预览
     updateSendButtonState();
     
     // 延迟显示AI处理动效，确保用户消息先完成渲染和滚动
@@ -2458,8 +2752,12 @@ async function sendMessage() {
     }, 200);
     
     try {
-        // 使用HTTP发送消息
-        await sendMessageViaHTTP(content);
+        // 使用HTTP发送消息（支持文件附件）
+        if (filesToSend.length > 0) {
+            await sendMessageWithFiles(content, filesToSend);
+        } else {
+            await sendMessageViaHTTP(content);
+        }
     } catch (error) {
         console.error('发送消息失败:', error);
         hideAiProcessing();
@@ -2510,6 +2808,20 @@ function displayMessage(message) {
         contentHtml = escapeHtml(message.content);
     }
     
+    // 为用户消息添加附件显示
+    let attachmentHtml = '';
+    if (message.message_type === 'user' && message.attached_files && message.attached_files.length > 0) {
+        attachmentHtml = `
+            <div class="message-attachments">
+                ${message.attached_files.map(file => `
+                    <div class="attachment-indicator">
+                        📎 ${escapeHtml(file.filename)} (${formatFileSize(file.size || 0)})
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+    
     // 移除了AI消息刷新功能
     const refreshButton = '';
     
@@ -2517,6 +2829,7 @@ function displayMessage(message) {
         <div class="message-avatar">${avatar}</div>
         <div class="message-body">
             <div class="message-content ${message.message_type === 'ai' || message.message_type === 'assistant' ? 'ai-formatted' : ''}">${contentHtml}</div>
+            ${attachmentHtml}
             <div class="message-footer">
                 <div class="message-time">${time}</div>
                 ${refreshButton}
@@ -3246,6 +3559,185 @@ function parseMarkdownSimple(text) {
     }
     
     return html;
+}
+
+// ================================
+// 文件上传相关函数
+// ================================
+
+// 初始化文件上传功能
+function initializeFileUpload() {
+    const fileInput = document.getElementById('fileInput');
+    const messageInput = document.getElementById('messageInput');
+    const dragOverlay = document.getElementById('dragOverlay');
+    
+    if (!fileInput || !messageInput) {
+        console.warn('文件上传初始化失败：找不到必要元素');
+        return;
+    }
+    
+    // 文件选择处理
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    // 拖拽上传事件
+    messageInput.addEventListener('dragenter', handleDragEnter);
+    messageInput.addEventListener('dragover', handleDragOver);
+    messageInput.addEventListener('dragleave', handleDragLeave);
+    messageInput.addEventListener('drop', handleFileDrop);
+    
+    console.log('✅ 文件上传功能初始化完成');
+}
+
+function handleFileSelect(e) {
+    const files = Array.from(e.target.files);
+    processFiles(files);
+    e.target.value = ''; // 清空以允许重复选择
+}
+
+let dragCounter = 0;
+
+function handleDragEnter(e) {
+    e.preventDefault();
+    dragCounter++;
+    showDragOverlay();
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    dragCounter--;
+    if (dragCounter === 0) {
+        hideDragOverlay();
+    }
+}
+
+function handleFileDrop(e) {
+    e.preventDefault();
+    dragCounter = 0;
+    hideDragOverlay();
+    
+    const files = Array.from(e.dataTransfer.files);
+    processFiles(files);
+}
+
+function showDragOverlay() {
+    const dragOverlay = document.getElementById('dragOverlay');
+    const messageInput = document.getElementById('messageInput');
+    if (dragOverlay) {
+        dragOverlay.classList.add('active');
+    }
+    if (messageInput) {
+        messageInput.classList.add('drag-over');
+    }
+}
+
+function hideDragOverlay() {
+    const dragOverlay = document.getElementById('dragOverlay');
+    const messageInput = document.getElementById('messageInput');
+    if (dragOverlay) {
+        dragOverlay.classList.remove('active');
+    }
+    if (messageInput) {
+        messageInput.classList.remove('drag-over');
+    }
+}
+
+function processFiles(files) {
+    for (const file of files) {
+        // 验证文件格式
+        const ext = '.' + file.name.split('.').pop().toLowerCase();
+        if (!ext.match(/\.(txt|md)$/)) {
+            showMessage(`文件 ${file.name} 格式不支持，仅支持 txt 和 md 文件`, 'error');
+            continue;
+        }
+        
+        // 验证文件大小
+        if (file.size > 10 * 1024 * 1024) {
+            showMessage(`文件 ${file.name} 过大，最大支持 10MB`, 'error');
+            continue;
+        }
+        
+        // 检查是否已存在
+        if (attachedFiles.some(f => f.name === file.name && f.size === file.size)) {
+            showMessage(`文件 ${file.name} 已存在`, 'warning');
+            continue;
+        }
+        
+        // 读取文件内容
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const fileInfo = {
+                id: Date.now() + Math.random(),
+                name: file.name,
+                size: file.size,
+                content: e.target.result
+            };
+            
+            attachedFiles.push(fileInfo);
+            updateAttachmentPreview();
+            updateSendButtonState(); // 更新发送按钮状态
+            showMessage(`文件 ${file.name} 上传成功`, 'success');
+        };
+        
+        reader.onerror = () => {
+            showMessage(`读取文件 ${file.name} 失败`, 'error');
+        };
+        
+        reader.readAsText(file, 'utf-8');
+    }
+}
+
+function updateAttachmentPreview() {
+    const preview = document.getElementById('attachmentPreview');
+    const list = document.getElementById('attachmentList');
+    
+    if (!preview || !list) {
+        console.warn('找不到附件预览元素');
+        return;
+    }
+    
+    if (attachedFiles.length === 0) {
+        preview.style.display = 'none';
+        return;
+    }
+    
+    preview.style.display = 'block';
+    list.innerHTML = attachedFiles.map(file => `
+        <div class="attachment-item" data-file-id="${file.id}">
+            <div class="attachment-icon">${file.name.toLowerCase().endsWith('.md') ? 'MD' : 'TXT'}</div>
+            <div class="attachment-info">
+                <div class="attachment-name">${escapeHtml(file.name)}</div>
+                <div class="attachment-size">${formatFileSize(file.size)}</div>
+            </div>
+            <button onclick="removeAttachment(${file.id})" class="remove-attachment">×</button>
+        </div>
+    `).join('');
+}
+
+function removeAttachment(fileId) {
+    console.log('删除附件:', fileId, '当前附件:', attachedFiles.map(f => f.id));
+    attachedFiles = attachedFiles.filter(file => file.id.toString() !== fileId.toString());
+    updateAttachmentPreview();
+    updateSendButtonState(); // 更新发送按钮状态
+    console.log('删除后剩余附件:', attachedFiles.length);
+}
+
+function clearAllAttachments() {
+    attachedFiles = [];
+    updateAttachmentPreview();
+    updateSendButtonState(); // 更新发送按钮状态
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
 function showMessage(message, type) {

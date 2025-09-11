@@ -58,6 +58,65 @@ requirements_bp = Blueprint("requirements", __name__, url_prefix="/api/requireme
 active_sessions = {}
 
 
+def process_uploaded_files(files):
+    """处理上传的文件，提取内容"""
+    attached_files = []
+    
+    for file in files:
+        # 验证文件格式
+        if not file.filename.lower().endswith(('.txt', '.md')):
+            raise ValidationError(f"不支持的文件格式: {file.filename}。仅支持 txt 和 md 文件")
+        
+        # 验证文件大小（10MB）
+        content_bytes = file.read()
+        if len(content_bytes) > 10 * 1024 * 1024:
+            raise ValidationError(f"文件过大: {file.filename}。最大支持 10MB")
+        
+        # 尝试解码文件内容
+        content = None
+        for encoding in ['utf-8', 'gbk', 'gb2312']:
+            try:
+                content = content_bytes.decode(encoding)
+                break
+            except UnicodeDecodeError:
+                continue
+        
+        if content is None:
+            raise ValidationError(f"无法解码文件: {file.filename}")
+        
+        attached_files.append({
+            "filename": file.filename,
+            "content": content,
+            "size": len(content_bytes),
+            "encoding": encoding
+        })
+    
+    return attached_files
+
+
+def build_message_with_files(message_content, attached_files):
+    """构建包含文件内容的完整消息"""
+    if not attached_files:
+        return message_content
+    
+    parts = ["=== 相关文档内容 ==="]
+    
+    for file_info in attached_files:
+        parts.append(f"\n## 文档：{file_info['filename']}")
+        parts.append("```")
+        parts.append(file_info['content'])
+        parts.append("```\n")
+    
+    if message_content and message_content.strip():
+        parts.append("=== 用户问题 ===")
+        parts.append(message_content)
+    
+    combined_message = "\n".join(parts)
+    print(f"📎 构建完整消息: 文件数={len(attached_files)}, 原始消息长度={len(message_content) if message_content else 0}, 合并后长度={len(combined_message)}")
+    print(f"📎 文件列表: {[f['filename'] for f in attached_files]}")
+    return combined_message
+
+
 @requirements_bp.route("/sessions", methods=["POST"])
 @require_json
 @log_api_call
@@ -177,10 +236,9 @@ def get_messages(session_id):
 
 
 @requirements_bp.route("/sessions/<session_id>/messages", methods=["POST"])
-@require_json
 @log_api_call
 def send_message(session_id):
-    """发送消息到会话（HTTP轮询模式）"""
+    """发送消息到会话（HTTP轮询模式，支持文件上传）"""
     try:
         # 验证会话是否存在
         session = RequirementsSession.query.get(session_id)
@@ -190,11 +248,26 @@ def send_message(session_id):
         if session.session_status != "active":
             raise ValidationError("会话不在活跃状态，无法发送消息")
         
-        data = request.get_json()
-        content = data.get("content", "").strip()
+        # 检查请求类型：支持JSON和multipart/form-data
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            # 有文件上传
+            content = request.form.get('content', '').strip()
+            files = request.files.getlist('files')
+            attached_files = process_uploaded_files(files)
+        else:
+            # 纯文本消息（JSON）
+            if not request.is_json:
+                raise ValidationError("请求格式错误：需要JSON或multipart/form-data格式")
+            data = request.get_json()
+            content = data.get("content", "").strip()
+            attached_files = []
         
-        if not content:
-            raise ValidationError("消息内容不能为空")
+        # 验证消息内容：内容和文件不能同时为空
+        if not content and not attached_files:
+            raise ValidationError("消息内容和文件不能同时为空")
+        
+        # 如果有文件附件，构建包含文件内容的完整消息
+        full_content = build_message_with_files(content, attached_files)
             
         # 获取会话中的助手类型
         user_context = json.loads(session.user_context or "{}")
@@ -202,20 +275,20 @@ def send_message(session_id):
         
         # 检查是否是激活消息（仅依靠内容特征，不依赖长度）
         # 1. Bundle + 激活指令组合
-        # 2. YAML格式配置 + agent定义
+        # 2. YAML格式配置 + agent定义  
         # 3. 关键操作指令的组合模式
         is_activation_message = (
             # Bundle激活模式：包含明确的Bundle标识和激活指令
-            ("Bundle" in content and ("activation-instructions" in content or "persona:" in content)) or
+            ("Bundle" in full_content and ("activation-instructions" in full_content or "persona:" in full_content)) or
             # YAML配置模式：包含YAML格式的agent配置
-            ("```yaml" in content and "agent:" in content) or
+            ("```yaml" in full_content and "agent:" in full_content) or
             # 操作指令模式：包含关键操作指令的组合
-            ("你的关键操作指令" in content and "请严格按照" in content and "persona执行" in content)
+            ("你的关键操作指令" in full_content and "请严格按照" in full_content and "persona执行" in full_content)
         )
         
-        # 字符长度限制：激活消息允许更长，常规消息限制10000字符
+        # 字符长度限制：激活消息允许更长，常规消息限分10000字符
         max_length = 50000 if is_activation_message else 10000
-        if len(content) > max_length:
+        if len(full_content) > max_length:
             message = f"激活消息内容不能超过{max_length}字符" if is_activation_message else "消息内容不能超过10000字符"
             raise ValidationError(message)
         
@@ -223,12 +296,14 @@ def send_message(session_id):
         user_message = RequirementsMessage(
             session_id=session_id,
             message_type="system" if is_activation_message else "user",
-            content=content,
+            content=content,  # 原始用户消息内容
+            attached_files=json.dumps(attached_files) if attached_files else None,
             message_metadata=json.dumps({
                 "stage": session.current_stage,
                 "char_count": len(content),
                 "source": "http",
-                "is_activation": is_activation_message
+                "is_activation": is_activation_message,
+                "has_attachments": len(attached_files) > 0
             })
         )
         
@@ -248,9 +323,9 @@ def send_message(session_id):
                 'consensus_content': json.loads(session.consensus_content) if session.consensus_content else {}
             }
             
-            # 调用智能助手分析服务
+            # 调用智能助手分析服务（传入包含文件内容的完整消息）
             ai_result = ai_svc.analyze_user_requirement(
-                user_message=content,
+                user_message=full_content,  # 使用包含文件内容的完整消息
                 session_context=session_context,
                 project_name=session.project_name,
                 current_stage=session.current_stage,
