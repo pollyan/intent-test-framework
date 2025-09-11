@@ -200,14 +200,17 @@ def send_message(session_id):
         user_context = json.loads(session.user_context or "{}")
         assistant_type = user_context.get("assistant_type", "alex")
         
-        # 检查是否是激活消息（包含bundle关键标识）
-        # 1. 包含明确的bundle激活标识
-        # 2. 长度超过5000字符（bundle通常很长）
-        # 3. 包含YAML格式的配置内容
+        # 检查是否是激活消息（仅依靠内容特征，不依赖长度）
+        # 1. Bundle + 激活指令组合
+        # 2. YAML格式配置 + agent定义
+        # 3. 关键操作指令的组合模式
         is_activation_message = (
+            # Bundle激活模式：包含明确的Bundle标识和激活指令
             ("Bundle" in content and ("activation-instructions" in content or "persona:" in content)) or
-            len(content) > 5000 or
-            ("```yaml" in content and "agent:" in content)
+            # YAML配置模式：包含YAML格式的agent配置
+            ("```yaml" in content and "agent:" in content) or
+            # 操作指令模式：包含关键操作指令的组合
+            ("你的关键操作指令" in content and "请严格按照" in content and "persona执行" in content)
         )
         
         # 字符长度限制：激活消息允许更长，常规消息限制10000字符
@@ -644,8 +647,15 @@ def register_requirements_socketio(socketio: SocketIO):
                 emit('error', {'message': '缺少session_id或content参数'})
                 return
                 
-            # 检查是否是激活消息
-            is_activation_message = ("智能需求分析师" in content and "Bundle" in content) or len(content) > 10000
+            # 检查是否是激活消息（与HTTP逻辑保持一致，仅依靠内容特征）
+            is_activation_message = (
+                # Bundle激活模式：包含明确的Bundle标识和激活指令
+                ("Bundle" in content and ("activation-instructions" in content or "persona:" in content)) or
+                # YAML配置模式：包含YAML格式的agent配置
+                ("```yaml" in content and "agent:" in content) or
+                # 操作指令模式：包含关键操作指令的组合
+                ("你的关键操作指令" in content and "请严格按照" in content and "persona执行" in content)
+            )
             max_length = 50000 if is_activation_message else 10000
             
             if len(content) > max_length:
