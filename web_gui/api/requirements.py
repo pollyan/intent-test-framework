@@ -38,7 +38,16 @@ def get_ai_service(assistant_type='alex'):
         default_config = RequirementsAIConfig.get_default_config()
         if default_config:
             config_data = default_config.get_config_for_ai_service()
-            # 创建智能助手服务实例
+            
+            # 验证配置的完整性
+            required_fields = ['api_key', 'base_url', 'model_name']
+            missing_fields = [field for field in required_fields if not config_data.get(field)]
+            
+            if missing_fields:
+                print(f"❌ AI配置不完整，缺少字段: {missing_fields}")
+                return None
+            
+            # 创建AI服务实例
             ai_service = IntelligentAssistantService(config=config_data, assistant_type=assistant_type)
             assistant_info = IntelligentAssistantService.SUPPORTED_ASSISTANTS.get(assistant_type, {})
             print(f"✅ 智能助手AI服务初始化成功，使用{assistant_info.get('title', '')} {assistant_info.get('name', '')}，配置: {default_config.config_name}")
@@ -47,6 +56,9 @@ def get_ai_service(assistant_type='alex'):
             # 如果没有默认配置，返回None而不是使用环境变量
             print("⚠️ 未找到默认AI配置")
             return None
+    except ImportError as e:
+        print(f"❌ 无法导入AI配置模块: {e}")
+        return None
     except Exception as e:
         print(f"⚠️ 智能助手AI服务初始化失败: {e}")
         return None
@@ -311,19 +323,36 @@ def send_message(session_id):
         db.session.commit()
         
         # 根据助手类型获取对应的AI服务
-        ai_svc = get_ai_service(assistant_type=assistant_type)
-        if ai_svc is None:
-            raise Exception("AI服务暂不可用，请稍后重试")
+        print(f"🔧 初始化AI服务: 助手类型={assistant_type}")
+        try:
+            ai_svc = get_ai_service(assistant_type=assistant_type)
+            if ai_svc is None:
+                error_msg = f"AI服务初始化失败：未找到有效的AI配置或服务初始化失败。请检查AI服务配置或联系管理员。"
+                print(f"❌ {error_msg}")
+                raise Exception(error_msg)
+            print(f"✅ AI服务初始化成功")
+        except Exception as ai_init_error:
+            print(f"❌ AI服务初始化异常: {ai_init_error}")
+            # 直接抛出异常，让外层的try-catch处理
+            raise ai_init_error
         
         try:
+            print(f"🔍 开始处理消息: 会话ID={session_id}, 助手类型={assistant_type}, 消息长度={len(full_content)}, 激活消息={is_activation_message}")
+            
             # 构建会话上下文
-            session_context = {
-                'user_context': json.loads(session.user_context) if session.user_context else {},
-                'ai_context': json.loads(session.ai_context) if session.ai_context else {},
-                'consensus_content': json.loads(session.consensus_content) if session.consensus_content else {}
-            }
+            try:
+                session_context = {
+                    'user_context': json.loads(session.user_context) if session.user_context else {},
+                    'ai_context': json.loads(session.ai_context) if session.ai_context else {},
+                    'consensus_content': json.loads(session.consensus_content) if session.consensus_content else {}
+                }
+                print(f"✅ 会话上下文构建成功")
+            except Exception as ctx_error:
+                print(f"❌ 构建会话上下文失败: {ctx_error}")
+                raise Exception(f"会话上下文构建失败: {str(ctx_error)}")
             
             # 调用智能助手分析服务（传入包含文件内容的完整消息）
+            print(f"🤖 开始调用AI服务: {ai_svc.__class__.__name__}")
             ai_result = ai_svc.analyze_user_requirement(
                 user_message=full_content,  # 使用包含文件内容的完整消息
                 session_context=session_context,
@@ -331,61 +360,115 @@ def send_message(session_id):
                 current_stage=session.current_stage,
                 session_id=session_id
             )
+            print(f"✅ AI服务调用完成")
             
             # 创建AI响应消息
-            ai_message = RequirementsMessage(
-                session_id=session_id,
-                message_type='ai',
-                content=ai_result['ai_response'],
-                message_metadata=json.dumps({
-                    'stage': ai_result.get('stage', session.current_stage),
+            print(f"💾 开始创建数据库记录")
+            try:
+                if not ai_result or 'ai_response' not in ai_result:
+                    raise Exception(f"AI服务返回的结果无效: {ai_result}")
+                
+                ai_message = RequirementsMessage(
+                    session_id=session_id,
+                    message_type='ai',
+                    content=ai_result['ai_response'],
+                    message_metadata=json.dumps({
+                        'stage': ai_result.get('stage', session.current_stage),
+                        'identified_requirements': ai_result.get('identified_requirements', []),
+                        'information_gaps': ai_result.get('information_gaps', []),
+                        'clarification_questions': ai_result.get('clarification_questions', []),
+                        'analysis_summary': ai_result.get('analysis_summary', ''),
+                        'assistant_type': assistant_type,
+                        'source': 'http'
+                    })
+                )
+                print(f"✅ AI响应消息对象创建成功")
+            except Exception as msg_error:
+                print(f"❌ 创建AI响应消息对象失败: {msg_error}")
+                raise Exception(f"AI响应消息创建失败: {str(msg_error)}")
+            
+            # 更新会话上下文和共识内容
+            print(f"🔄 更新会话状态")
+            try:
+                session.ai_context = json.dumps(ai_result.get('ai_context', session_context['ai_context']))
+                session.consensus_content = json.dumps(ai_result.get('consensus_content', {}))
+                session.current_stage = ai_result.get('stage', session.current_stage)
+                session.updated_at = datetime.utcnow()
+                print(f"✅ 会话状态更新成功")
+            except Exception as session_error:
+                print(f"❌ 更新会话状态失败: {session_error}")
+                raise Exception(f"会话状态更新失败: {str(session_error)}")
+            
+            # 保存到数据库
+            print(f"💾 提交数据库事务")
+            try:
+                db.session.add(ai_message)
+                db.session.commit()
+                print(f"✅ 数据库事务提交成功")
+            except Exception as db_error:
+                print(f"❌ 数据库事务失败: {db_error}")
+                db.session.rollback()
+                raise Exception(f"数据库保存失败: {str(db_error)}")
+            
+            # 构建响应数据
+            print(f"📦 构建响应数据")
+            try:
+                response_data = {
+                    'ai_message': ai_message.to_dict(),
+                    'consensus_content': ai_result.get('consensus_content', {}),
                     'identified_requirements': ai_result.get('identified_requirements', []),
                     'information_gaps': ai_result.get('information_gaps', []),
                     'clarification_questions': ai_result.get('clarification_questions', []),
-                    'analysis_summary': ai_result.get('analysis_summary', ''),
-                    'assistant_type': assistant_type,
-                    'source': 'http'
-                })
-            )
+                    'current_stage': session.current_stage
+                }
+                
+                # 统一返回格式，包含AI响应和用户消息（如果非激活消息）
+                response_data['user_message'] = user_message.to_dict() if not is_activation_message else None
+                print(f"✅ 响应数据构建成功")
+            except Exception as resp_error:
+                print(f"❌ 构建响应数据失败: {resp_error}")
+                raise Exception(f"响应数据构建失败: {str(resp_error)}")
             
-            # 更新会话上下文和共识内容
-            session.ai_context = json.dumps(ai_result.get('ai_context', session_context['ai_context']))
-            session.consensus_content = json.dumps(ai_result.get('consensus_content', {}))
-            session.current_stage = ai_result.get('stage', session.current_stage)
-            session.updated_at = datetime.utcnow()
-            
-            db.session.add(ai_message)
-            db.session.commit()
-            
-            # 返回结果，仅当不是激活消息时才返回用户消息
-            response_data = {
-                'ai_message': ai_message.to_dict(),
-                'consensus_content': ai_result.get('consensus_content', {}),
-                'identified_requirements': ai_result.get('identified_requirements', []),
-                'information_gaps': ai_result.get('information_gaps', []),
-                'clarification_questions': ai_result.get('clarification_questions', []),
-                'current_stage': session.current_stage
-            }
-            
-            # 统一返回格式，包含AI响应和用户消息（如果非激活消息）
-            response_data['user_message'] = user_message.to_dict() if not is_activation_message else None
-            
+            print(f"✅ 消息处理完成")
             return standard_success_response(
                 data=response_data,
                 message="消息处理成功"
             )
             
         except Exception as ai_error:
-            print(f"❌ AI服务调用失败: {str(ai_error)}")
+            error_details = str(ai_error)
+            print(f"❌ AI服务调用失败: {error_details}")
+            
+            # 分析具体的错误类型，提供更有用的错误信息
+            if "api_key" in error_details.lower() or "unauthorized" in error_details.lower():
+                user_message = "AI服务配置错误：API密钥无效或未配置。请联系管理员检查AI服务配置。"
+                error_type = "config_error"
+            elif "timeout" in error_details.lower():
+                user_message = "AI服务响应超时，请稍后重试。如果问题持续存在，请尝试简化您的消息。"
+                error_type = "timeout_error"
+            elif "connection" in error_details.lower() or "network" in error_details.lower():
+                user_message = "无法连接到AI服务。请检查网络连接或稍后重试。"
+                error_type = "connection_error"
+            elif "not found" in error_details.lower() or "404" in error_details:
+                user_message = "AI服务配置错误：服务端点不存在。请联系管理员检查基础URL配置。"
+                error_type = "endpoint_error"
+            elif "500" in error_details or "internal server error" in error_details.lower():
+                user_message = "AI服务内部错误，可能是消息内容过长或格式问题。请尝试简化消息后重试。"
+                error_type = "server_error"
+            else:
+                user_message = f"抱歉，AI分析服务遇到了问题：{error_details}。请稍后重试，或重新描述您的需求。"
+                error_type = "unknown_error"
+            
             # 创建AI服务错误消息
             error_message = RequirementsMessage(
                 session_id=session_id,
                 message_type='system',
-                content=f"抱歉，AI分析服务遇到了问题：{str(ai_error)}。请稍后重试，或重新描述您的需求。",
+                content=user_message,
                 message_metadata=json.dumps({
-                    'error_type': 'ai_service_error',
-                    'error_details': str(ai_error),
-                    'stage': session.current_stage
+                    'error_type': error_type,
+                    'error_details': error_details,
+                    'stage': session.current_stage,
+                    'troubleshooting_hint': 'Check AI service configuration, network connectivity, and message size'
                 })
             )
             
@@ -408,10 +491,20 @@ def send_message(session_id):
                 )
         
     except (ValidationError, NotFoundError) as e:
+        print(f"❌ 验证或查找错误: {e.__class__.__name__}: {e}")
         return standard_error_response(e.message, e.code if hasattr(e, 'code') else 400)
     except Exception as e:
+        print(f"❌ 未处理的异常发生: {e.__class__.__name__}: {str(e)}")
+        print(f"❌ 异常堆栈信息:")
+        import traceback
+        traceback.print_exc()
+        
         db.session.rollback()
-        return standard_error_response(f"发送消息失败: {str(e)}", 500)
+        print(f"❌ 数据库事务已回滚")
+        
+        error_response = standard_error_response(f"发送消息失败: {str(e)}", 500)
+        print(f"❌ 返回500错误响应: {error_response}")
+        return error_response
 
 
 @requirements_bp.route("/sessions/<session_id>/status", methods=["PUT"])

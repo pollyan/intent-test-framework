@@ -233,6 +233,18 @@ class IntelligentAssistantService:
 
     def _call_ai_model_with_messages(self, messages: List[Dict[str, str]]) -> str:
         """使用消息列表调用AI模型"""
+        # 检查消息长度，防止超过token限制
+        total_length = sum(len(msg.get('content', '')) for msg in messages)
+        if total_length > 100000:  # 约10万字符限制
+            logger.warning(f"消息总长度过长: {total_length} 字符，可能超过模型限制")
+            # 保留系统消息和最近的几条消息
+            system_messages = [msg for msg in messages if msg.get('role') == 'system']
+            other_messages = [msg for msg in messages if msg.get('role') != 'system']
+            # 只保留最近的5条非系统消息
+            recent_messages = other_messages[-5:] if len(other_messages) > 5 else other_messages
+            messages = system_messages + recent_messages
+            logger.info(f"已截断消息，保留{len(messages)}条消息")
+        
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
@@ -289,7 +301,32 @@ class IntelligentAssistantService:
                     logger.error(f"解析AI响应时发生错误: {e}, 完整响应: {result}")
                     return "抱歉，AI响应格式解析失败。请检查API配置或稍后重试。"
             else:
-                error_msg = f"AI API调用失败: {response.status_code} - {response.text}"
+                # 分析具体的HTTP错误码
+                try:
+                    error_response = response.json()
+                    error_detail = error_response.get('error', {}).get('message', response.text)
+                except:
+                    error_detail = response.text
+                
+                if response.status_code == 400:
+                    error_msg = f"AI API请求格式错误 (400): {error_detail}"
+                elif response.status_code == 401:
+                    error_msg = f"AI API身份验证失败 (401): API密钥无效或过期"
+                elif response.status_code == 403:
+                    error_msg = f"AI API访问被禁止 (403): 没有相关权限或额度不足"
+                elif response.status_code == 404:
+                    error_msg = f"AI API端点不存在 (404): 请检查base_url配置"
+                elif response.status_code == 429:
+                    error_msg = f"AI API请求频率过高 (429): {error_detail}"
+                elif response.status_code == 500:
+                    error_msg = f"AI服务内部错误 (500): 可能是消息内容过长或格式问题"
+                elif response.status_code == 502:
+                    error_msg = f"AI服务网关错误 (502): 服务不可用"
+                elif response.status_code == 503:
+                    error_msg = f"AI服务不可用 (503): 服务过载或维护中"
+                else:
+                    error_msg = f"AI API调用失败 ({response.status_code}): {error_detail}"
+                
                 logger.error(error_msg)
                 raise Exception(error_msg)
                 
