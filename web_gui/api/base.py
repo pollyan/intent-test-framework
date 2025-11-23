@@ -165,6 +165,77 @@ def register_blueprints(app):
             return render_template("index.html")
         except:
             return {"message": "AI4SE工具集", "status": "running"}
+    
+    @app.route("/testcases")
+    def testcases():
+        """测试用例页面"""
+        try:
+            from flask import render_template
+            return render_template("testcases.html")
+        except:
+            return {"error": "无法加载页面"}
+    
+    @app.route("/execution")
+    def execution():
+        """执行控制台页面"""
+        try:
+            from flask import render_template
+            return render_template("execution.html")
+        except:
+            return {"error": "无法加载页面"}
+    
+    @app.route("/requirements-analyzer")
+    @app.route("/requirements")
+    def requirements_analyzer_page():
+        """需求分析页面"""
+        try:
+            from flask import render_template
+            return render_template("requirements_analyzer.html")
+        except:
+            return {"error": "无法加载页面"}
+    
+    @app.route("/config-management")
+    @app.route("/configs")
+    def config_management_page():
+        """配置管理页面"""
+        try:
+            from flask import render_template
+            return render_template("config_management.html")
+        except:
+            return {"error": "无法加载页面"}
+    
+    @app.route("/local-proxy")
+    def local_proxy():
+        """本地代理页面"""
+        try:
+            from flask import render_template
+            from datetime import datetime
+            return render_template(
+                "local_proxy.html",
+                current_date=datetime.utcnow().strftime("%Y-%m-%d"),
+                build_time=datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
+            )
+        except:
+            return {"error": "无法加载页面"}
+    
+    @app.route("/reports")
+    def reports():
+        """报告页面"""
+        try:
+            from flask import render_template
+            return render_template("reports.html")
+        except:
+            return {"error": "无法加载页面"}
+    
+    @app.route("/profile")
+    @app.route("/about")
+    def profile_page():
+        """个人简介页面"""
+        try:
+            from flask import render_template
+            return render_template("profile.html")
+        except:
+            return {"error": "无法加载页面"}
             
     @app.route("/health")
     def health_check():
