@@ -240,3 +240,15 @@ integration_example.py
 # Auto-added by quality check
 *.pyc
 logs/
+
+# SSH keys and certificates (Security Critical)
+key/
+*.pem
+*.key
+*.ppk
+*.cer
+*.crt
+id_rsa*
+id_dsa*
+id_ecdsa*
+id_ed25519*
