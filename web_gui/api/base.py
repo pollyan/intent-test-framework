@@ -165,7 +165,7 @@ def register_blueprints(app):
             return render_template("index.html")
         except:
             return {"message": "AI4SE工具集", "status": "running"}
-    
+            
     @app.route("/testcases")
     def testcases():
         """测试用例页面"""
