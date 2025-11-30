@@ -50,7 +50,7 @@ jobs:
     name: Deploy to Tencent Cloud
     needs: api-test  # 必须等待 api-test 完成且成功
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     
     steps:
     - name: 📥 Checkout code
