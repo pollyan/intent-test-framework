@@ -91,11 +91,38 @@ jobs:
             cd intent-test-framework
             
             # 配置 git 以处理大仓库和慢速网络
+            echo "⚙️  配置 Git..."
             git config --global http.postBuffer 524288000
             git config --global http.lowSpeedLimit 0
             git config --global http.lowSpeedTime 999999
             
-            git clone https://github.com/pollyan/intent-test-framework.git .
+            # 尝试克隆代码，最多重试 3 次
+            echo "📦 开始克隆代码仓库..."
+            echo "仓库: https://github.com/pollyan/intent-test-framework.git"
+            RETRY_COUNT=0
+            MAX_RETRIES=3
+            
+            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+              echo ""
+              echo "🔄 尝试 $((RETRY_COUNT + 1))/$MAX_RETRIES..."
+              
+              # 使用 --verbose 和 --progress 显示详细进度
+              if git clone --verbose --progress https://github.com/pollyan/intent-test-framework.git . 2>&1; then
+                echo "✅ 代码克隆成功！"
+                break
+              else
+                RETRY_COUNT=$((RETRY_COUNT + 1))
+                if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                  echo "❌ 克隆失败，等待 10 秒后重试..."
+                  sleep 10
+                  # 清理失败的克隆
+                  rm -rf .git *
+                else
+                  echo "❌ 克隆失败，已达到最大重试次数"
+                  exit 1
+                fi
+              fi
+            done
             
             echo "📝 创建 .env 文件..."
             echo "DATABASE_URL=postgresql://postgres.jzmqsuxphksbulrbhebp:Shunlian04@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?sslmode=require&connect_timeout=15&application_name=prod" > .env
