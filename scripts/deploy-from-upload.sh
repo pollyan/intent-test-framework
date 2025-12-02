@@ -149,7 +149,7 @@ main() {
     # 7. 重新构建 Docker 镜像
     log_info "构建 Docker 镜像..."
     cd "$DEPLOY_DIR"
-    docker-compose -f docker-compose.prod.yml build --no-cache web-app
+    docker-compose -f docker-compose.prod.yml build web-app
     log_info "✅ 镜像构建完成"
     
     # 8. 启动服务
