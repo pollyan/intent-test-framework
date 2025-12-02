@@ -136,10 +136,13 @@ main() {
         if [ -f "$BACKUP_DIR/latest/.env" ]; then
             cp "$BACKUP_DIR/latest/.env" "$DEPLOY_DIR/.env"
             log_info "✅ 从备份恢复 .env 文件"
+        elif [ -f "$DEPLOY_DIR/.env.docker.example" ]; then
+            log_warn ".env 文件不存在，使用 .env.docker.example 创建基本配置"
+            cp "$DEPLOY_DIR/.env.docker.example" "$DEPLOY_DIR/.env"
+            log_warn "⚠️  请SSH登录服务器，手动编辑 $DEPLOY_DIR/.env 配置数据库等信息"
         else
-            log_error "未找到 .env 文件，请手动创建"
-            echo "你可以参考 .env.docker.example 创建 .env 文件"
-            exit 1
+            log_warn "⚠️  未找到 .env 文件，将使用环境变量或默认配置"
+            log_warn "如果应用启动失败，请SSH登录服务器创建 $DEPLOY_DIR/.env 文件"
         fi
     fi
     
