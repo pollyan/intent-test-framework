@@ -49,14 +49,36 @@ mkdir -p "$BACKUP_DIR"
 log_info "从 Supabase 导出数据..."
 log_warn "这可能需要几分钟，请耐心等待..."
 
-# 使用 pg_dump 导出（只导出 public schema，排除 Supabase 系统表）
-pg_dump "$SUPABASE_URL" \
-    --schema=public \
-    --no-owner \
-    --no-privileges \
-    --clean \
-    --if-exists \
-    --file="$BACKUP_FILE"
+# 检查是否有 pg_dump 命令
+if command -v pg_dump &> /dev/null; then
+    # 使用本地 pg_dump
+    log_info "使用本地 PostgreSQL 客户端..."
+    pg_dump "$SUPABASE_URL" \
+        --schema=public \
+        --no-owner \
+        --no-privileges \
+        --clean \
+        --if-exists \
+        --file="$BACKUP_FILE"
+else
+    # 使用 Docker 容器中的 pg_dump
+    log_warn "本地未安装 PostgreSQL 客户端，使用 Docker..."
+    
+    # 确保容器正在运行
+    if ! docker ps | grep -q "$TENCENT_CONTAINER"; then
+        log_error "❌ 容器 $TENCENT_CONTAINER 未运行，无法使用 Docker 方式"
+        log_info "请安装 PostgreSQL 客户端: brew install postgresql"
+        exit 1
+    fi
+    
+    docker exec "$TENCENT_CONTAINER" pg_dump "$SUPABASE_URL" \
+        --schema=public \
+        --no-owner \
+        --no-privileges \
+        --clean \
+        --if-exists \
+        > "$BACKUP_FILE"
+fi
 
 if [ $? -eq 0 ]; then
     log_info "✅ 数据导出成功: $BACKUP_FILE"
