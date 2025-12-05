@@ -18,7 +18,7 @@ services:
     restart: unless-stopped
     environment:
       # 连接到宿主机上已有的 PostgreSQL 容器
-      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@host.docker.internal:5432/intent_test}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@langfuse-postgres-1:5432/intent_test}
       - SECRET_KEY=${SECRET_KEY}
       - FLASK_ENV=production
     ports:
