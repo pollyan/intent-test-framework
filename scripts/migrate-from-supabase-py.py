@@ -46,8 +46,17 @@ def migrate():
             conn.execute(text("SELECT 1"))
         log("✅ 本地 PostgreSQL 连接成功")
         
-        # 2. 核心表列表（只迁移这些表）
-        core_tables = ['test_cases', 'execution_history', 'step_executions', 'templates']
+        # 2. 核心业务表列表 - 扩展包含所有有数据的表
+        core_tables = [
+            'test_cases',           # 14条
+            'execution_history',    # 214条
+            'step_executions',      # 2条
+            'templates',            # 1条
+            'execution_variables',  # 1条
+            'requirements_ai_configs',  # 3条
+            'requirements_sessions',    # 168条
+            'requirements_messages'     # 478条
+        ]
         log(f"将迁移 {len(core_tables)} 个核心表: {', '.join(core_tables)}")
         
         # 3. 备份本地数据
