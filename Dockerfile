@@ -25,6 +25,7 @@ COPY web_gui ./web_gui
 COPY api ./api
 COPY migrations ./migrations
 COPY scripts ./scripts
+COPY dist ./dist
 COPY start.py .
 COPY .env.docker.example .
 

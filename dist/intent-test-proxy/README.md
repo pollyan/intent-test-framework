@@ -39,30 +39,89 @@ MIDSCENE_MODEL_NAME=qwen-vl-max-latest
 
 ## 系统要求
 
-- Node.js 16.x 或更高版本
+- **Node.js 18.x - 22.x LTS** (推荐 20.x)
+  - ⚠️ Node.js v24+ 过新，可能存在兼容性问题
+  - ❌ Node.js < 18 不支持
 - 至少 2GB 可用内存
 - 稳定的网络连接 (用于AI API调用)
 
 ## 故障排除
 
-### Node.js未安装
-请访问 https://nodejs.org/ 下载并安装Node.js LTS版本
+### Node.js 版本问题
+
+**问题**：Node.js版本不兼容（太旧或太新）
+
+**解决方案**：
+1. 推荐使用 nvm 管理 Node.js 版本
+   ```bash
+   # 安装 nvm (Mac/Linux)
+   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+   
+   # 安装 Node.js 20 LTS
+   nvm install 20
+   nvm use 20
+   
+   # 验证版本
+   node --version  # 应该显示 v20.x.x
+   ```
+
+2. 或直接下载安装 Node.js 20 LTS: https://nodejs.org/
+
+### npm 权限错误 (EACCES)
+
+**症状**：安装依赖时出现 `EACCES` 权限错误
+
+**解决方案 (Mac/Linux)**：
+```bash
+# 修复 npm 缓存权限
+sudo chown -R $(whoami) "$HOME/.npm"
+
+# 修复当前目录权限
+sudo chown -R $(whoami) "$(pwd)"
+```
+
+**解决方案 (Windows)**：
+- 以管理员身份运行 `start.bat`
+- 或清理 npm 缓存：`npm cache clean --force`
+
+### Node.js 未安装
+
+请访问 https://nodejs.org/ 下载并安装 Node.js 20.x LTS 版本
 
 ### 端口被占用
+
 如果3001端口被占用，可以在 `.env` 文件中修改：
 ```env
 PORT=3002
 ```
 
 ### 依赖安装失败
+
 尝试清除缓存后重新安装：
 ```bash
 npm cache clean --force
-rm -rf node_modules
+rm -rf node_modules package-lock.json
 npm install
 ```
 
+或使用国内镜像：
+```bash
+npm config set registry https://registry.npmmirror.com
+npm install
+```
+
+### Playwright 浏览器安装失败
+
+```bash
+# 手动安装浏览器
+npx playwright install chromium --with-deps
+
+# 如果上述命令失败，尝试不带系统依赖
+npx playwright install chromium
+```
+
 ### AI API调用失败
+
 1. 检查API密钥是否正确
 2. 确认账户余额充足
 3. 检查网络连接
@@ -71,10 +130,11 @@ npm install
 ## 技术支持
 
 如遇问题，请检查：
-1. 控制台错误信息
-2. 网络连接状态
-3. API密钥配置
-4. 防火墙设置
+1. Node.js 版本是否在 18-22 范围内
+2. 控制台错误信息
+3. 网络连接状态  
+4. API密钥配置
+5. 防火墙设置
 
 ---
 

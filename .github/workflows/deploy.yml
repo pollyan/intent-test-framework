@@ -75,7 +75,6 @@ jobs:
           --exclude='.env' \
           --exclude='.DS_Store' \
           --exclude='*.md' \
-          --exclude='dist' \
           --exclude='.github' \
           --exclude='.claude' \
           --exclude='.cursor' \

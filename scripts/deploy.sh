@@ -59,6 +59,20 @@ esac
 log_info "使用配置文件: $COMPOSE_FILE"
 log_info "部署目录: $DEPLOY_DIR"
 
+# 构建本地代理包（必须在Docker构建前完成）
+log_info "构建本地代理包..."
+if [ -f "scripts/build-proxy-package.js" ]; then
+    if command -v node &> /dev/null; then
+        node scripts/build-proxy-package.js
+        log_info "✅ 本地代理包构建完成"
+    else
+        log_warn "⚠️ Node.js未安装，跳过代理包构建"
+        log_warn "   代理包可能不是最新版本"
+    fi
+else
+    log_warn "⚠️ 构建脚本不存在，跳过代理包构建"
+fi
+
 # 切换到部署目录
 cd "$DEPLOY_DIR"
 

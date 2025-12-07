@@ -92,31 +92,74 @@ fs.writeFileSync(path.join(BUILD_DIR, '.env.example'), envTemplate);
 console.log('🖥️ 创建启动脚本...');
 const windowsScript = `@echo off
 chcp 65001 >nul
-title Intent Test Framework - Local Proxy Server [FINAL]
+title Intent Test Framework - Local Proxy Server
 setlocal enabledelayedexpansion
 
 echo.
 echo ========================================
 echo   Intent Test Framework Local Proxy
-echo   [FINAL VERSION - Complete Setup]
 echo ========================================
 echo.
 
-REM Step 1: Check Node.js
+REM Step 1: Check Node.js version
 echo [1/5] Checking Node.js environment...
 for /f "tokens=*" %%i in ('node --version 2^>nul') do set NODE_VERSION=%%i
 if "!NODE_VERSION!"=="" (
     echo X Error: Node.js not detected
-    echo Please install Node.js from https://nodejs.org/
+    echo.
+    echo Please install Node.js from: https://nodejs.org/
+    echo Recommended version: Node.js 18.x - 22.x LTS
+    echo.
     pause
     exit /b 1
 )
+
+REM Extract major version (e.g., v20.1.0 -> 20)
+for /f "tokens=1 delims=." %%a in ("!NODE_VERSION:~1!") do set NODE_MAJOR=%%a
+
 echo + Node.js version: !NODE_VERSION!
 
-REM Step 2: Skip npm version check
+REM Check Node.js version compatibility
+if !NODE_MAJOR! LSS 18 (
+    echo.
+    echo X Error: Node.js version too old
+    echo.
+    echo Current version: !NODE_VERSION!
+    echo Required version: Node.js 18.x - 22.x LTS
+    echo.
+    echo Please upgrade Node.js:
+    echo   Download from: https://nodejs.org/
+    echo   Recommended: Node.js 20.x LTS
+    echo.
+    pause
+    exit /b 1
+)
+
+if !NODE_MAJOR! GEQ 24 (
+    echo.
+    echo ! Warning: Node.js version too new ^(v!NODE_MAJOR!^)
+    echo.
+    echo Detected Node.js v!NODE_MAJOR!, some dependencies may have compatibility issues
+    echo Recommended: Node.js 18.x - 22.x LTS
+    echo.
+    echo If you encounter problems, please install Node.js 20.x LTS
+    echo   Download from: https://nodejs.org/
+    echo.
+    set /p CONTINUE="Continue anyway? (y/n): "
+    if /i not "!CONTINUE!"=="y" exit /b 1
+    echo.
+)
+
+REM Step 2: npm check
 echo.
 echo [2/5] npm check...
-echo + npm: Will be verified during dependency installation
+where npm >nul 2>nul
+if !errorlevel! neq 0 (
+    echo X Error: npm not found
+    pause
+    exit /b 1
+)
+echo + npm is available
 
 REM Step 3: Install dependencies
 echo.
@@ -126,35 +169,44 @@ if exist "node_modules\\@playwright\\test" (
     if exist "node_modules\\axios" (
         echo + Dependencies already exist, skipping installation
     ) else (
-        echo ^ Installing npm dependencies...
-        echo   This may take several minutes, please wait...
-        echo   Note: Warnings are normal and will not stop installation
-        echo.
-        call npm install --no-audit --no-fund --silent
-        set NPM_CODE=!errorlevel!
-        if !NPM_CODE! neq 0 (
-            echo.
-            echo X npm install failed ^(exit code: !NPM_CODE!^)
-            echo Try running as administrator or check network connection
-            pause
-            exit /b 1
-        )
-        echo + npm dependencies installed successfully!
+        goto :install_deps
     )
 ) else (
+    :install_deps
     echo ^ Installing npm dependencies...
     echo   This may take several minutes, please wait...
     echo   Note: Warnings are normal and will not stop installation
     echo.
-    call npm install --no-audit --no-fund --silent
+    call npm install --no-audit --no-fund 2>&1 | tee npm_install.log
     set NPM_CODE=!errorlevel!
     if !NPM_CODE! neq 0 (
         echo.
         echo X npm install failed ^(exit code: !NPM_CODE!^)
-        echo Try running as administrator or check network connection
+        echo.
+        
+        REM Check for permission errors
+        findstr /C:"EACCES" npm_install.log >nul
+        if !errorlevel! equ 0 (
+            echo Error: npm permission error detected
+            echo.
+            echo Solution:
+            echo   1. Run this script as Administrator
+            echo   2. Or clean npm cache: npm cache clean --force
+            echo.
+        ) else (
+            echo Possible solutions:
+            echo   1. Run as Administrator
+            echo   2. Check network connection
+            echo   3. Clean npm cache: npm cache clean --force
+            echo   4. Use China mirror: npm config set registry https://registry.npmmirror.com
+            echo.
+        )
+        
+        del npm_install.log 2>nul
         pause
         exit /b 1
     )
+    del npm_install.log 2>nul
     echo + npm dependencies installed successfully!
 )
 
@@ -319,20 +371,53 @@ echo "  Intent Test Framework 本地代理服务器"
 echo "========================================"
 echo ""
 
-# 检查Node.js
-echo -e "\${BLUE}[1/4]\${NC} 检查Node.js环境..."
+# 步骤 1: 检查Node.js版本
+echo -e "\${BLUE}[1/5]\${NC} 检查Node.js环境..."
 if ! command -v node &> /dev/null; then
     echo -e "\${RED}❌ 错误: 未检测到Node.js\${NC}"
     echo ""
     echo "请先安装Node.js:"
-    echo "https://nodejs.org/"
+    echo "  https://nodejs.org/"
     echo ""
-    echo "建议安装LTS版本 (16.x或更高)"
+    echo "推荐版本: Node.js 18.x - 22.x LTS"
+    echo ""
+    echo "💡 提示: 推荐使用 nvm 管理 Node.js 版本"
+    echo "   安装 nvm: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash"
+    echo "   安装 Node.js 20: nvm install 20"
     exit 1
 fi
 
 NODE_VERSION=\$(node --version)
+NODE_MAJOR=\$(echo \$NODE_VERSION | cut -d'.' -f1 | sed 's/v//')
+
 echo -e "\${GREEN}✅ Node.js版本: \$NODE_VERSION\${NC}"
+
+# 检查Node.js版本兼容性
+if [ \$NODE_MAJOR -lt 18 ]; then
+    echo -e "\${RED}❌ 错误: Node.js版本过低\${NC}"
+    echo ""
+    echo "当前版本: \$NODE_VERSION"
+    echo "要求版本: Node.js 18.x - 22.x LTS"
+    echo ""
+    echo "请升级Node.js:"
+    echo "  使用 nvm: nvm install 20 && nvm use 20"
+    echo "  或访问: https://nodejs.org/"
+    exit 1
+elif [ \$NODE_MAJOR -ge 24 ]; then
+    echo -e "\${YELLOW}⚠️  警告: Node.js版本过新 (v\$NODE_MAJOR)\${NC}"
+    echo ""
+    echo "检测到 Node.js v\$NODE_MAJOR，部分依赖包可能存在兼容性问题"
+    echo "推荐使用: Node.js 18.x - 22.x LTS"
+    echo ""
+    echo "如果遇到问题，建议切换到 Node.js 20:"
+    echo "  nvm install 20 && nvm use 20"
+    echo ""
+    read -p "是否继续? (y/n) " -n 1 -r
+    echo
+    if [[ ! \$REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+fi
 
 # 检查npm
 if ! command -v npm &> /dev/null; then
@@ -340,9 +425,9 @@ if ! command -v npm &> /dev/null; then
     exit 1
 fi
 
-# 检查和安装依赖
+# 步骤 2: 检查和安装依赖
 echo ""
-echo -e "\${BLUE}[2/4]\${NC} 检查依赖包..."
+echo -e "\${BLUE}[2/5]\${NC} 检查依赖包..."
 
 # 检查关键依赖是否存在
 PLAYWRIGHT_TEST_MISSING=false
@@ -368,16 +453,34 @@ if [ ! -d "node_modules" ] || [ "\$PLAYWRIGHT_TEST_MISSING" = true ] || [ "\$AXI
     fi
     
     # 安装依赖
-    npm install
-    if [ \$? -ne 0 ]; then
+    npm install 2>&1 | tee /tmp/npm_install.log
+    NPM_EXIT_CODE=\${PIPESTATUS[0]}
+    
+    if [ \$NPM_EXIT_CODE -ne 0 ]; then
         echo -e "\${RED}❌ 依赖安装失败\${NC}"
         echo ""
-        echo "可能的解决方案:"
-        echo "1. 检查网络连接"
-        echo "2. 清理npm缓存: npm cache clean --force"
-        echo "3. 使用国内镜像: npm config set registry https://registry.npmmirror.com"
+        
+        # 检查是否是权限问题
+        if grep -q "EACCES" /tmp/npm_install.log; then
+            echo -e "\${RED}检测到 npm 权限错误 (EACCES)\${NC}"
+            echo ""
+            echo "解决方法:"
+            echo "  sudo chown -R \$(whoami) \"\$HOME/.npm\""
+            echo "  sudo chown -R \$(whoami) \"\$(pwd)\""
+            echo ""
+            echo "修复后请重新运行此脚本"
+        else
+            echo "可能的解决方案:"
+            echo "1. 检查网络连接"
+            echo "2. 清理npm缓存: npm cache clean --force"
+            echo "3. 使用国内镜像: npm config set registry https://registry.npmmirror.com"
+        fi
+        
+        rm -f /tmp/npm_install.log
         exit 1
     fi
+    
+    rm -f /tmp/npm_install.log
     
     # 验证关键依赖
     if [ ! -d "node_modules/@playwright/test" ]; then
@@ -395,9 +498,26 @@ else
     echo -e "\${GREEN}✅ 依赖包已存在\${NC}"
 fi
 
-# 检查配置文件
+# 步骤 3: 检查 Playwright 浏览器
 echo ""
-echo -e "\${BLUE}[3/4]\${NC} 检查配置文件..."
+echo -e "\${BLUE}[3/5]\${NC} 检查 Playwright 浏览器..."
+echo "确保浏览器驱动已安装..."
+
+# 检查 Playwright 浏览器是否已安装
+if npx playwright --version &> /dev/null; then
+    # 尝试安装浏览器（如果已安装会快速跳过）
+    npx playwright install chromium --with-deps > /dev/null 2>&1 || \
+    npx playwright install chromium > /dev/null 2>&1 || true
+    
+    echo -e "\${GREEN}✅ Playwright 浏览器就绪\${NC}"
+else
+    echo -e "\${YELLOW}⚠️  Playwright 未正确安装\${NC}"
+    echo "浏览器将在首次测试时自动下载"
+fi
+
+# 步骤 4: 检查配置文件
+echo ""
+echo -e "\${BLUE}[4/5]\${NC} 检查配置文件..."
 if [ ! -f ".env" ]; then
     echo -e "\${YELLOW}⚙️ 首次运行，创建配置文件...\${NC}"
     cp .env.example .env
@@ -415,13 +535,13 @@ fi
 
 echo -e "\${GREEN}✅ 配置文件存在\${NC}"
 
-# 启动服务器
+# 步骤 5: 启动服务器
 echo ""
-echo -e "\${BLUE}[4/4]\${NC} 启动服务器..."
+echo -e "\${BLUE}[5/5]\${NC} 启动服务器..."
 echo ""
-echo -e "\${GREEN}🚀 正在启动Intent Test Framework本地代理服务器...\${NC}"
+echo -e "\${GREEN}🚀 Starting Intent Test Framework Local Proxy Server...\${NC}"
 echo ""
-echo "启动成功后，请返回Web界面选择"本地代理模式""
+echo "启动成功后，请返回Web界面选择本地代理模式"
 echo "按 Ctrl+C 可停止服务器"
 echo ""
 
@@ -483,30 +603,89 @@ MIDSCENE_MODEL_NAME=qwen-vl-max-latest
 
 ## 系统要求
 
-- Node.js 16.x 或更高版本
+- **Node.js 18.x - 22.x LTS** (推荐 20.x)
+  - ⚠️ Node.js v24+ 过新，可能存在兼容性问题
+  - ❌ Node.js < 18 不支持
 - 至少 2GB 可用内存
 - 稳定的网络连接 (用于AI API调用)
 
 ## 故障排除
 
-### Node.js未安装
-请访问 https://nodejs.org/ 下载并安装Node.js LTS版本
+### Node.js 版本问题
+
+**问题**：Node.js版本不兼容（太旧或太新）
+
+**解决方案**：
+1. 推荐使用 nvm 管理 Node.js 版本
+   \`\`\`bash
+   # 安装 nvm (Mac/Linux)
+   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+   
+   # 安装 Node.js 20 LTS
+   nvm install 20
+   nvm use 20
+   
+   # 验证版本
+   node --version  # 应该显示 v20.x.x
+   \`\`\`
+
+2. 或直接下载安装 Node.js 20 LTS: https://nodejs.org/
+
+### npm 权限错误 (EACCES)
+
+**症状**：安装依赖时出现 \`EACCES\` 权限错误
+
+**解决方案 (Mac/Linux)**：
+\`\`\`bash
+# 修复 npm 缓存权限
+sudo chown -R \$(whoami) "\$HOME/.npm"
+
+# 修复当前目录权限
+sudo chown -R \$(whoami) "\$(pwd)"
+\`\`\`
+
+**解决方案 (Windows)**：
+- 以管理员身份运行 \`start.bat\`
+- 或清理 npm 缓存：\`npm cache clean --force\`
+
+### Node.js 未安装
+
+请访问 https://nodejs.org/ 下载并安装 Node.js 20.x LTS 版本
 
 ### 端口被占用
+
 如果3001端口被占用，可以在 \`.env\` 文件中修改：
 \`\`\`env
 PORT=3002
 \`\`\`
 
 ### 依赖安装失败
+
 尝试清除缓存后重新安装：
 \`\`\`bash
 npm cache clean --force
-rm -rf node_modules
+rm -rf node_modules package-lock.json
 npm install
 \`\`\`
 
+或使用国内镜像：
+\`\`\`bash
+npm config set registry https://registry.npmmirror.com
+npm install
+\`\`\`
+
+### Playwright 浏览器安装失败
+
+\`\`\`bash
+# 手动安装浏览器
+npx playwright install chromium --with-deps
+
+# 如果上述命令失败，尝试不带系统依赖
+npx playwright install chromium
+\`\`\`
+
 ### AI API调用失败
+
 1. 检查API密钥是否正确
 2. 确认账户余额充足
 3. 检查网络连接
@@ -515,10 +694,11 @@ npm install
 ## 技术支持
 
 如遇问题，请检查：
-1. 控制台错误信息
-2. 网络连接状态
-3. API密钥配置
-4. 防火墙设置
+1. Node.js 版本是否在 18-22 范围内
+2. 控制台错误信息
+3. 网络连接状态  
+4. API密钥配置
+5. 防火墙设置
 
 ---
 
@@ -538,4 +718,35 @@ console.log('  - start.bat             (Windows启动脚本)');
 console.log('  - start.sh              (Mac/Linux启动脚本)');
 console.log('  - README.md             (使用说明)');
 console.log('');
-console.log('🎯 下一步: 将整个文件夹打包为ZIP文件供用户下载');
+
+// 创建ZIP文件
+console.log('📦 创建ZIP压缩包...');
+const zipPath = path.join(__dirname, '..', 'dist', `${PACKAGE_NAME}.zip`);
+
+try {
+    // 删除旧的ZIP文件
+    if (fs.existsSync(zipPath)) {
+        fs.unlinkSync(zipPath);
+    }
+
+    // 使用系统zip命令创建压缩包
+    const cwd = path.join(__dirname, '..', 'dist');
+    execSync(`zip -r "${PACKAGE_NAME}.zip" "${PACKAGE_NAME}"`, {
+        cwd: cwd,
+        stdio: 'pipe'
+    });
+
+    console.log('✅ ZIP文件创建成功！');
+    console.log(`📦 ZIP文件位置: ${zipPath}`);
+
+    // 获取文件大小
+    const stats = fs.statSync(zipPath);
+    const fileSizeInMB = (stats.size / (1024 * 1024)).toFixed(2);
+    console.log(`📊 文件大小: ${fileSizeInMB} MB`);
+} catch (error) {
+    console.error('⚠️ ZIP文件创建失败:', error.message);
+    console.log('💡 提示: 可以手动压缩 dist/intent-test-proxy 文件夹');
+}
+
+console.log('');
+console.log('🎯 代理包已准备就绪，可供下载！');

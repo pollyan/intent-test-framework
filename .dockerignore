@@ -3,46 +3,41 @@
 .gitignore
 .gitattributes
 
-# Python
-__pycache__
-*.py[cod]
-*$py.class
-*.so
-.Python
-*.egg-info
-dist
-build
-*.egg
-.pytest_cache
+# Build artifacts
+node_modules/
+__pycache__/
+*.pyc
+.pytest_cache/
 .coverage
-htmlcov
-.tox
+htmlcov/
 
-# 虚拟环境
-venv
-env
-ENV
-.venv
-
-# Node.js
-node_modules
-npm-debug.log
-yarn-error.log
-
-# IDE
-.vscode
-.idea
-*.swp
-*.swo
+# Development files
+*.log
+.env
+.env.local
 .DS_Store
 
-# 环境配置
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Documentation
+*.md
+!README.md
+
+# Dist - keep intent-test-proxy package
+# dist/
+# Commented out to allow proxy package in Docker image
 .env
 .env.local
 *.env.local
 
 # 日志和临时文件
-*.log
 logs
 tmp
 temp
