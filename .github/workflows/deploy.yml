@@ -162,37 +162,54 @@ jobs:
           
           # 构建代理包（确保 ZIP 文件存在）
           echo "📦 构建本地代理包..."
-          cd dist
           
-          # 检查是否有 intent-test-proxy 目录
-          if [ ! -d "intent-test-proxy" ]; then
-            echo "❌ 错误：intent-test-proxy 目录不存在"
-            cd ..
+          # 检查 dist/intent-test-proxy 目录是否存在
+          if [ ! -d "dist/intent-test-proxy" ]; then
+            echo "❌ 错误：dist/intent-test-proxy 目录不存在"
           else
             # 尝试使用 Node.js 构建（包含所有功能）
             if command -v node &> /dev/null; then
-              cd ..
               node scripts/build-proxy-package.js
               echo "✅ 使用 Node.js 构建代理包完成"
             else
-              # 后备方案：使用系统 zip 命令（不依赖 Node.js）
-              echo "⚠️ Node.js 未安装，使用系统 zip 命令创建压缩包"
+              # 后备方案：使用 Python 创建 ZIP（服务器肯定有 Python）
+              echo "⚠️ Node.js 未安装，使用 Python 创建 ZIP 文件"
               
-              # 删除旧的 ZIP 文件
-              rm -f intent-test-proxy.zip
+              python3 << 'PYEOF'
+import zipfile
+import os
+from pathlib import Path
+
+dist_dir = Path('dist')
+source_dir = dist_dir / 'intent-test-proxy'
+zip_path = dist_dir / 'intent-test-proxy.zip'
+
+# 删除旧的 ZIP 文件
+if zip_path.exists():
+    zip_path.unlink()
+    print(f"删除旧的 ZIP 文件: {zip_path}")
+
+# 创建 ZIP 文件
+print(f"创建 ZIP 文件: {zip_path}")
+with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+    for file_path in source_dir.rglob('*'):
+        if file_path.is_file():
+            arcname = file_path.relative_to(dist_dir)
+            zipf.write(file_path, arcname)
+            print(f"  添加: {arcname}")
+
+# 验证文件
+if zip_path.exists():
+    size_mb = zip_path.stat().st_size / (1024 * 1024)
+    print(f"✅ ZIP 文件创建成功: {zip_path} ({size_mb:.2f} MB)")
+    os.chmod(zip_path, 0o644)
+else:
+    print("❌ ZIP 文件创建失败")
+    exit(1)
+PYEOF
               
-              # 创建 ZIP 文件
-              zip -r intent-test-proxy.zip intent-test-proxy/
-              
-              if [ -f "intent-test-proxy.zip" ]; then
-                echo "✅ ZIP 文件创建成功"
-                ls -lh intent-test-proxy.zip
-                chmod 644 intent-test-proxy.zip
-              else
-                echo "❌ ZIP 文件创建失败"
-              fi
-              
-              cd ..
+              echo "✅ Python ZIP 创建完成"
+              ls -lh dist/intent-test-proxy.zip
             fi
           fi
           
