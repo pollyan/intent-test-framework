@@ -160,15 +160,40 @@ jobs:
           # 切换到部署目录
           cd /opt/intent-test-framework
           
-          # 构建代理包（在服务器上构建，确保 dist/ 目录存在）
+          # 构建代理包（确保 ZIP 文件存在）
           echo "📦 构建本地代理包..."
-          if command -v node &> /dev/null; then
-            node scripts/build-proxy-package.js
-            echo "✅ 代理包构建完成"
-            ls -lh dist/intent-test-proxy.zip
+          cd dist
+          
+          # 检查是否有 intent-test-proxy 目录
+          if [ ! -d "intent-test-proxy" ]; then
+            echo "❌ 错误：intent-test-proxy 目录不存在"
+            cd ..
           else
-            echo "⚠️ Node.js 未安装，使用 GitHub Actions 构建的代理包"
-            # 代理包已经在 GitHub Actions 中构建并包含在部署文件中
+            # 尝试使用 Node.js 构建（包含所有功能）
+            if command -v node &> /dev/null; then
+              cd ..
+              node scripts/build-proxy-package.js
+              echo "✅ 使用 Node.js 构建代理包完成"
+            else
+              # 后备方案：使用系统 zip 命令（不依赖 Node.js）
+              echo "⚠️ Node.js 未安装，使用系统 zip 命令创建压缩包"
+              
+              # 删除旧的 ZIP 文件
+              rm -f intent-test-proxy.zip
+              
+              # 创建 ZIP 文件
+              zip -r intent-test-proxy.zip intent-test-proxy/
+              
+              if [ -f "intent-test-proxy.zip" ]; then
+                echo "✅ ZIP 文件创建成功"
+                ls -lh intent-test-proxy.zip
+                chmod 644 intent-test-proxy.zip
+              else
+                echo "❌ ZIP 文件创建失败"
+              fi
+              
+              cd ..
+            fi
           fi
           
           # 确保脚本有执行权限
