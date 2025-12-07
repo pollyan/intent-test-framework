@@ -24,6 +24,7 @@ services:
     ports:
       - "5001:5001"
     volumes:
+      - ./dist:/app/dist:ro
       - ./web_gui/static/screenshots:/app/web_gui/static/screenshots
       - ./logs:/app/logs
     extra_hosts:
