@@ -12,12 +12,12 @@
     "@playwright/test": "1.57.0",
     "axios": "1.13.2",
     "cors": "^2.8.5",
-    "express": "4.22.1",
+    "express": "4.21.2",
     "playwright": "1.57.0",
     "socket.io": "^4.7.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0"
+    "@types/node": "20.19.26"
   },
   "keywords": [
     "midscene",

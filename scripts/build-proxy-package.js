@@ -29,7 +29,18 @@ fs.copyFileSync(
     path.join(BUILD_DIR, 'midscene_server.js')
 );
 
-// 创建精简的package.json
+// 读取根目录的 package.json 以获取最新的依赖版本
+const rootPackageJsonPath = path.join(__dirname, '..', 'package.json');
+const rootPackageJson = JSON.parse(fs.readFileSync(rootPackageJsonPath, 'utf8'));
+
+// 从根 package.json 提取关键依赖的版本
+const getDependencyVersion = (depName) => {
+    return rootPackageJson.dependencies[depName] ||
+        rootPackageJson.devDependencies[depName] ||
+        'latest';
+};
+
+// 创建精简的package.json，使用根项目的依赖版本
 const packageJson = {
     "name": "intent-test-proxy",
     "version": "1.0.0",
@@ -40,16 +51,16 @@ const packageJson = {
         "install-deps": "npm install"
     },
     "dependencies": {
-        "@midscene/web": "^0.22.1",
-        "@playwright/test": "^1.45.0",
-        "axios": "^1.10.0",
-        "cors": "^2.8.5",
-        "express": "^4.18.2",
-        "playwright": "^1.45.0",
-        "socket.io": "^4.7.0"
+        "@midscene/web": getDependencyVersion("@midscene/web"),
+        "@playwright/test": getDependencyVersion("@playwright/test"),
+        "axios": getDependencyVersion("axios"),
+        "cors": getDependencyVersion("cors"),
+        "express": getDependencyVersion("express"),
+        "playwright": getDependencyVersion("playwright"),
+        "socket.io": getDependencyVersion("socket.io")
     },
     "devDependencies": {
-        "@types/node": "^20.0.0"
+        "@types/node": getDependencyVersion("@types/node")
     },
     "keywords": ["midscene", "automation", "testing", "ai"],
     "author": "Intent Test Framework",
