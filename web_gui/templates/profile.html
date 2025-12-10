@@ -24,33 +24,6 @@
         position: relative;
     }
 
-    .wechat-qr {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        width: 140px;
-        padding: 8px;
-        background: #ffffff;
-        border: 1px solid #e8e8e8;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    }
-
-    .wechat-qr img {
-        width: 100%;
-        height: auto;
-        display: block;
-        border-radius: 4px;
-    }
-
-    .wechat-qr-label {
-        text-align: center;
-        font-size: 11px;
-        color: #999999;
-        margin-top: 6px;
-        font-weight: 400;
-    }
-
     .profile-name {
         font-size: 42px;
         font-weight: 300;
@@ -70,7 +43,7 @@
         display: flex;
         justify-content: center;
         gap: 32px;
-        margin-bottom: 20px;
+        margin-bottom: 30px;
         flex-wrap: wrap;
     }
 
@@ -85,6 +58,68 @@
     .contact-label {
         font-weight: 500;
         color: #333333;
+    }
+
+    /* New QR Section */
+    .qr-section {
+        display: flex;
+        justify-content: center;
+        gap: 24px;
+        margin: 30px 0;
+        padding: 24px;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 12px;
+        border: 1px dashed #e0e0e0;
+    }
+
+    .qr-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: #ffffff;
+        padding: 12px 20px;
+        border-radius: 8px;
+        border: 1px solid #e8e8e8;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .qr-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .qr-image-wrapper {
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border-radius: 4px;
+        background: #f8f8f8;
+    }
+
+    .qr-image-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .qr-info {
+        text-align: left;
+    }
+
+    .qr-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #333333;
+        margin-bottom: 4px;
+    }
+
+    .qr-desc {
+        font-size: 12px;
+        color: #999999;
     }
 
     .profile-links {
@@ -266,10 +301,14 @@
             padding: 40px 24px 32px 24px;
         }
 
-        .wechat-qr {
-            position: static;
-            margin: 0 auto 20px auto;
-            width: 120px;
+        .qr-section {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .qr-card {
+            width: 100%;
+            justify-content: center;
         }
 
         .profile-name {
@@ -304,15 +343,9 @@
 <div class="profile-container">
     <!-- 个人信息头部 -->
     <div class="profile-header">
-        <!-- 微信二维码 -->
-        <div class="wechat-qr">
-            <img src="/static/wechat-qr.jpg" alt="微信二维码">
-            <div class="wechat-qr-label">扫码加微信</div>
-        </div>
-
         <h1 class="profile-name">安辉</h1>
         <p class="profile-title">AI 产品经理 | AI 解决方案专家 | 资深技术咨询</p>
-        
+
         <div class="profile-contact">
             <div class="contact-item">
                 <span class="contact-label">电话：</span>
@@ -324,8 +357,33 @@
             </div>
         </div>
 
+        <!-- QR Code Section -->
+        <div class="qr-section">
+            <div class="qr-card">
+                <div class="qr-image-wrapper">
+                    <img src="/static/wechat-qr.jpg" alt="个人微信" title="个人微信">
+                </div>
+                <div class="qr-info">
+                    <div class="qr-title">个人微信</div>
+                    <div class="qr-desc">扫码添加好友</div>
+                </div>
+            </div>
+
+            <div class="qr-card">
+                <div class="qr-image-wrapper">
+                    <!-- 使用 object-fit: cover 自动裁剪白边 -->
+                    <img src="/static/wechat_oa_qr.png" alt="公众号" title="IT老兵-大头">
+                </div>
+                <div class="qr-info">
+                    <div class="qr-title">IT老兵-大头</div>
+                    <div class="qr-desc">扫码关注公众号</div>
+                </div>
+            </div>
+        </div>
+
         <div style="margin-top: 24px; font-size: 14px; color: #666666; line-height: 1.6;">
-            <strong style="color: #333333;">核心优势：</strong>19 年研发与管理经验 | 14 年 ThoughtWorks 咨询背景 | 精通 AI4SE | 具备由 0 到 1 的产品规划与百人团队交付能力
+            <strong style="color: #333333;">核心优势：</strong>19 年研发与管理经验 | 14 年 ThoughtWorks 咨询背景 | 精通 AI4SE | 具备由 0 到 1
+            的产品规划与百人团队交付能力
         </div>
     </div>
 
@@ -334,12 +392,17 @@
         <h2 class="section-title">个人简介</h2>
         <p class="intro-text">
             <span class="intro-highlight">具备"工程思维"的实战型 AI 产品专家</span>。
-            拥有 19 年软件研发经验，近 14 年任职于全球顶尖咨询公司 <strong>ThoughtWorks</strong>。近年来深耕 <strong>AI4SE（AI 赋能软件工程）</strong> 领域，致力于将 LLM、Agent 等前沿技术转化为企业级生产力工具。
+            拥有 19 年软件研发经验，近 14 年任职于全球顶尖咨询公司 <strong>ThoughtWorks</strong>。近年来深耕 <strong>AI4SE（AI 赋能软件工程）</strong>
+            领域，致力于将 LLM、Agent 等前沿技术转化为企业级生产力工具。
         </p>
         <ul class="achievement-list">
-            <li class="achievement-item"><strong>AI 落地能力：</strong>不仅理解 AI 理论，更具备动手构建 AI Agent、编写复杂 Prompt、开发 AI 辅助工具（Vibe Coding）的实战能力。</li>
-            <li class="achievement-item"><strong>产品与商业化：</strong>具备成熟的产品经理方法论（用户画像、MVP、Roadmap），曾主导联想百人规模全球交付项目的产品全生命周期管理。</li>
-            <li class="achievement-item"><strong>咨询与赋能：</strong>擅长通过 Design Thinking 和敏捷方法论，帮助企业（如银行、大疆）重构研发价值流，具备极强的用户需求洞察与业务分析（BA）能力。</li>
+            <li class="achievement-item"><strong>AI 落地能力：</strong>不仅理解 AI 理论，更具备动手构建 AI Agent、编写复杂 Prompt、开发 AI
+                辅助工具（Vibe Coding）的实战能力。</li>
+            <li class="achievement-item">
+                <strong>产品与商业化：</strong>具备成熟的产品经理方法论（用户画像、MVP、Roadmap），曾主导联想百人规模全球交付项目的产品全生命周期管理。
+            </li>
+            <li class="achievement-item"><strong>咨询与赋能：</strong>擅长通过 Design Thinking
+                和敏捷方法论，帮助企业（如银行、大疆）重构研发价值流，具备极强的用户需求洞察与业务分析（BA）能力。</li>
         </ul>
     </div>
 
@@ -365,24 +428,29 @@
     <!-- 重点 AI 与技术成果 -->
     <div class="achievements-section">
         <h2 class="section-title">重点 AI 与技术成果（个人与社区）</h2>
-        
+
         <div class="achievement-category">
             <div class="category-title">原创行业洞见发表</div>
             <ul class="achievement-list">
                 <li class="achievement-item">
-                    <a href="https://mp.weixin.qq.com/s/rGOmGJF3ptFPw15h0nUI2g" target="_blank" class="achievement-link">元提示词驱动：领域专家级 AI Agent 的构建框架</a>
+                    <a href="https://mp.weixin.qq.com/s/rGOmGJF3ptFPw15h0nUI2g" target="_blank"
+                        class="achievement-link">元提示词驱动：领域专家级 AI Agent 的构建框架</a>
                 </li>
                 <li class="achievement-item">
-                    <a href="https://mp.weixin.qq.com/s/CBUn4MV7zz61fuMRStIw-g" target="_blank" class="achievement-link">从氛围编程到规约驱动：AI 时代的工程纪律回归</a>
+                    <a href="https://mp.weixin.qq.com/s/CBUn4MV7zz61fuMRStIw-g" target="_blank"
+                        class="achievement-link">从氛围编程到规约驱动：AI 时代的工程纪律回归</a>
                 </li>
                 <li class="achievement-item">
-                    <a href="https://mp.weixin.qq.com/s/fRoYm3R58VNBNKzQ5go2Uw" target="_blank" class="achievement-link">ThoughtWorks洞见《AI 自动化测试新范式："意图驱动"》</a>
+                    <a href="https://mp.weixin.qq.com/s/fRoYm3R58VNBNKzQ5go2Uw" target="_blank"
+                        class="achievement-link">ThoughtWorks洞见《AI 自动化测试新范式："意图驱动"》</a>
                 </li>
                 <li class="achievement-item">
-                    <a href="https://zhuanlan.zhihu.com/p/389339077" target="_blank" class="achievement-link">ThoughtWorks洞见《敏捷转型中的敏态与稳态》</a>
+                    <a href="https://zhuanlan.zhihu.com/p/389339077" target="_blank"
+                        class="achievement-link">ThoughtWorks洞见《敏捷转型中的敏态与稳态》</a>
                 </li>
                 <li class="achievement-item">
-                    <a href="https://mp.weixin.qq.com/s/6qtjW_DL7eSXu-4Kc4z29A" target="_blank" class="achievement-link">ThoughtWorks洞见《测试分层策略实践模型》</a>
+                    <a href="https://mp.weixin.qq.com/s/6qtjW_DL7eSXu-4Kc4z29A" target="_blank"
+                        class="achievement-link">ThoughtWorks洞见《测试分层策略实践模型》</a>
                 </li>
             </ul>
         </div>
@@ -391,10 +459,12 @@
             <div class="category-title">独立开发 AI 工具</div>
             <ul class="achievement-list">
                 <li class="achievement-item">
-                    构建 <a href="https://intent-test-framework.vercel.app/requirements-analyzer" target="_blank" class="achievement-link">产品经理与测试专家智能体</a>，基于 LangGraph 探索产品经理与测试专家智能体开发。
+                    构建 <a href="https://intent-test-framework.vercel.app/requirements-analyzer" target="_blank"
+                        class="achievement-link">产品经理与测试专家智能体</a>，基于 LangGraph 探索产品经理与测试专家智能体开发。
                 </li>
                 <li class="achievement-item">
-                    构建 <a href="https://intent-test-framework.vercel.app/testcases" target="_blank" class="achievement-link">Intent Test Framework</a>，探索基于"意图驱动"的 AI 测试生成框架。
+                    构建 <a href="https://intent-test-framework.vercel.app/testcases" target="_blank"
+                        class="achievement-link">Intent Test Framework</a>，探索基于"意图驱动"的 AI 测试生成框架。
                 </li>
             </ul>
         </div>
@@ -421,4 +491,3 @@
     </div>
 </div>
 {% endblock %}
-
