@@ -27,6 +27,7 @@ COPY migrations ./migrations
 COPY scripts ./scripts
 COPY dist ./dist
 COPY start.py .
+COPY assistant-bundles ./assistant-bundles
 COPY .env.docker.example .
 
 # 创建必要的目录

@@ -1,6 +1,6 @@
 {% extends "base_layout.html" %}
 
-{% block title %}执行控制台 - AI4SE工具集{% endblock %}
+{% block title %}执行控制台 - 老兵大头的 AI4SE 工具集{% endblock %}
 
 {% block page_title %}执行控制台{% endblock %}
 
@@ -16,14 +16,14 @@
         margin-bottom: 0 !important;
         width: 100% !important;
     }
-    
+
     .execution-right-panel {
         display: flex;
         flex-direction: column;
         gap: 16px;
         align-items: flex-start;
     }
-    
+
     .log-container {
         background: #f8f8f8;
         border: 1px solid #e8e8e8;
@@ -36,67 +36,67 @@
         overflow-y: auto;
         color: #333333;
     }
-    
+
     /* 确保右侧面板不会因为内容少而产生空白 */
-    .execution-console-layout > div:last-child {
+    .execution-console-layout>div:last-child {
         align-self: flex-start;
     }
-    
+
     .log-entry {
         margin-bottom: 2px;
         word-wrap: break-word;
     }
-    
+
     .log-entry-time {
         color: #999999;
         margin-right: 8px;
     }
-    
+
     .log-entry-success {
         color: #28a745;
     }
-    
+
     .log-entry-warning {
         color: #ffc107;
     }
-    
+
     .log-entry-error {
         color: #dc3545;
     }
-    
+
     .log-entry.info {
         color: #333333;
     }
-    
+
     .log-entry.success {
         color: #28a745;
     }
-    
+
     .log-entry.error {
         color: #dc3545;
     }
-    
+
     .log-entry.warning {
         color: #ffc107;
     }
-    
+
     .empty-state {
         text-align: center;
         padding: 40px 20px;
         color: #999999;
     }
-    
-    
+
+
     .empty-state-text {
         font-size: 16px;
         margin-bottom: 8px;
     }
-    
+
     .empty-state-subtext {
         font-size: 14px;
         color: #bbbbbb;
     }
-    
+
     .proxy-status {
         width: 12px;
         height: 12px;
@@ -106,39 +106,41 @@
         position: relative;
         cursor: pointer;
     }
-    
+
     .proxy-status.connected {
         background: #28a745;
         box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.3);
         animation: pulse 2s infinite;
     }
-    
+
     .proxy-status.disconnected {
         background: #dc3545;
         box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.3);
     }
-    
+
     .proxy-status.connecting {
         background: #ffc107;
         box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.3);
         animation: pulse 1s infinite;
     }
-    
+
     @keyframes pulse {
         0% {
             transform: scale(0.95);
             box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
         }
+
         70% {
             transform: scale(1);
             box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
         }
+
         100% {
             transform: scale(0.95);
             box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
         }
     }
-    
+
     .proxy-status-tooltip {
         position: absolute;
         bottom: 20px;
@@ -155,18 +157,18 @@
         transition: opacity 0.3s;
         z-index: 1000;
     }
-    
+
     .proxy-status:hover .proxy-status-tooltip {
         opacity: 1;
     }
-    
+
     .screenshot-image {
         max-width: 100%;
         max-height: 400px;
         border-radius: 4px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
-    
+
     /* 当前截图容器固定高度 */
     #current-screenshot-container {
         min-height: 400px;
@@ -175,7 +177,7 @@
         justify-content: center;
         position: relative;
     }
-    
+
     /* 空状态样式优化 */
     .empty-state {
         color: #999;
@@ -183,16 +185,17 @@
         text-align: center;
         padding: 20px;
     }
-    
+
     .screenshot-history-container {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        min-height: 200px;  /* 改为min-height确保初始化时就有高度 */
+        min-height: 200px;
+        /* 改为min-height确保初始化时就有高度 */
         max-height: 200px;
         overflow-y: auto;
     }
-    
+
     .screenshot-thumbnail {
         width: 80px;
         height: 60px;
@@ -202,30 +205,30 @@
         transition: all 0.2s ease;
         object-fit: cover;
     }
-    
+
     .screenshot-thumbnail:hover {
         border-color: #333333;
         transform: scale(1.05);
     }
-    
+
     .screenshot-thumbnail.active {
         border-color: #333333;
         box-shadow: 0 0 0 2px rgba(51, 51, 51, 0.2);
     }
-    
+
     .screenshot-info {
         font-size: 12px;
         color: #666666;
         margin-top: 4px;
         text-align: center;
     }
-    
+
     @media (max-width: 1200px) {
         .execution-console-layout {
             grid-template-columns: 1fr !important;
             gap: 16px !important;
         }
-        
+
         .log-container {
             height: 180px;
         }
@@ -240,7 +243,7 @@
     <div class="card">
         <h3 class="card-title">执行控制</h3>
         <p class="card-subtitle">测试用例选择和执行配置</p>
-        
+
         <div class="card-content">
             <!-- 测试用例选择 -->
             <div class="form-group">
@@ -249,7 +252,8 @@
                     <select id="testcase-select" class="form-select" style="flex: 1;">
                         <option value="">请选择测试用例</option>
                     </select>
-                    <button id="back-to-edit" class="btn btn-primary btn-small" style="display: none;" onclick="backToEdit()">
+                    <button id="back-to-edit" class="btn btn-primary btn-small" style="display: none;"
+                        onclick="backToEdit()">
                         修改用例
                     </button>
                 </div>
@@ -293,20 +297,22 @@
             <div class="card" style="background: #f8f8f8; border: 1px solid #e8e8e8; margin-bottom: 16px;">
                 <div class="card-title">超时设置</div>
                 <div class="card-subtitle">配置页面加载和操作的超时时间</div>
-                
+
                 <div class="grid grid-cols-2 gap-2">
                     <div class="form-group">
                         <label class="form-label">页面加载超时 (秒)</label>
-                        <input type="number" id="page-timeout" class="form-input" value="30" min="5" max="120" placeholder="30">
+                        <input type="number" id="page-timeout" class="form-input" value="30" min="5" max="120"
+                            placeholder="30">
                         <div class="text-sm text-gray-500 mt-1">页面导航的最大等待时间</div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">操作超时 (秒)</label>
-                        <input type="number" id="action-timeout" class="form-input" value="30" min="5" max="120" placeholder="30">
+                        <input type="number" id="action-timeout" class="form-input" value="30" min="5" max="120"
+                            placeholder="30">
                         <div class="text-sm text-gray-500 mt-1">AI操作的最大等待时间</div>
                     </div>
                 </div>
-                
+
                 <div class="flex items-center gap-2 mt-2">
                     <button class="btn btn-small btn-ghost" onclick="resetTimeouts()">重置默认</button>
                     <span class="text-sm text-gray-500">建议范围：5-120秒</span>
@@ -347,7 +353,7 @@
         <div class="card">
             <h3 class="card-title">执行日志</h3>
             <p class="card-subtitle">实时执行日志输出</p>
-            
+
             <!-- 执行进度条 -->
             <div class="execution-progress-section" style="margin-bottom: 16px;">
                 <div class="flex items-center justify-between mb-2">
@@ -359,7 +365,7 @@
                 </div>
                 <div class="text-sm text-gray-500 mt-1" id="current-step-info">等待执行开始...</div>
             </div>
-            
+
             <div id="log-container" class="log-container">
                 <div class="log-entry">
                     <span class="log-entry-time">[14:32:15]</span>
@@ -417,7 +423,7 @@
 <div class="card mt-4">
     <h3 class="card-title">执行报告</h3>
     <p class="card-subtitle">点击报告链接查看详细的执行过程和问题诊断</p>
-    
+
     <div id="execution-reports-list" class="list">
         <!-- 执行报告将在这里动态加载 -->
         <div class="list-item">
@@ -451,23 +457,23 @@
 
     // 页面真正关闭时停止执行（增加确认机制）
     let isPageActuallyUnloading = false;
-    
+
     window.addEventListener('beforeunload', (event) => {
         if (currentExecution && currentExecution.local_execution_id) {
             const executionStatus = document.getElementById('execution-status').textContent;
-            
+
             // 只有在确实要关闭页面时才停止执行
             if (executionStatus === '执行中') {
                 // 设置一个短暂的延迟，确认用户真的要离开
                 setTimeout(() => {
                     if (isPageActuallyUnloading) {
                         // 用户确认要离开，停止执行
-                        navigator.sendBeacon(`http://localhost:3001/api/stop-execution/${currentExecution.local_execution_id}`, 
+                        navigator.sendBeacon(`http://localhost:3001/api/stop-execution/${currentExecution.local_execution_id}`,
                             JSON.stringify({ reason: 'page_unload' })
                         );
                     }
                 }, 100);
-                
+
                 // 提示用户
                 event.preventDefault();
                 event.returnValue = '测试正在执行中，确定要离开页面吗？这将停止当前的测试执行。';
@@ -475,7 +481,7 @@
             }
         }
     });
-    
+
     // 监听实际的页面卸载
     window.addEventListener('unload', () => {
         isPageActuallyUnloading = true;
@@ -500,12 +506,12 @@
     });
 
     // 页面初始化
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         loadTestCases();
         updateExecutionReportsUI();
         initializeWebSocket();
         connectToLocalProxy();
-        
+
         // 设置事件监听器
         document.getElementById('start-execution').addEventListener('click', startExecution);
         document.getElementById('stop-execution').addEventListener('click', stopExecution);
@@ -517,18 +523,18 @@
         try {
             const response = await axios.get('/api/testcases?size=100');
             const select = document.getElementById('testcase-select');
-            
+
             if (response.data.code === 200) {
                 const testcases = response.data.data.items;
                 select.innerHTML = '<option value="">请选择测试用例</option>';
-                
+
                 testcases.forEach(testcase => {
                     const option = document.createElement('option');
                     option.value = testcase.id;
                     option.textContent = testcase.name;
                     select.appendChild(option);
                 });
-                
+
                 // 检查URL参数中是否有testcase_id，如果有则自动选择
                 const urlParams = new URLSearchParams(window.location.search);
                 const testcaseId = urlParams.get('testcase_id');
@@ -565,7 +571,7 @@
                 localProxySocket.disconnect();
                 localProxySocket = null;
             }
-            
+
             localProxySocket = io('http://localhost:3001', {
                 timeout: 5000,
                 forceNew: true,
@@ -573,81 +579,81 @@
                 reconnectionAttempts: 3,
                 reconnectionDelay: 1000
             });
-            
-            localProxySocket.on('connect', function() {
+
+            localProxySocket.on('connect', function () {
                 updateProxyStatus('connected');
                 addLog('本地代理连接成功', 'success');
             });
-            
-            localProxySocket.on('connect_error', function(error) {
+
+            localProxySocket.on('connect_error', function (error) {
                 updateProxyStatus('disconnected');
                 addLog('本地代理服务器连接失败，正在重试...', 'warning');
                 console.error('本地代理连接错误:', error);
             });
-            
-            localProxySocket.on('disconnect', function(reason) {
+
+            localProxySocket.on('disconnect', function (reason) {
                 updateProxyStatus('disconnected');
                 addLog(`本地代理连接断开: ${reason}`, 'warning');
                 console.log('断开原因:', reason);
             });
-            
-            localProxySocket.on('reconnect', function(attemptNumber) {
+
+            localProxySocket.on('reconnect', function (attemptNumber) {
                 updateProxyStatus('connected');
                 addLog(`本地代理重连成功 (尝试 ${attemptNumber} 次)`, 'success');
             });
-            
-            localProxySocket.on('reconnect_error', function(error) {
+
+            localProxySocket.on('reconnect_error', function (error) {
                 updateProxyStatus('disconnected');
                 addLog('本地代理重连失败', 'error');
                 console.error('重连错误:', error);
             });
-            
-            localProxySocket.on('reconnect_failed', function() {
+
+            localProxySocket.on('reconnect_failed', function () {
                 updateProxyStatus('disconnected');
                 addLog('本地代理重连失败，请检查服务器状态', 'error');
                 addLog('如果未安装本地代理服务器，请点击左侧菜单的"本地代理"页面进行下载', 'info');
                 localProxySocket = null;
             });
-            
+
             // 监听本地代理服务器事件
-            localProxySocket.on('execution-start', function(data) {
+            localProxySocket.on('execution-start', function (data) {
                 addLog(`本地代理开始执行: ${data.testcase}`, 'success');
                 document.getElementById('execution-status').textContent = '执行中';
             });
-            
-            localProxySocket.on('execution-completed', function(data) {
+
+            localProxySocket.on('execution-completed', function (data) {
                 console.log('Received execution-completed event:', data);
                 addLog(`执行完成: ${data.status}`, data.status === 'success' ? 'success' : 'error');
-                
+
                 // 确保进度条显示完成状态
                 if (currentExecution && currentExecution.totalSteps) {
-                    updateExecutionProgress(currentExecution.totalSteps, currentExecution.totalSteps, 
+                    updateExecutionProgress(currentExecution.totalSteps, currentExecution.totalSteps,
                         data.status === 'success' ? '执行完成' : '执行失败');
                 }
-                
+
                 onExecutionCompleted(data);
             });
-            
-            localProxySocket.on('execution-stopped', function(data) {
+
+            localProxySocket.on('execution-stopped', function (data) {
                 console.log('Received execution-stopped event:', data);
                 addLog('执行已停止', 'warning');
                 onExecutionCompleted({ status: 'stopped' });
             });
-            
-            localProxySocket.on('step-start', function(data) {
+
+            localProxySocket.on('step-start', function (data) {
                 addLog(`步骤 ${data.stepIndex + 1} 开始: ${data.description}`, 'info');
                 // 使用实际的步骤数或者从testcase获取
                 const totalSteps = data.totalSteps || currentExecution?.totalSteps || 0;
                 updateExecutionProgress(data.stepIndex, totalSteps, `正在执行: ${data.description}`);
             });
-            
-            localProxySocket.on('step-completed', function(data) {
+
+            localProxySocket.on('step-completed', function (data) {
                 addLog(`步骤 ${data.stepIndex + 1} 完成`, 'success');
                 // 使用实际的步骤数或者从testcase获取
                 const totalSteps = data.totalSteps || currentExecution?.totalSteps || 0;
                 const currentStep = data.stepIndex + 1;
                 updateExecutionProgress(currentStep, totalSteps, `步骤 ${currentStep} 已完成`);
-                
+
                 // 检查是否是最后一个步骤
                 if (currentStep === totalSteps && totalSteps > 0) {
                     // 延迟一点时间确保所有步骤都完成
@@ -656,22 +662,22 @@
                     }, 100);
                 }
             });
-            
-            localProxySocket.on('step-failed', function(data) {
+
+            localProxySocket.on('step-failed', function (data) {
                 addLog(`步骤 ${data.stepIndex + 1} 失败: ${data.error}`, 'error');
                 // 使用实际的步骤数或者从testcase获取
                 const totalSteps = data.totalSteps || currentExecution?.totalSteps || 0;
                 updateExecutionProgress(data.stepIndex + 1, totalSteps, `步骤 ${data.stepIndex + 1} 执行失败`);
             });
-            
-            localProxySocket.on('step-skipped', function(data) {
+
+            localProxySocket.on('step-skipped', function (data) {
                 addLog(`步骤 ${data.stepIndex + 1} 跳过: ${data.message || '此步骤已被标记为跳过'}`, 'warning');
                 // 使用实际的步骤数或者从testcase获取
                 const totalSteps = data.totalSteps || currentExecution?.totalSteps || 0;
                 updateExecutionProgress(data.stepIndex + 1, totalSteps, `步骤 ${data.stepIndex + 1} 已跳过`);
             });
-            
-            localProxySocket.on('screenshot-taken', function(data) {
+
+            localProxySocket.on('screenshot-taken', function (data) {
                 const screenshot = {
                     step_index: data.stepIndex,
                     step_name: `步骤 ${data.stepIndex + 1}`,
@@ -680,8 +686,8 @@
                 addScreenshotToHistory(screenshot);
                 showScreenshot(screenshot.path);
             });
-            
-            localProxySocket.on('log-message', function(data) {
+
+            localProxySocket.on('log-message', function (data) {
                 if (data.level === 'error') {
                     addLog(data.message, 'error');
                 } else if (data.level === 'warning') {
@@ -689,7 +695,7 @@
                 } else {
                     addLog(data.message, 'info');
                 }
-                
+
                 // 检查是否是执行完成的消息
                 if (data.message && data.message.includes('测试执行完成')) {
                     // 确保进度条显示完成状态
@@ -698,21 +704,21 @@
                     }
                 }
             });
-            
-            localProxySocket.on('server-status', function(data) {
+
+            localProxySocket.on('server-status', function (data) {
                 addLog(`本地代理服务器状态: ${data.status}`, 'info');
             });
-            
-            localProxySocket.on('error', function(error) {
+
+            localProxySocket.on('error', function (error) {
                 addLog(`本地代理错误: ${error.message || error}`, 'error');
                 console.error('WebSocket错误:', error);
             });
-            
+
             // 添加通用事件监听器来捕获所有事件
-            localProxySocket.onAny(function(eventName, data) {
+            localProxySocket.onAny(function (eventName, data) {
                 console.log(`收到事件: ${eventName}`, data);
             });
-            
+
             // 连接状态检查
             setTimeout(() => {
                 if (!localProxySocket || !localProxySocket.connected) {
@@ -720,7 +726,7 @@
                     updateProxyStatus('disconnected');
                 }
             }, 6000);
-            
+
         } catch (error) {
             updateProxyStatus('disconnected');
             addLog('本地代理服务器连接失败，请检查是否已正确安装并启动', 'error');
@@ -730,12 +736,12 @@
     // 更新代理状态
     function updateProxyStatus(status) {
         const statusElement = document.getElementById('proxy-status');
-        
+
         // 移除所有状态类
         statusElement.className = 'status';
-        
+
         // 添加新状态类
-        switch(status) {
+        switch (status) {
             case 'connected':
                 statusElement.classList.add('status-success');
                 break;
@@ -753,14 +759,14 @@
         // 始终连接到本地代理
         connectToLocalProxy();
     }
-    
+
     // 手动重连本地代理
     function reconnectLocalProxy() {
         addLog('正在尝试重连本地代理服务器...', 'info');
         updateProxyStatus('connecting');
         connectToLocalProxy();
     }
-    
+
     // 重置超时设置
     function resetTimeouts() {
         document.getElementById('page-timeout').value = 30;
@@ -775,23 +781,23 @@
         const executionType = document.getElementById('execution-type').value;
         const pageTimeout = parseInt(document.getElementById('page-timeout').value) || 30;
         const actionTimeout = parseInt(document.getElementById('action-timeout').value) || 30;
-        
+
         if (!testcaseId) {
             showMessage('请选择测试用例', 'error');
             return;
         }
-        
+
         // 验证超时设置
         if (pageTimeout < 5 || pageTimeout > 120) {
             showMessage('页面加载超时时间必须在5-120秒之间', 'error');
             return;
         }
-        
+
         if (actionTimeout < 5 || actionTimeout > 120) {
             showMessage('操作超时时间必须在5-120秒之间', 'error');
             return;
         }
-        
+
         // 注意：不需要检查WebSocket连接，因为我们使用HTTP API执行
         // 但是可以检查本地代理服务器是否在运行
         try {
@@ -805,32 +811,32 @@
             showMessage('本地代理服务器未运行，请先启动本地代理服务器后再进行执行', 'error');
             return;
         }
-        
+
         try {
             // 清空截图历史
             clearScreenshotHistory();
-            
+
             // 重置进度条
             updateExecutionProgress(0, 0, '准备开始执行...');
-            
+
             const response = await axios.post('/api/executions', {
                 testcase_id: parseInt(testcaseId),
                 mode: executionMode,
                 browser: 'chrome',
                 executed_by: 'user'
             });
-            
+
             if (response.data.code === 200) {
                 currentExecution = response.data.data;
                 console.log('Set currentExecution from API response:', currentExecution);
-                
+
                 // 更新UI状态
                 document.getElementById('start-execution').disabled = true;
                 document.getElementById('stop-execution').disabled = false;
                 document.getElementById('execution-status').textContent = '执行中';
-                
+
                 addLog('开始执行测试用例...', 'info');
-                
+
                 // 发送到本地代理执行
                 addLog(`正在获取测试用例数据 (ID: ${testcaseId})...`, 'info');
                 const testcaseResponse = await axios.get(`/api/testcases/${testcaseId}`);
@@ -838,22 +844,22 @@
                     const testcase = testcaseResponse.data.data;
                     addLog(`测试用例数据获取成功: ${testcase.name}`, 'success');
                     addLog(`正在发送执行请求到本地代理服务器...`, 'info');
-                    
+
                     // 保存总步骤数到currentExecution
                     const totalSteps = testcase.steps ? testcase.steps.length : 0;
                     currentExecution.totalSteps = totalSteps;
-                    
+
                     // 更新进度条显示总步骤数
                     updateExecutionProgress(0, totalSteps, '准备开始执行...');
-                    
+
                     // 检查WebSocket连接状态
                     if (!localProxySocket || !localProxySocket.connected) {
                         addLog('错误：本地代理连接已断开', 'error');
                         return;
                     }
-                    
+
                     const enableCache = document.getElementById('enable-cache').checked;
-                    
+
                     const executeData = {
                         testcase: testcase,
                         mode: executionMode,
@@ -864,19 +870,19 @@
                             navigation_timeout: pageTimeout * 1000
                         }
                     };
-                    
+
                     addLog(`发送数据到本地代理服务器: ${JSON.stringify(executeData, null, 2)}`, 'info');
-                    
+
                     // 使用HTTP API发送执行请求
                     try {
                         const proxyResponse = await axios.post('http://localhost:3001/api/execute-testcase', executeData, {
                             timeout: 10000
                         });
-                        
+
                         if (proxyResponse.data.success) {
                             addLog('执行请求已发送到本地代理服务器', 'success');
                             addLog(`执行ID: ${proxyResponse.data.executionId}`, 'info');
-                            
+
                             // 保存本地执行ID
                             currentExecution.local_execution_id = proxyResponse.data.executionId;
                             console.log('Set local_execution_id:', currentExecution.local_execution_id);
@@ -891,7 +897,7 @@
                 } else {
                     addLog('获取测试用例失败：' + (testcaseResponse.data.message || '未知错误'), 'error');
                 }
-                
+
             } else {
                 showMessage(response.data.message || '启动执行失败', 'error');
             }
@@ -905,7 +911,7 @@
     async function stopExecution() {
         console.log('stopExecution called');
         console.log('currentExecution:', currentExecution);
-        
+
         if (currentExecution && currentExecution.local_execution_id) {
             try {
                 addLog(`正在向本地代理发送停止请求: ${currentExecution.local_execution_id}`, 'info');
@@ -923,12 +929,12 @@
             addLog('没有正在执行的任务或缺少执行ID', 'warning');
             console.log('No execution to stop or missing local_execution_id');
         }
-        
+
         // 更新UI状态
         document.getElementById('start-execution').disabled = false;
         document.getElementById('stop-execution').disabled = true;
         document.getElementById('execution-status').textContent = '已停止';
-        
+
         addLog('执行已停止', 'warning');
         currentExecution = null;
     }
@@ -938,14 +944,14 @@
         if (!currentExecution || !currentExecution.local_execution_id) {
             return;
         }
-        
+
         try {
             // 检查本地代理执行状态
             const response = await axios.get(`http://localhost:3001/api/execution-status/${currentExecution.local_execution_id}`);
             if (response.data && response.data.success) {
                 const status = response.data;
                 console.log('刷新执行状态:', status);
-                
+
                 // 更新UI状态
                 if (status.isRunning) {
                     document.getElementById('execution-status').textContent = '执行中';
@@ -957,7 +963,7 @@
                     document.getElementById('start-execution').disabled = false;
                     document.getElementById('stop-execution').disabled = true;
                 }
-                
+
                 // 更新进度
                 if (status.currentStep !== undefined && status.totalSteps !== undefined) {
                     updateExecutionProgress(status.currentStep, status.totalSteps);
@@ -974,9 +980,9 @@
         // 确保数值有效
         const currentStep = Math.max(0, current || 0);
         const totalSteps = Math.max(0, total || 0);
-        
+
         document.getElementById('execution-progress').textContent = `${currentStep}/${totalSteps}`;
-        
+
         // 更新进度条
         const progressBar = document.getElementById('execution-progress-bar');
         if (progressBar && totalSteps > 0) {
@@ -986,7 +992,7 @@
         } else if (progressBar) {
             progressBar.style.width = '0%';
         }
-        
+
         // 更新当前步骤信息
         const stepInfoElement = document.getElementById('current-step-info');
         if (stepInfoElement) {
@@ -1006,10 +1012,10 @@
     function onExecutionCompleted(data) {
         console.log('onExecutionCompleted called with data:', data);
         console.log('Current execution before clearing:', currentExecution);
-        
+
         document.getElementById('start-execution').disabled = false;
         document.getElementById('stop-execution').disabled = true;
-        
+
         // 根据状态设置不同的显示文本
         let statusText = '执行完成';
         if (data.status === 'success') {
@@ -1019,16 +1025,16 @@
         } else if (data.status === 'stopped') {
             statusText = '已停止';
         }
-        
+
         document.getElementById('execution-status').textContent = statusText;
-        
+
         // 确保进度条显示完成状态
         if (currentExecution && currentExecution.totalSteps) {
             const totalSteps = currentExecution.totalSteps;
             const progressText = statusText;
             updateExecutionProgress(totalSteps, totalSteps, progressText);
         }
-        
+
         // 更新进度条颜色
         const progressBar = document.getElementById('execution-progress-bar');
         if (progressBar) {
@@ -1041,11 +1047,11 @@
                 progressBar.style.background = '#dc3545'; // 失败时显示红色
             }
         }
-        
+
         // 清空当前执行对象
         currentExecution = null;
         console.log('Cleared currentExecution');
-        
+
         // 刷新执行报告
         updateExecutionReportsUI();
     }
@@ -1057,15 +1063,15 @@
         const logEntry = document.createElement('div');
         logEntry.className = `log-entry ${type}`;
         logEntry.textContent = `[${timestamp}] ${message}`;
-        
+
         logContainer.appendChild(logEntry);
         logContainer.scrollTop = logContainer.scrollHeight;
-        
+
         // 调试：记录所有日志消息
         if (message.includes('Midscene') || message.includes('report')) {
             console.log('📋 收到可能的报告相关日志:', message);
         }
-        
+
         // 处理报告路径
         processLogForReports(message);
     }
@@ -1074,7 +1080,7 @@
     function showScreenshot(imagePath) {
         const placeholder = document.getElementById('screenshot-placeholder');
         const screenshot = document.getElementById('current-screenshot');
-        
+
         placeholder.style.display = 'none';
         screenshot.src = imagePath;
         screenshot.style.display = 'block';
@@ -1083,30 +1089,30 @@
     // 添加截图到历史
     function addScreenshotToHistory(screenshot) {
         screenshotHistory.push(screenshot);
-        
+
         const container = document.getElementById('screenshot-history-container');
-        
+
         // 如果这是第一个截图，清空空状态
         if (screenshotHistory.length === 1) {
             container.innerHTML = '';
         }
-        
+
         const thumbnailDiv = document.createElement('div');
         thumbnailDiv.style.textAlign = 'center';
-        
+
         const img = document.createElement('img');
         img.src = screenshot.path;
         img.className = 'screenshot-thumbnail';
         img.onclick = () => showScreenshot(screenshot.path);
-        
+
         const info = document.createElement('div');
         info.className = 'screenshot-info';
         info.textContent = screenshot.step_name;
-        
+
         thumbnailDiv.appendChild(img);
         thumbnailDiv.appendChild(info);
         container.appendChild(thumbnailDiv);
-        
+
         // 滚动到最新截图
         container.scrollTop = container.scrollHeight;
     }
@@ -1126,7 +1132,7 @@
 
     // 全局变量存储执行报告
     let executionReports = [];
-    
+
     // 添加执行报告
     function addExecutionReport(reportPath, testcaseName, executionId) {
         const report = {
@@ -1136,21 +1142,21 @@
             timestamp: new Date().toISOString(),
             status: 'generated'
         };
-        
+
         executionReports.unshift(report); // 添加到开头
-        
+
         // 最多保存10个报告
         if (executionReports.length > 10) {
             executionReports = executionReports.slice(0, 10);
         }
-        
+
         updateExecutionReportsUI();
     }
-    
+
     // 更新执行报告UI
     function updateExecutionReportsUI() {
         const listContainer = document.getElementById('execution-reports-list');
-        
+
         if (executionReports.length === 0) {
             listContainer.innerHTML = `
                 <div class="list-item">
@@ -1162,13 +1168,13 @@
             `;
             return;
         }
-        
+
         listContainer.innerHTML = '';
-        
+
         executionReports.forEach(report => {
             const timeAgo = formatTimeAgo(report.timestamp);
             const fileName = report.path.split('/').pop();
-            
+
             const listItem = document.createElement('div');
             listItem.className = 'list-item';
             listItem.innerHTML = `
@@ -1190,11 +1196,11 @@
                     <div class="status status-success"></div>
                 </div>
             `;
-            
+
             listContainer.appendChild(listItem);
         });
     }
-    
+
     // 复制报告路径
     function copyReportPath(path) {
         navigator.clipboard.writeText(path).then(() => {
@@ -1204,14 +1210,14 @@
             showMessage('复制失败', 'error');
         });
     }
-    
+
     // 清空报告
     function clearReports() {
         executionReports = [];
         updateExecutionReportsUI();
         showMessage('报告已清空', 'success');
     }
-    
+
     // 刷新报告
     function refreshReports() {
         updateExecutionReportsUI();
@@ -1224,13 +1230,13 @@
         const date = new Date(dateString);
         const diffMs = now - date;
         const diffMins = Math.floor(diffMs / 60000);
-        
+
         if (diffMins < 1) return '刚刚';
         if (diffMins < 60) return `${diffMins}分钟前`;
-        
+
         const diffHours = Math.floor(diffMins / 60);
         if (diffHours < 24) return `${diffHours}小时前`;
-        
+
         const diffDays = Math.floor(diffHours / 24);
         return `${diffDays}天前`;
     }
@@ -1245,16 +1251,16 @@
                 const testcaseSelect = document.getElementById('testcase-select');
                 const selectedOption = testcaseSelect.options[testcaseSelect.selectedIndex];
                 const testcaseName = selectedOption ? selectedOption.text : '未知测试用例';
-                
+
                 // 获取执行ID
-                const executionId = currentExecution ? 
-                    (currentExecution.local_execution_id || currentExecution.id || 'unknown') : 
+                const executionId = currentExecution ?
+                    (currentExecution.local_execution_id || currentExecution.id || 'unknown') :
                     'unknown';
-                
+
                 console.log('📊 处理报告路径:', reportPath.trim());
                 console.log('📊 测试用例名称:', testcaseName);
                 console.log('📊 执行ID:', executionId);
-                
+
                 addExecutionReport(reportPath.trim(), testcaseName, executionId);
             }
         }
