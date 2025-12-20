@@ -5,7 +5,7 @@ LangGraph 智能体服务封装
 - 多种助手类型（Alex、Lisa 等）
 - 流式和非流式对话
 - PostgreSQL 持久化检查点
-- Langfuse 追踪和观测
+- LangSmith 追踪和观测（通过环境变量自动启用）
 """
 
 import os
@@ -16,14 +16,6 @@ from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
 from .graph import get_graph_for_assistant
 from .state import AssistantState
-
-# Langfuse 追踪支持
-try:
-    from langfuse.callback import CallbackHandler
-    LANGFUSE_AVAILABLE = True
-except ImportError:
-    LANGFUSE_AVAILABLE = False
-    CallbackHandler = None
 
 logger = logging.getLogger(__name__)
 
@@ -50,33 +42,17 @@ class LangGraphAssistantService:
         self.session_id = None
         self.graph = None
         self.checkpointer = None
-        self.langfuse_handler = None
         
         logger.info(f"初始化 LangGraph 智能体服务: {assistant_type}")
         
-        # 配置 Langfuse 追踪（如果环境变量已设置且 SDK 可用）
-        if LANGFUSE_AVAILABLE:
-            langfuse_config = {
-                'public_key': os.getenv('LANGFUSE_PUBLIC_KEY'),
-                'secret_key': os.getenv('LANGFUSE_SECRET_KEY'),
-                'host': os.getenv('LANGFUSE_HOST', 'http://localhost:3000')
-            }
-            
-            if all(langfuse_config.values()):
-                try:
-                    self.langfuse_handler = CallbackHandler(
-                        public_key=langfuse_config['public_key'],
-                        secret_key=langfuse_config['secret_key'],
-                        host=langfuse_config['host']
-                    )
-                    logger.info(f"✅ Langfuse 追踪已启用 (host: {langfuse_config['host']})")
-                except Exception as e:
-                    logger.warning(f"⚠️ Langfuse 初始化失败: {e}")
-                    self.langfuse_handler = None
-            else:
-                logger.info("ℹ️ Langfuse 环境变量未完全配置，追踪功能已禁用")
+        # LangSmith 追踪（通过环境变量自动启用，无需额外代码）
+        if os.getenv('LANGCHAIN_TRACING_V2') == 'true':
+            langchain_project = os.getenv('LANGCHAIN_PROJECT', 'intent-test-framework')
+            logger.info(f"✅ LangSmith 追踪已启用")
+            logger.info(f"   项目: {langchain_project}")
+            logger.info(f"   模式: 自动追踪（LangChain 内置）")
         else:
-            logger.info("ℹ️ Langfuse SDK 未安装，追踪功能已禁用")
+            logger.info("ℹ️ LangSmith 追踪未启用（设置 LANGCHAIN_TRACING_V2=true 启用）")
     
     async def _setup_checkpointer(self):
         """
@@ -153,16 +129,17 @@ class LangGraphAssistantService:
         
         try:
             # 配置（使用 session_id 作为 thread_id）
+            # LangSmith 会自动记录所有 LangChain/LangGraph 调用
             config = {
                 "configurable": {
                     "thread_id": session_id
+                },
+                "tags": [self.assistant_type, "langgraph"],
+                "metadata": {
+                    "session_id": session_id,
+                    "project_name": project_name or "default"
                 }
             }
-            
-            # 添加 Langfuse callbacks（如果已初始化）
-            if self.langfuse_handler:
-                config["configurable"]["callbacks"] = [self.langfuse_handler]
-                logger.info("Langfuse 追踪已添加到配置")
             
             # 构建输入
             input_data = {
@@ -224,16 +201,17 @@ class LangGraphAssistantService:
         
         try:
             # 配置（使用 session_id 作为 thread_id）
+            # LangSmith 会自动记录所有 LangChain/LangGraph 调用
             config = {
                 "configurable": {
                     "thread_id": session_id
+                },
+                "tags": [self.assistant_type, "langgraph"],
+                "metadata": {
+                    "session_id": session_id,
+                    "project_name": project_name or "default"
                 }
             }
-            
-            # 添加 Langfuse callbacks（如果已初始化）
-            if self.langfuse_handler:
-                config["configurable"]["callbacks"] = [self.langfuse_handler]
-                logger.info("Langfuse 追踪已添加到流式配置")
             
             # 构建输入
             input_data = {
@@ -244,12 +222,29 @@ class LangGraphAssistantService:
             }
             
             # 流式调用图
+            has_streamed_content = False
             async for event in self.graph.astream_events(input_data, config=config, version="v2"):
-                # 提取 LLM 的流式输出
+                # 方法1: 提取 LLM 的流式输出（逐字符）
                 if event["event"] == "on_chat_model_stream":
                     chunk = event["data"]["chunk"]
                     if hasattr(chunk, "content") and chunk.content:
+                        has_streamed_content = True
                         yield chunk.content
+                
+                # 方法2: 捕获节点完成事件（处理静态消息，如 Lisa 的欢迎消息）
+                elif event["event"] == "on_chain_end" and not has_streamed_content:
+                    # 检查是否有新的 AI 消息输出
+                    output = event.get("data", {}).get("output", {})
+                    if isinstance(output, dict) and "messages" in output:
+                        messages = output["messages"]
+                        # 查找最新的 AI 消息
+                        for msg in reversed(messages):
+                            if isinstance(msg, AIMessage) and msg.content:
+                                # 静态消息一次性返回全部内容
+                                logger.info(f"检测到静态 AI 消息，长度: {len(msg.content)}")
+                                yield msg.content
+                                has_streamed_content = True
+                                break
             
             logger.info("流式消息处理完成")
             

@@ -91,6 +91,36 @@ services:
     networks:
       - intent-test-network
 
+  # Langfuse - LLM 追踪和观测平台 (生产环境 v2)
+  langfuse:
+    image: langfuse/langfuse:2
+    container_name: langfuse-prod
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER:-intent_user}:${DB_PASSWORD}@postgres:5432/langfuse
+      - NEXTAUTH_URL=http://120.53.220.231:3000
+      - NEXTAUTH_SECRET=${LANGFUSE_SECRET}
+      - SALT=${LANGFUSE_SALT}
+      - TELEMETRY_ENABLED=false
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:3000/api/public/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - intent-test-network
+
 # 持久化数据卷
 volumes:
   intent_postgres_data:

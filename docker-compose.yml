@@ -19,7 +19,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-intent_user}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-intent_user}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -37,6 +37,10 @@ services:
       # MidScene Server在本地手动启动，通过host.docker.internal访问
       - MIDSCENE_SERVER_URL=http://host.docker.internal:3001
       - FLASK_ENV=${FLASK_ENV:-production}
+      # LangSmith 追踪配置
+      - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2:-true}
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}
+      - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT:-intent-test-framework}
     ports:
       - "5001:5001"
     volumes:
@@ -47,7 +51,7 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5001/health')"]
+      test: [ "CMD", "python", "-c", "import requests; requests.get('http://localhost:5001/health')" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -71,7 +75,8 @@ services:
     depends_on:
       - web-app
     profiles:
-      - production  # 只在生产环境启动
+      - production # 只在生产环境启动
+
 
 volumes:
   postgres_data:
