@@ -180,7 +180,8 @@ class LangGraphAssistantService:
         self, 
         session_id: str, 
         user_message: str,
-        project_name: Optional[str] = None
+        project_name: Optional[str] = None,
+        is_activated: bool = False  # ✨ 激活状态标志
     ) -> AsyncIterator[str]:
         """
         处理用户消息（流式响应）
@@ -189,6 +190,7 @@ class LangGraphAssistantService:
             session_id: 会话 ID
             user_message: 用户消息内容
             project_name: 可选的项目名称
+            is_activated: 会话是否已激活（影响欢迎消息显示）
             
         Yields:
             AI 回复的文本片段
@@ -213,12 +215,13 @@ class LangGraphAssistantService:
                 }
             }
             
-            # 构建输入
+            #构建输入
             input_data = {
                 "messages": [HumanMessage(content=user_message)],
                 "session_id": session_id,
                 "assistant_type": self.assistant_type,
                 "project_name": project_name,
+                "is_activated": is_activated,  # ✨ 传递激活状态
             }
             
             # 流式调用图
@@ -240,9 +243,19 @@ class LangGraphAssistantService:
                         # 查找最新的 AI 消息
                         for msg in reversed(messages):
                             if isinstance(msg, AIMessage) and msg.content:
-                                # 静态消息一次性返回全部内容
-                                logger.info(f"检测到静态 AI 消息，长度: {len(msg.content)}")
-                                yield msg.content
+                                # ✨ 将静态消息分块流式返回，模拟打字效果
+                                logger.info(f"检测到静态 AI 消息，长度: {len(msg.content)}，开始分块流式输出")
+                                
+                                import asyncio
+                                # 每次发送 10-15 个字符
+                                chunk_size = 12
+                                content = msg.content
+                                for i in range(0, len(content), chunk_size):
+                                    chunk = content[i:i + chunk_size]
+                                    yield chunk
+                                    # 添加短暂延迟，模拟打字速度（30ms）
+                                    await asyncio.sleep(0.03)
+                                
                                 has_streamed_content = True
                                 break
             

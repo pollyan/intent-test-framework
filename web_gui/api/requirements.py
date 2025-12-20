@@ -6,7 +6,8 @@
 import uuid
 import json
 import os
-from datetime import datetime
+import logging
+from datetime import datetime, timedelta
 from pathlib import Path
 from flask import Blueprint, request, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room
@@ -26,6 +27,43 @@ except ImportError:
     from web_gui.models import db, RequirementsSession, RequirementsMessage
     from web_gui.utils.error_handler import ValidationError, NotFoundError, DatabaseError
     from web_gui.services.requirements_ai_service import RequirementsAIService, IntelligentAssistantService
+
+# ✨ 临时会话状态缓存（内存存储，24小时过期）
+_session_state_cache = {}  # {session_id: {'is_activated': bool, 'last_access': datetime}}
+_CACHE_TTL_HOURS = 24
+
+def _cleanup_expired_sessions():
+    """清理过期的会话状态"""
+    now = datetime.now()
+    expired_sessions = [
+        sid for sid, data in _session_state_cache.items()
+        if (now - data['last_access']).total_seconds() > _CACHE_TTL_HOURS * 3600
+    ]
+    for sid in expired_sessions:
+        del _session_state_cache[sid]
+        print(f"🗑️ 清理过期会话状态: {sid[:8]}")
+
+def _get_session_activated(session_id: str) -> bool:
+    """获取会话的激活状态"""
+    _cleanup_expired_sessions()  # 顺便清理过期数据
+    return _session_state_cache.get(session_id, {}).get('is_activated', False)
+
+def _set_session_activated(session_id: str, is_activated: bool = True):
+    """设置会话的激活状态"""
+    _session_state_cache[session_id] = {
+        'is_activated': is_activated,
+        'last_access': datetime.now()
+    }
+    print(f"✅ 会话状态已{'激活' if is_activated else '重置'}: {session_id[:8]}")
+
+def _clear_session_state(session_id: str):
+    """清除会话状态（用户退出时调用）"""
+    if session_id in _session_state_cache:
+        del _session_state_cache[session_id]
+        print(f"🗑️ 清除会话状态: {session_id[:8]}")
+
+# 初始化 logger
+logger = logging.getLogger(__name__)
 
 # AI服务实例（延迟初始化）
 ai_service = None
@@ -382,10 +420,14 @@ def send_message(session_id):
                 if not ai_result or 'ai_response' not in ai_result:
                     raise Exception(f"AI服务返回的结果无效: {ai_result}")
                 
+                # ✨ 清理 JSON 元数据
+                from web_gui.services.langgraph_agents.lisa_v2.utils.metadata_parser import extract_natural_response
+                cleaned_ai_response = extract_natural_response(ai_result['ai_response'])
+                
                 ai_message = RequirementsMessage(
                     session_id=session_id,
                     message_type='ai',
-                    content=ai_result['ai_response'],
+                    content=cleaned_ai_response,  # 使用清理后的内容
                     message_metadata=json.dumps({
                         'stage': ai_result.get('stage', session.current_stage),
                         'assistant_type': assistant_type,
@@ -750,10 +792,16 @@ def send_message_stream(session_id):
                 # 运行异步流式处理
                 async def stream_async():
                     await service.initialize()
+                    
+                    # 从缓存中获取激活状态
+                    is_activated = _get_session_activated(session_id)
+                    logger.info(f"会话 {session_id[:8]} 激活状态: {is_activated}")
+                    
                     async for chunk in service.stream_message(
                         session_id=session_id,
                         user_message=content,
-                        project_name=project_name
+                        project_name=project_name,
+                        is_activated=is_activated  # 传递激活状态
                     ):
                         yield chunk
                 
@@ -778,12 +826,16 @@ def send_message_stream(session_id):
                 complete_response = "".join(full_response)
                 
                 if complete_response:
-                    # 在应用上下文中保存消息
+                    # ✨ 清理 JSON 元数据
+                    from ..services.langgraph_agents.lisa_v2.utils.metadata_parser import extract_natural_response
+                    cleaned_response = extract_natural_response(complete_response)
+                    
+                    # 在应用上下文中保存消息（保存清理后的内容）
                     with app.app_context():
                         ai_message = RequirementsMessage(
                             session_id=session_id,
                             message_type='ai',
-                            content=complete_response,
+                            content=cleaned_response,  # 使用清理后的内容
                             message_metadata=json.dumps({
                                 'stage': current_stage,
                                 'assistant_type': assistant_type,
@@ -793,6 +845,9 @@ def send_message_stream(session_id):
                         db.session.add(ai_message)
                         db.session.commit()
                         message_id = ai_message.id
+                    
+                    # ✨ 标记会话为已激活（首次响应后）
+                    _set_session_activated(session_id, True)
                     
                     # 发送完成信号
                     yield f"data: {json.dumps({'type': 'done', 'message_id': message_id})}\n\n"
