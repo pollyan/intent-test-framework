@@ -1,40 +1,34 @@
 """
 Lisa v2 状态定义
 
-完全独立于 Alex 的 AssistantState，确保两个智能体之间零耦合。
+定义 Agent 的状态结构，用于在节点之间传递信息。
 """
 
-from typing import TypedDict, Annotated, Sequence, Optional, Dict, Literal
+from typing import TypedDict, Annotated, Optional, List, Dict, Literal
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 
 
 class LisaState(TypedDict):
-    """
-    Lisa 智能体的状态定义
+    """Lisa Agent 的状态"""
     
-    使用业务含义命名，便于维护和扩展。
-    """
+    # ========== 基础字段 ==========
+    messages: Annotated[List[BaseMessage], add_messages]
+    """对话历史"""
     
-    # ============ 基础字段 ============
-    # 对话历史，使用 add_messages reducer 自动追加
-    messages: Annotated[Sequence[BaseMessage], add_messages]
-    
-    # 会话标识
     session_id: str
+    """会话 ID"""
     
-    # ============ 工作流状态 ============
-    # 当前阶段 - 使用业务含义命名
-    current_stage: Literal[
-        "intent",           # 意图识别阶段
-        "clarification",    # 需求澄清阶段 (工作流 A 子阶段 1)
-        "risk_analysis",    # 风险分析阶段 (工作流 A 子阶段 2)
-        "test_design",      # 测试设计阶段 (工作流 A 子阶段 3)
-        "review",           # 评审交付阶段 (工作流 A 子阶段 4)
-        "done"              # 完成
-    ]
+    assistant_type: Optional[str]
+    """助手类型"""
     
-    # 识别到的用户意图 (A-F 工作流)
+    project_name: Optional[str]
+    """项目名称"""
+    
+    is_activated: Optional[bool]
+    """是否已激活（用于首次交互检测）"""
+    
+    # ========== 意图识别相关 ==========
     detected_intent: Optional[str]
     
     # 意图置信度 (用于决定是否需要澄清)
@@ -52,6 +46,29 @@ class LisaState(TypedDict):
     
     # 评审交付阶段产出物：《测试设计文档》
     review_output: Optional[Dict]
+    
+    # ============ 测试设计工作流结构化产出物（新设计）============
+    requirement_summary: Optional[str]
+    """需求概要描述"""
+    
+    clarification_checklist: Optional[Dict]
+    """需求澄清阶段产出：需求澄清清单"""
+    
+    test_strategy: Optional[Dict]
+    """风险分析阶段产出：测试策略蓝图"""
+    
+    test_cases: Optional[List[Dict]]
+    """测试用例设计阶段产出：测试用例集"""
+    
+    final_document: Optional[str]
+    """交付阶段产出：最终测试设计文档"""
+    
+    # ============ 工作流状态控制 ============
+    workflow_stage: Optional[str]
+    """工作流当前阶段（REQUIREMENT_CLARIFICATION/RISK_ANALYSIS/TEST_CASE_DESIGN/DELIVERY/COMPLETED）"""
+    
+    workflow_action: Optional[str]
+    """工作流操作（supplement/reopen/modify）"""
     
     # ============ 门控状态 ============
     # 当前阶段的门控是否通过 (用户确认)
