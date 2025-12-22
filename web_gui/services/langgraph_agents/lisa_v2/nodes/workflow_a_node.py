@@ -8,7 +8,7 @@ from langchain_core.messages import SystemMessage
 from langchain_core.runnables import RunnableConfig
 
 from ..state import LisaState
-from ..utils.llm_factory import get_llm
+from ..utils.llm_factory import get_llm_from_db
 from ..utils.logger import logger
 from ..prompts.loader import load_v5_workflow_a_prompt
 
@@ -34,7 +34,7 @@ def workflow_a_node(state: LisaState, config: RunnableConfig) -> Dict:
     
     try:
         # 1. 获取 LLM
-        llm = get_llm(session_id)
+        llm = get_llm_from_db()
         logger.info(f"[{session_id[:8]}] 🎯 进入工作流 A: 测试设计")
         
         # 2. 加载完整的 v5.0 工作流 A prompt
