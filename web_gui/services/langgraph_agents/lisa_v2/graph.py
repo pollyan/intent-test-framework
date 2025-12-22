@@ -1,158 +1,84 @@
 """
-Lisa v2 LangGraph 图结构
+Lisa v2 LangGraph 图结构 - 简化版
 
-扁平化架构：所有节点直接添加到主图，避免子图递归问题
+架构: Intent Node → Workflow Nodes → END
+每个 Workflow 使用完整的 v5.0 prompt,LLM 自主管理内部流程
 """
-
-import re
-from typing import Literal, Optional
+from typing import Literal
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.base import BaseCheckpointSaver
 
 from .state import LisaState
 from .nodes.intent_node import intent_node
-from .nodes.requirement_clarification_node import requirement_clarification_node
-from .nodes.risk_analysis_node import risk_analysis_node
-from .nodes.test_case_design_node import test_case_design_node
-from .nodes.delivery_node import delivery_node
+from .nodes.workflow_a_node import workflow_a_node
 from .utils.logger import get_lisa_logger
 
 logger = get_lisa_logger()
 
-# 阶段到节点的映射
-STAGE_TO_NODE = {
-    "REQUIREMENT_CLARIFICATION": "requirement_clarification",
-    "RISK_ANALYSIS": "risk_analysis",
-    "TEST_CASE_DESIGN": "test_case_design",
-    "DELIVERY": "delivery",
-    "COMPLETED": "end",
-}
 
-
-def route_after_intent(state: LisaState) -> Literal["requirement_clarification", "end"]:
+def route_after_intent(state: LisaState) -> Literal["workflow_a", "end"]:
     """
     意图识别后的路由
     
-    Args:
-        state: 当前状态
-        
-    Returns:
-        下一个节点名称
+    根据识别的意图,路由到对应的工作流节点:
+    - TEST_DESIGN → workflow_a (测试设计工作流)
+    - 其他 → end (暂未实现)
     """
     # 检查门控：如果未通过，结束本轮
     if not state.get("gate_passed"):
+        logger.info("门控未通过,结束流程")
         return "end"
     
     detected_intent = state.get("detected_intent")
     
-    # MVP 只实现测试设计工作流
+    # 路由到测试设计工作流
     if detected_intent == "TEST_DESIGN":
-        logger.info("路由到测试设计工作流")
-        return "requirement_clarification"
+        logger.info("🎯 路由到工作流 A: 测试设计")
+        return "workflow_a"
     
-    # 其他工作流暂时直接结束
+    # 其他工作流暂未实现
+    logger.info(f"意图 '{detected_intent}' 对应的工作流暂未实现")
     return "end"
 
 
-def route_test_design_workflow(state: LisaState) -> str:
+def create_lisa_graph(checkpointer: BaseCheckpointSaver = None) -> StateGraph:
     """
-    测试设计工作流路由 - 完全基于 LLM 的状态标记
+    创建 Lisa v2 LangGraph
     
-    Args:
-        state: 当前状态
-        
-    Returns:
-        下一个节点名称
-    """
-    # 检查门控：如果未通过（保持当前阶段），结束本轮
-    if not state.get("gate_passed", False):
-        logger.info("🚫 门控未通过，结束本轮对话")
-        return "end"
-    
-    # 从 workflow_stage 获取目标阶段
-    target_stage = state.get("workflow_stage")
-    
-    # 如果 workflow_stage 未设置，尝试从最后一条消息解析
-    if not target_stage and state.get("messages"):
-        last_message = state["messages"][-1].content if state["messages"] else ""
-        match = re.search(r'<!-- STAGE: (\w+)', last_message)
-        if match:
-            target_stage = match.group(1)
-    
-    # 如果仍然没有找到目标阶段，结束对话
-    if not target_stage:
-        logger.warning("未找到 workflow_stage，结束对话")
-        return "end"
-    
-    # 检查是否已完成
-    if target_stage == "COMPLETED":
-        logger.info("✅ 工作流已完成")
-        return "end"
-    
-    # 记录决策
-    action = state.get("workflow_action")
-    action_str = f", ACTION={action}" if action else ""
-    logger.info(f"🔀 路由决策: STAGE={target_stage}{action_str}")
-    
-    # 映射到节点
-    next_node = STAGE_TO_NODE.get(target_stage, "end")
-    
-    return next_node
-
-
-def create_lisa_v2_graph(checkpointer: Optional[BaseCheckpointSaver] = None):
-    """
-    创建 Lisa v2 主图 - 扁平化结构
-    
-    图结构：
-    START → intent_node ──► requirement_clarification ──► risk_analysis ──► test_case_design ──► delivery → END
-                     ↓
-                    end
+    简化架构:
+    - 意图识别节点: 识别用户意图 (TEST_DESIGN / CONSULTATION 等)
+    - 工作流 A 节点: 使用完整 v5.0 prompt,LLM 自主管理 A1→A2→A3→A4
+    - 其他工作流节点: 后续扩展
     
     Args:
         checkpointer: 可选的检查点保存器
         
     Returns:
-        编译后的图
+        编译后的 LangGraph
     """
-    builder = StateGraph(LisaState)
+    # 创建图
+    graph = StateGraph(LisaState)
     
-    # 添加所有节点（扁平化，不使用子图）
-    builder.add_node("intent_node", intent_node)
-    builder.add_node("requirement_clarification", requirement_clarification_node)
-    builder.add_node("risk_analysis", risk_analysis_node)
-    builder.add_node("test_case_design", test_case_design_node)
-    builder.add_node("delivery", delivery_node)
+    # 添加节点
+    graph.add_node("intent", intent_node)
+    graph.add_node("workflow_a", workflow_a_node)
     
-    # 定义边
-    builder.add_edge(START, "intent_node")
+    # 设置入口点
+    graph.set_entry_point("intent")
     
-    # 意图识别后的条件路由
-    builder.add_conditional_edges(
-        "intent_node",
+    # 添加条件边: intent → workflow_a / end
+    graph.add_conditional_edges(
+        "intent",
         route_after_intent,
         {
-            "requirement_clarification": "requirement_clarification",
-            "end": END,
+            "workflow_a": "workflow_a",
+            "end": END
         }
     )
     
-    # 工作流节点的条件路由（支持任意跳转和回退）
-    for node_name in ["requirement_clarification", "risk_analysis", "test_case_design", "delivery"]:
-        builder.add_conditional_edges(
-            node_name,
-            route_test_design_workflow,
-            {
-                "requirement_clarification": "requirement_clarification",
-                "risk_analysis": "risk_analysis",
-                "test_case_design": "test_case_design",
-                "delivery": "delivery",
-                "end": END,
-            }
-        )
+    # workflow_a 执行完就结束
+    graph.add_edge("workflow_a", END)
     
-    # 编译图
-    if checkpointer:
-        return builder.compile(checkpointer=checkpointer)
-    
-    return builder.compile()
+    # 编译
+    logger.info("✅ Lisa v2 图结构已创建 (简化版: 3 节点)")
+    return graph.compile(checkpointer=checkpointer)

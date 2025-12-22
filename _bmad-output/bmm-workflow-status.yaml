@@ -45,12 +45,20 @@ workflow_status:
   - phase: 1
     name: "Planning"
     workflows:
+      - id: "product-brief"
+        status: "_bmad-output/lisa-langgraph-enhancement/product-brief-lisa-langgraph-2025-12-19.md"
+        agent: "analyst"
+        command: "product-brief"
+        output: "Product Brief for Lisa-LangGraph-Enhancement"
+        completed: "2025-12-19"
+      
       - id: "prd"
-        status: "required"
+        status: "_bmad-output/lisa-langgraph-enhancement/prd-lisa-langgraph-enhancement.md"
         agent: "pm"
         command: "prd"
-        output: "PRD focused on new features/changes"
-        note: "Must consider existing system constraints"
+        output: "PRD for Lisa-LangGraph-Enhancement"
+        completed: "2025-12-19"
+        note: "Technical refactoring PRD - 33 functional requirements"
       
       - id: "create-ux-design"
         status: "conditional"
@@ -62,11 +70,12 @@ workflow_status:
     name: "Solutioning"
     workflows:
       - id: "create-architecture"
-        status: "recommended"
+        status: "_bmad-output/lisa-langgraph-enhancement/architecture-lisa-langgraph.md"
         agent: "architect"
         command: "create-architecture"
-        output: "Integration architecture - solution design for THIS project"
-        note: "HIGHLY RECOMMENDED: Distills massive brownfield context into focused solution design. Prevents agent confusion."
+        output: "Architecture Decision Document for Lisa-LangGraph-Enhancement"
+        completed: "2025-12-19"
+        note: "5 architectural decisions, 4 implementation patterns, complete project structure"
       
       - id: "create-epics-and-stories"
         status: "required"

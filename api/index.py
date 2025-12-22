@@ -233,6 +233,9 @@ def config_management_page():
         return jsonify({"error": f"无法加载配置管理页面: {str(e)}"}), 500
 
 
+
+
+
 @app.route("/profile")
 @app.route("/about")  # 备选路由
 def profile_page():
