@@ -9,8 +9,11 @@ from langchain_core.runnables import RunnableConfig
 
 from ..state import LisaState
 from ..utils.llm_factory import get_llm_from_db
-from ..utils.logger import logger
+from ..utils.logger import get_lisa_logger
 from ..prompts.loader import load_v5_workflow_a_prompt
+
+# 初始化 logger
+logger = get_lisa_logger("workflow_a")
 
 
 def workflow_a_node(state: LisaState, config: RunnableConfig) -> Dict:

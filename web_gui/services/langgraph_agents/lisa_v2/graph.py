@@ -41,7 +41,7 @@ def route_after_intent(state: LisaState) -> Literal["workflow_a", "end"]:
     return "end"
 
 
-def create_lisa_graph(checkpointer: BaseCheckpointSaver = None) -> StateGraph:
+def create_lisa_v2_graph(checkpointer: BaseCheckpointSaver = None) -> StateGraph:
     """
     创建 Lisa v2 LangGraph
     
