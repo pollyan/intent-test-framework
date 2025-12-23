@@ -180,7 +180,8 @@ def create_session():
         assistant_type = data.get("assistant_type", "alex")
         
         # 验证助手类型（支持 lisa 别名）
-        supported_types = list(IntelligentAssistantService.SUPPORTED_ASSISTANTS.keys()) + ['lisa']
+        # 验证助手类型（支持 lisa 别名）
+        supported_types = list(AdkAssistantService.SUPPORTED_ASSISTANTS.keys()) + ['lisa']
         if assistant_type not in supported_types:
             raise ValidationError(f"不支持的助手类型: {assistant_type}")
         
@@ -626,7 +627,7 @@ def get_assistants():
     """获取支持的助手列表"""
     try:
         assistants = []
-        for assistant_id, info in IntelligentAssistantService.SUPPORTED_ASSISTANTS.items():
+        for assistant_id, info in AdkAssistantService.SUPPORTED_ASSISTANTS.items():
             assistants.append({
                 "id": assistant_id,
                 "name": info["name"],
@@ -649,10 +650,10 @@ def get_assistants():
 def get_assistant_bundle(assistant_type):
     """获取指定助手的完整bundle内容"""
     try:
-        if assistant_type not in IntelligentAssistantService.SUPPORTED_ASSISTANTS:
+        if assistant_type not in AdkAssistantService.SUPPORTED_ASSISTANTS:
             return standard_error_response(f"不支持的助手类型: {assistant_type}", 400)
         
-        assistant_info = IntelligentAssistantService.SUPPORTED_ASSISTANTS[assistant_type]
+        assistant_info = AdkAssistantService.SUPPORTED_ASSISTANTS[assistant_type]
         bundle_file = assistant_info["bundle_file"]
         bundle_path = Path(__file__).parent.parent.parent / "assistant-bundles" / bundle_file
         

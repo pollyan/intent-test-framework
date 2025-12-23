@@ -22,6 +22,21 @@ class AdkAssistantService:
     替代 LangGraphAssistantService，提供相同的接口。
     """
     
+    SUPPORTED_ASSISTANTS = {
+        "alex": {
+            "name": "Alex",
+            "title": "需求分析专家",
+            "bundle_file": "intelligent-requirements-analyst-bundle.txt",
+            "description": "专业的软件需求分析师，擅长澄清需求、识别模糊点并生成详细的需求文档。"
+        },
+        "lisa": {
+            "name": "Lisa",
+            "title": "测试专家",
+            "bundle_file": "lisa_v5_bundle.txt",
+            "description": "资深测试专家，专注于制定测试策略、设计测试用例和探索性测试。"
+        }
+    }
+    
     def __init__(self, assistant_type: str, config: Optional[dict] = None):
         """
         初始化 ADK 服务
