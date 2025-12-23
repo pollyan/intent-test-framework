@@ -112,10 +112,10 @@ class AdkAssistantService:
             )
             
             # 运行 (非流式)
-            # ADK 的 run_async 默认返回 stream，我们需要根据 run_config 控制或手动收集
-            # 此处我们收集流式响应组合成完整文本
+            # ADK 的 run_async 返回事件流，标准 LlmAgent 通常产生增量文本 (deltas)
+            # 我们累积所有文本部分以构建完整响应
             
-            full_response_text = ""
+            full_response_text = []
             
             async for event in self.runner.run_async(
                 user_id="default",
@@ -125,26 +125,10 @@ class AdkAssistantService:
                 if event.content and event.content.parts:
                     for part in event.content.parts:
                         if part.text:
-                            # 注意：ADK v1 可能是累积的也可能是增量的，取决于具体实现
-                            # 但根据 stream_message 的实现，我们假设需要处理
-                            # 观察 stream_message 逻辑，event.content.parts[0].text似乎是累积的？
-                            # 在 stream_message 中：
-                            # if current_text.startswith(previous_text): delta = ...
-                            # 这意味着 event.content 是累积的。
-                            # 所以最后一个 event 包含完整文本。
-                            pass
-                
-                # 我们只关心最终状态，或者简单的覆盖
-                # 如果是累积的，只需保留最新的 text
-                if event.content and event.content.parts:
-                     for part in event.content.parts:
-                        if part.text:
-                            # 假设是累积的，且只有一段文本
-                            if len(part.text) > len(full_response_text):
-                                full_response_text = part.text
+                            full_response_text.append(part.text)
 
             return {
-                'ai_response': full_response_text,
+                'ai_response': "".join(full_response_text),
                 'stage': current_stage,
                 'ai_context': {}, # ADK 管理状态，不需要返回给前端/DB存储
                 'consensus_content': {}
@@ -178,7 +162,7 @@ class AdkAssistantService:
             parts=[types.Part(text=user_msg)]
         )
 
-        full_response_text = ""
+        full_response_text = []
         async for event in self.runner.run_async(
             user_id="default",
             session_id=session_id,
@@ -186,10 +170,10 @@ class AdkAssistantService:
         ):
              if event.content and event.content.parts:
                 for part in event.content.parts:
-                    if part.text and len(part.text) > len(full_response_text):
-                        full_response_text = part.text
+                    if part.text:
+                        full_response_text.append(part.text)
         
-        return full_response_text
+        return "".join(full_response_text)
     
     async def stream_message(
         self,
