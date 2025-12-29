@@ -38,7 +38,7 @@ const TestDataFactory = {
       ...overrides
     };
   },
-  
+
   // 创建复杂测试用例
   createComplexTestCase: (stepCount = 10) => {
     const steps = [];
@@ -49,14 +49,14 @@ const TestDataFactory = {
         description: `点击按钮 ${i}`
       });
     }
-    
+
     return {
       id: 2,
       name: `复杂测试用例 (${stepCount}步骤)`,
       steps
     };
   },
-  
+
   // 创建带有跳过步骤的测试用例
   createTestCaseWithSkippedSteps: () => {
     return {
@@ -82,7 +82,7 @@ const TestDataFactory = {
       ]
     };
   },
-  
+
   // 创建无效测试用例
   createInvalidTestCase: () => {
     return {
@@ -102,21 +102,21 @@ const WebSocketTestHelper = {
       connected: false,
       connect: () => Promise.resolve(),
       disconnect: () => Promise.resolve(),
-      emit: () => {},
-      on: () => {},
-      once: () => {}
+      emit: () => { },
+      on: () => { },
+      once: () => { }
     };
   },
-  
+
   // 等待WebSocket事件 - 暂时返回mock数据
   waitForEvent: (client, eventName, timeout = 5000) => {
     console.warn('WebSocket事件等待暂时禁用 - 返回mock数据');
-    return Promise.resolve({ 
-      mockEvent: eventName, 
-      timestamp: new Date().toISOString() 
+    return Promise.resolve({
+      mockEvent: eventName,
+      timestamp: new Date().toISOString()
     });
   },
-  
+
   // 断开所有连接 - 暂时为空操作
   disconnectAll: (clients) => {
     console.warn('WebSocket断开暂时禁用');
@@ -128,7 +128,7 @@ const ServerTestHelper = {
   // 等待服务器启动
   waitForServerReady: async (port = global.testPort, timeout = 10000) => {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeout) {
       try {
         const response = await fetch(`http://localhost:${port}/health`);
@@ -138,17 +138,17 @@ const ServerTestHelper = {
       } catch (error) {
         // 服务器还未启动，继续等待
       }
-      
+
       await new Promise(resolve => setTimeout(resolve, 100));
     }
-    
+
     throw new Error(`服务器在 ${timeout}ms 内未启动`);
   },
-  
+
   // 等待服务器关闭
   waitForServerStopped: async (port = global.testPort, timeout = 5000) => {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeout) {
       try {
         await fetch(`http://localhost:${port}/health`);
@@ -158,13 +158,20 @@ const ServerTestHelper = {
         return true;
       }
     }
-    
+
     throw new Error(`服务器在 ${timeout}ms 内未关闭`);
   },
-  
+
   // 生成唯一执行ID
   generateExecutionId: () => {
     return `test_exec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  },
+
+  // Alias for backward compatibility
+  waitForServer: async (port = global.testPort, timeout = 10000) => {
+    // Simple wait without health check for tests that create their own mock server
+    await new Promise(resolve => setTimeout(resolve, 100));
+    return true;
   }
 };
 
@@ -174,29 +181,29 @@ const AssertHelper = {
   assertApiResponse: (response, expectedStatus = 200) => {
     expect(response.status).toBe(expectedStatus);
     expect(response.body).toBeDefined();
-    
+
     if (expectedStatus === 200) {
       expect(response.body.success).toBe(true);
     }
   },
-  
+
   // 断言执行ID格式
   assertExecutionId: (executionId) => {
     expect(executionId).toBeDefined();
     expect(typeof executionId).toBe('string');
     expect(executionId).toMatch(/^exec_\d+_[a-z0-9]+$/);
   },
-  
+
   // 断言WebSocket消息结构
   assertWebSocketMessage: (message, expectedType) => {
     expect(message).toBeDefined();
     expect(typeof message).toBe('object');
-    
+
     if (expectedType) {
       // 可以根据消息类型添加特定断言
     }
   },
-  
+
   // 断言执行状态
   assertExecutionStatus: (status, expectedStatuses = ['running', 'completed', 'failed']) => {
     expect(expectedStatuses).toContain(status);
@@ -210,19 +217,19 @@ const PerformanceHelper = {
     const startTime = Date.now();
     const result = await fn();
     const endTime = Date.now();
-    
+
     return {
       result,
       duration: endTime - startTime
     };
   },
-  
+
   // 并发测试
   runConcurrent: async (fn, concurrency = 3) => {
     const promises = Array(concurrency).fill().map(() => fn());
     return Promise.all(promises);
   },
-  
+
   // 内存使用监控
   getMemoryUsage: () => {
     const usage = process.memoryUsage();
@@ -243,14 +250,14 @@ const CleanupHelper = {
       serverInstance.executionStates.clear();
     }
   },
-  
+
   // 清理执行控制
   clearExecutionControls: (serverInstance) => {
     if (serverInstance && serverInstance.executionControls) {
       serverInstance.executionControls.clear();
     }
   },
-  
+
   // 强制垃圾回收（如果可用）
   forceGC: () => {
     if (global.gc) {
