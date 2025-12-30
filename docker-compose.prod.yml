@@ -36,7 +36,7 @@ services:
   web-app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: tools/intent-tester/docker/Dockerfile
     container_name: intent-test-web
     restart: unless-stopped
     environment:
