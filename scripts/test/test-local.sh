@@ -133,7 +133,7 @@ run_proxy_tests() {
     
     # 运行测试
     log_info "运行代理测试..."
-    if npx jest --testPathPattern="tests/proxy" --passWithNoTests --forceExit; then
+    if npx jest --testPathPatterns="tests/proxy" --passWithNoTests --forceExit; then
         log_info "✅ 代理测试通过"
     else
         log_error "❌ 代理测试失败"
