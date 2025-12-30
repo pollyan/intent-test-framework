@@ -93,7 +93,7 @@ jobs:
     - name: 📦 Build proxy package
       run: |
         echo "构建本地代理包..."
-        node scripts/deployment/build-proxy-package.js
+        node scripts/ci/build-proxy-package.js
         echo "✅ 代理包构建完成"
         ls -lh dist/intent-test-proxy.zip
     
@@ -282,10 +282,10 @@ jobs:
           # 步骤5: 执行部署
           # ==========================================
           # 确保脚本有执行权限
-          chmod +x scripts/deploy.sh
+          chmod +x scripts/ci/deploy.sh
           
           # 执行统一部署脚本（生产环境）
-          bash scripts/deploy.sh production
+          bash scripts/ci/deploy.sh production
           
           echo "=========================================="
           echo "✅ 部署完成"
