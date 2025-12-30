@@ -282,55 +282,7 @@ class StepExecution(db.Model):
         return result
 
 
-class Template(db.Model):
-    """测试模板模型"""
 
-    __tablename__ = "templates"
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), nullable=False)
-    description = db.Column(db.Text)
-    category = db.Column(db.String(100))
-    steps_template = db.Column(db.Text, nullable=False)  # JSON string
-    parameters = db.Column(db.Text)  # JSON string - 模板参数定义
-    usage_count = db.Column(db.Integer, default=0)
-    created_by = db.Column(db.String(100))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    is_public = db.Column(db.Boolean, default=False)
-
-    def to_dict(self):
-        """转换为字典"""
-        return {
-            "id": self.id,
-            "name": self.name,
-            "description": self.description,
-            "category": self.category,
-            "steps_template": (
-                json.loads(self.steps_template) if self.steps_template else []
-            ),
-            "parameters": json.loads(self.parameters) if self.parameters else {},
-            "usage_count": self.usage_count,
-            "created_by": self.created_by,
-            "created_at": (
-                self.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-                if self.created_at
-                else None
-            ),
-            "is_public": self.is_public,
-        }
-
-    @classmethod
-    def from_dict(cls, data):
-        """从字典创建实例"""
-        return cls(
-            name=data.get("name"),
-            description=data.get("description"),
-            category=data.get("category"),
-            steps_template=json.dumps(data.get("steps_template", [])),
-            parameters=json.dumps(data.get("parameters", {})),
-            created_by=data.get("created_by", "system"),
-            is_public=data.get("is_public", False),
-        )
 
 
 class ExecutionVariable(db.Model):

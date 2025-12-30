@@ -166,88 +166,11 @@ class QueryOptimizer:
         if not execution:
             return None
 
-        return execution.to_dict()
+        result = execution.to_dict()
+        result["steps"] = [step.to_dict() for step in execution.step_executions]
+        return result
 
-    @staticmethod
-    def get_dashboard_stats(days: int = 30) -> Dict[str, Any]:
-        """
-        优化的仪表板统计查询
 
-        Args:
-            days: 统计天数
-
-        Returns:
-            统计数据
-        """
-        end_date = datetime.utcnow()
-        start_date = end_date - timedelta(days=days)
-
-        # 使用单个查询获取所有统计数据
-        stats = (
-            db.session.query(
-                func.count(TestCase.id).label("total_testcases"),
-                func.sum(case((TestCase.is_active == True, 1), else_=0)).label(
-                    "active_testcases"
-                ),
-                func.count(ExecutionHistory.id).label("total_executions"),
-                func.sum(
-                    case((ExecutionHistory.status == "success", 1), else_=0)
-                ).label("successful_executions"),
-                func.sum(case((ExecutionHistory.status == "failed", 1), else_=0)).label(
-                    "failed_executions"
-                ),
-                func.avg(ExecutionHistory.duration).label("avg_duration"),
-            )
-            .select_from(TestCase)
-            .outerjoin(
-                ExecutionHistory,
-                and_(
-                    TestCase.id == ExecutionHistory.test_case_id,
-                    ExecutionHistory.start_time >= start_date,
-                ),
-            )
-            .first()
-        )
-
-        # 获取最近执行历史
-        recent_executions = (
-            db.session.query(ExecutionHistory)
-            .options(joinedload(ExecutionHistory.test_case))
-            .filter(ExecutionHistory.start_time >= start_date)
-            .order_by(desc(ExecutionHistory.start_time))
-            .limit(10)
-            .all()
-        )
-
-        # 获取分类统计
-        category_stats = (
-            db.session.query(TestCase.category, func.count(TestCase.id).label("count"))
-            .filter(TestCase.is_active == True)
-            .group_by(TestCase.category)
-            .all()
-        )
-
-        return {
-            "summary": {
-                "total_testcases": stats.total_testcases or 0,
-                "active_testcases": stats.active_testcases or 0,
-                "total_executions": stats.total_executions or 0,
-                "success_rate": round(
-                    (
-                        (stats.successful_executions / stats.total_executions * 100)
-                        if stats.total_executions > 0
-                        else 0
-                    ),
-                    1,
-                ),
-                "average_duration": round(stats.avg_duration or 0, 2),
-            },
-            "recent_executions": [exec.to_dict() for exec in recent_executions],
-            "category_distribution": [
-                {"category": cat or "Uncategorized", "count": count}
-                for cat, count in category_stats
-            ],
-        }
 
     @staticmethod
     def get_execution_variables_batch(
@@ -283,93 +206,7 @@ class QueryOptimizer:
 
         return result
 
-    @staticmethod
-    def get_performance_stats(
-        testcase_id: Optional[int] = None, days: int = 7
-    ) -> Dict[str, Any]:
-        """
-        获取性能统计数据
 
-        Args:
-            testcase_id: 测试用例ID（可选）
-            days: 统计天数
-
-        Returns:
-            性能统计数据
-        """
-        end_date = datetime.utcnow()
-        start_date = end_date - timedelta(days=days)
-
-        query = db.session.query(
-            ExecutionHistory.start_time,
-            ExecutionHistory.duration,
-            ExecutionHistory.status,
-            ExecutionHistory.steps_total,
-            ExecutionHistory.steps_failed,
-        ).filter(ExecutionHistory.start_time >= start_date)
-
-        if testcase_id:
-            query = query.filter(ExecutionHistory.test_case_id == testcase_id)
-
-        executions = query.all()
-
-        if not executions:
-            return {
-                "execution_count": 0,
-                "avg_duration": 0,
-                "success_rate": 0,
-                "trend_data": [],
-            }
-
-        # 计算统计指标
-        durations = [e.duration for e in executions if e.duration]
-        success_count = sum(1 for e in executions if e.status == "success")
-
-        # 按日期分组统计趋势
-        from collections import defaultdict
-
-        daily_stats = defaultdict(
-            lambda: {"success": 0, "failed": 0, "total_duration": 0, "count": 0}
-        )
-
-        for execution in executions:
-            date_key = execution.start_time.date().isoformat()
-            daily_stats[date_key]["count"] += 1
-            if execution.status == "success":
-                daily_stats[date_key]["success"] += 1
-            else:
-                daily_stats[date_key]["failed"] += 1
-            if execution.duration:
-                daily_stats[date_key]["total_duration"] += execution.duration
-
-        trend_data = []
-        for date, stats in sorted(daily_stats.items()):
-            trend_data.append(
-                {
-                    "date": date,
-                    "success_count": stats["success"],
-                    "failed_count": stats["failed"],
-                    "success_rate": (
-                        round(stats["success"] / stats["count"] * 100, 1)
-                        if stats["count"] > 0
-                        else 0
-                    ),
-                    "avg_duration": (
-                        round(stats["total_duration"] / stats["count"], 2)
-                        if stats["count"] > 0
-                        else 0
-                    ),
-                }
-            )
-
-        return {
-            "execution_count": len(executions),
-            "avg_duration": (
-                round(sum(durations) / len(durations), 2) if durations else 0
-            ),
-            "success_rate": round(success_count / len(executions) * 100, 1),
-            "trend_data": trend_data,
-        }
 
     @staticmethod
     def cleanup_old_data(days_to_keep: int = 90) -> Dict[str, int]:

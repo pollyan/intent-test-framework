@@ -49,10 +49,18 @@ jobs:
     - name: 🧪 Run API tests
       run: |
         echo "::group::Running API Integration Tests"
-        # 使用内存数据库运行新版 intent-tester 测试
-        export PYTHONPATH=$PYTHONPATH:.
-        # 排除需要AI配置的测试（如果环境变量未设置）或运行所有测试但允许skip
-        pytest tools/intent-tester/tests/api/ -v --cov=tools/intent-tester/backend --cov-report=term
+        # 设置 PYTHONPATH (与 local-test.sh 保持一致)
+        export PYTHONPATH=$PYTHONPATH:$(pwd):$(pwd)/tools/intent-tester:$(pwd)/tools/ai-agents
+        
+        # 1. 运行 Intent Tester 测试 (包含 API 和 Service)
+        echo "Running Intent Tester tests..."
+        python -m pytest tools/intent-tester/tests/ -v --cov=tools/intent-tester/backend --cov-report=term
+        
+        # 2. 运行 AI Agents 测试
+        echo "Running AI Agents tests..."
+        # 注意：这里分开运行以避免 conftest.py 路径冲突
+        python -m pytest tools/ai-agents/tests/ -v --cov=tools/ai-agents/backend --cov-report=term
+        
         echo "::endgroup::"
     
     - name: 📊 Code quality check

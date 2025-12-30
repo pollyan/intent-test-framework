@@ -189,22 +189,20 @@ class TestExternalServiceErrors:
         # 这个测试验证系统在网络问题时的基本处理能力
         # 通过访问健康检查端点来验证服务可用性
 
-        # 尝试访问仪表板健康检查API
-        response = api_client.get("/api/dashboard/health-check")
+        # 尝试访问系统健康检查API
+        response = api_client.get("/intent-tester/health")
 
         # 应该能返回健康状态或适当的错误
         assert response.status_code in [200, 500, 503]
 
         if response.status_code == 200:
             data = response.get_json()
-            assert "health_status" in data["data"]
-            assert data["data"]["health_status"] in [
-                "excellent",
-                "good",
-                "warning",
-                "critical",
-                "error",
-            ]
+            # 兼容直接返回 status 或 wrapped data
+            if "data" in data and "health_status" in data["data"]:
+                 assert data["data"]["health_status"] in ["excellent", "good", "warning", "critical", "error"]
+            else:
+                 assert "status" in data
+                 assert data["status"] == "ok"
 
     def test_should_validate_external_url_accessibility(self, api_client):
         """测试外部URL可访问性验证"""

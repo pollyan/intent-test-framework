@@ -21,7 +21,7 @@ from backend.utils.error_handler import (
 )
 
 # 导入数据模型
-from backend.models import db, TestCase, ExecutionHistory, StepExecution, Template
+from backend.models import db, TestCase, ExecutionHistory, StepExecution
 
 
 def get_pagination_params():

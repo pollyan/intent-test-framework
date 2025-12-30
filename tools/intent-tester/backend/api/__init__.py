@@ -9,9 +9,7 @@ def register_api_routes(app):
     # 注意：为了避免循环导入，函数内部导入
     from .testcases import testcases_bp
     from .executions import executions_bp
-    from .templates import templates_bp
-    from .dashboard import dashboard_bp
-
+    # from .dashboard import dashboard_bp
     from .midscene import midscene_bp
     from .proxy import proxy_bp
 
@@ -22,8 +20,6 @@ def register_api_routes(app):
     # 统一挂载到 /intent-tester/api 前缀下
     app.register_blueprint(testcases_bp, url_prefix='/intent-tester/api')
     app.register_blueprint(executions_bp, url_prefix='/intent-tester/api')
-    app.register_blueprint(templates_bp, url_prefix='/intent-tester/api')
-    app.register_blueprint(dashboard_bp, url_prefix='/intent-tester/api')
-
+    # app.register_blueprint(dashboard_bp, url_prefix='/intent-tester/api')
     app.register_blueprint(midscene_bp, url_prefix='/intent-tester/api')
     app.register_blueprint(proxy_bp, url_prefix='/intent-tester/api')

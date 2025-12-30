@@ -78,7 +78,7 @@ class APITestDataManager:
             "testcases": [],
             "executions": [],
             "step_executions": [],
-            "templates": [],
+
         }
 
     def create_testcase(self, data: Optional[Dict[str, Any]] = None) -> "TestCaseProxy":
@@ -172,6 +172,7 @@ class APITestDataManager:
             error_message=default_data.get("error_message"),
             error_stack=default_data.get("error_stack"),
             executed_by=default_data["executed_by"],
+            created_at=default_data.get("created_at"), # Allow overriding created_at for testing cleanup
         )
 
         self.db_session.add(execution)
@@ -205,8 +206,7 @@ class APITestDataManager:
         step_execution = StepExecution(
             execution_id=execution_id,
             step_index=default_data["step_index"],
-            action=default_data["action"],
-            params=default_data.get("params", "{}"),
+            step_description=default_data.get("description", f"Step {default_data['step_index']}"),
             status=default_data["status"],
             start_time=default_data["start_time"],
             end_time=default_data.get(
@@ -215,10 +215,9 @@ class APITestDataManager:
                 + timedelta(milliseconds=default_data["duration"]),
             ),
             duration=default_data["duration"],
-            result_data=default_data["result_data"],
+            ai_decision=default_data.get("result_data"), # Mapping result_data to ai_decision as closest fit or just JSON storage
             error_message=default_data.get("error_message"),
             screenshot_path=default_data.get("screenshot_path"),
-            logs=default_data.get("logs", ""),
         )
 
         self.db_session.add(step_execution)
@@ -376,5 +375,5 @@ class APITestDataManager:
             "testcases": len(self.created_items["testcases"]),
             "executions": len(self.created_items["executions"]),
             "step_executions": len(self.created_items["step_executions"]),
-            "templates": len(self.created_items["templates"]),
+
         }

@@ -45,7 +45,7 @@ def app():
     # 在应用上下文中先导入再操作数据库
     with _app.app_context():
         # 从 web_gui.models 导入已注册的 db
-        from web_gui.models import db
+        from backend.models import db
         db.create_all()
         yield _app
         db.session.remove()
@@ -56,7 +56,7 @@ def app():
 def db_session(app):
     """Create a new database session for a test."""
     with app.app_context():
-        from web_gui.models import db
+        from backend.models import db
         yield db.session
 
 
@@ -72,22 +72,29 @@ def api_client(client):
     class APIClient:
         def __init__(self, client):
             self.client = client
+            self.prefix = '/ai-agents'
             
-        def get(self, *args, **kwargs):
-            return self.client.get(*args, **kwargs)
+        def _get_path(self, path):
+            # Prepend prefix if not present and matches API or health routes
+            if path.startswith('/api') or path.startswith('/health'):
+                return f"{self.prefix}{path}"
+            return path
             
-        def post(self, *args, **kwargs):
+        def get(self, path, *args, **kwargs):
+            return self.client.get(self._get_path(path), *args, **kwargs)
+            
+        def post(self, path, *args, **kwargs):
             if 'json' in kwargs:
                 kwargs['content_type'] = 'application/json'
-            return self.client.post(*args, **kwargs)
+            return self.client.post(self._get_path(path), *args, **kwargs)
             
-        def put(self, *args, **kwargs):
+        def put(self, path, *args, **kwargs):
             if 'json' in kwargs:
                 kwargs['content_type'] = 'application/json'
-            return self.client.put(*args, **kwargs)
+            return self.client.put(self._get_path(path), *args, **kwargs)
             
-        def delete(self, *args, **kwargs):
-            return self.client.delete(*args, **kwargs)
+        def delete(self, path, *args, **kwargs):
+            return self.client.delete(self._get_path(path), *args, **kwargs)
             
     return APIClient(client)
 
@@ -145,7 +152,7 @@ def create_ai_config(app):
     
     def _create_config(**kwargs):
         with app.app_context():
-            from web_gui.models import db, RequirementsAIConfig
+            from backend.models import db, RequirementsAIConfig
             
             defaults = {
                 "config_name": "测试配置",
@@ -174,7 +181,7 @@ def create_ai_config(app):
     
     # 清理
     with app.app_context():
-        from web_gui.models import db, RequirementsAIConfig
+        from backend.models import db, RequirementsAIConfig
         for config_id in configs_created:
             try:
                 config = RequirementsAIConfig.query.get(config_id)

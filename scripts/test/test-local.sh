@@ -70,10 +70,21 @@ run_api_tests() {
     
     # 运行测试
     log_info "运行 API 测试..."
-    if python3 -m pytest tools/intent-tester/tests/api/ -v --cov=tools/intent-tester/backend --cov-report=term; then
-        log_info "✅ API 测试通过"
+    # 运行 Intent Tester 测试
+    log_info "运行 Intent Tester API 测试..."
+    if python3 -m pytest tools/intent-tester/tests/ -v --cov=tools/intent-tester/backend --cov-report=term; then
+        log_info "✅ Intent Tester 测试通过"
     else
-        log_error "❌ API 测试失败"
+        log_error "❌ Intent Tester 测试失败"
+        return 1
+    fi
+
+    # 运行 AI Agents 测试
+    log_info "运行 AI Agents API 测试..."
+    if python3 -m pytest tools/ai-agents/tests/ -v --cov=tools/ai-agents/backend --cov-report=term; then
+        log_info "✅ AI Agents 测试通过"
+    else
+        log_error "❌ AI Agents 测试失败"
         return 1
     fi
 }

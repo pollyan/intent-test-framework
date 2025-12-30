@@ -16,9 +16,9 @@ logger = logging.getLogger(__name__)
 
 # 确保导入与Flask应用初始化的相同db实例
 try:
-    from backend.models import db, TestCase, ExecutionHistory, StepExecution, Template
+    from backend.models import db, TestCase, ExecutionHistory, StepExecution
 except ImportError:
-    from ..models import db, TestCase, ExecutionHistory, StepExecution, Template
+    from ..models import db, TestCase, ExecutionHistory, StepExecution
 
 # 验证db实例导入
 logger.debug(f"DatabaseService导入的db实例: {id(db)}")
@@ -306,14 +306,7 @@ class DatabaseService:
 
                 return {"message": "执行已停止"}
 
-    # ==================== 模板相关操作 ====================
 
-    @staticmethod
-    def get_templates():
-        """获取模板列表"""
-        with current_app.app_context():
-            # 目前返回空列表，未来实现
-            return []
 
 
 # 创建全局服务实例
