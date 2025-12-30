@@ -52,11 +52,21 @@ jobs:
   proxy-test:
     name: MidScene Proxy Tests
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tools/intent-tester
     
     steps:
     - name: 📥 Checkout code
       uses: actions/checkout@v3
+      with:
+        path: '.' # Checkout to current dir (redundant but explicit)
     
+    - name: 📥 Relocate for consistency
+      run: |
+        # Ensure we are in the project root first, though checkout defaults to it
+        cd $GITHUB_WORKSPACE
+        
     - name: 🟢 Set up Node.js
       uses: actions/setup-node@v3
       with:
@@ -64,12 +74,12 @@ jobs:
     
     - name: 📦 Install dependencies
       run: |
-        cd tools/intent-tester && npm ci
+        npm ci
     
     - name: 🧪 Run proxy tests
       run: |
         echo "::group::Running MidScene Proxy Tests"
-        npx jest --testPathPatterns="tools/intent-tester/tests/proxy" --passWithNoTests --forceExit
+        npx jest --testPathPatterns="tests/proxy" --passWithNoTests --forceExit
         echo "::endgroup::"
 
   # ====================================
