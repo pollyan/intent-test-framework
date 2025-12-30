@@ -713,6 +713,23 @@
 
     <!-- 标准列表组件样式 -->
     <link rel="stylesheet" href="/static/css/list-components.css">
+
+    <!-- 全局环境配置 -->
+    <script>
+        // 自动检测API基础路径
+        (function () {
+            const getApiPrefix = function () {
+                // 如果在Nginx反向代理环境下 (URL以/intent-tester开头)
+                if (window.location.pathname.startsWith('/intent-tester')) {
+                    return '/intent-tester/api';
+                }
+                // 默认本地开发环境
+                return '/api';
+            };
+            window.API_BASE_URL = getApiPrefix();
+            console.log('Environment detected. API Base URL:', window.API_BASE_URL);
+        })();
+    </script>
 </head>
 
 <body>

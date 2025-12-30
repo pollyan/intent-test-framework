@@ -25,14 +25,14 @@ class SmartVariableInput {
         this.filterText = '';
         this.isLoading = false;
         this.currentContext = null;
-        
+
         // DOM元素
         this.dropdown = null;
         this.container = null;
-        
+
         // 防抖定时器
         this.debounceTimer = null;
-        
+
         // 初始化组件
         this.init();
     }
@@ -59,7 +59,7 @@ class SmartVariableInput {
         // 创建容器
         this.container = document.createElement('div');
         this.container.className = 'smart-variable-input';
-        
+
         // 包装原有input
         this.input.parentNode.insertBefore(this.container, this.input);
         this.container.appendChild(this.input);
@@ -84,7 +84,7 @@ class SmartVariableInput {
         this.input.addEventListener('keydown', this.handleKeyDown.bind(this));
         this.input.addEventListener('focus', this.handleFocus.bind(this));
         this.input.addEventListener('blur', this.handleBlur.bind(this));
-        
+
         // 点击外部关闭提示
         document.addEventListener('click', this.handleDocumentClick.bind(this));
     }
@@ -95,7 +95,7 @@ class SmartVariableInput {
     handleInput(event) {
         const value = event.target.value;
         const cursorPosition = event.target.selectionStart;
-        
+
         // 检测是否应该显示提示
         if (this.shouldShowSuggestions(value, cursorPosition)) {
             this.currentContext = this.getVariableContext(value, cursorPosition);
@@ -129,22 +129,22 @@ class SmartVariableInput {
                 event.preventDefault();
                 this.selectNext();
                 break;
-                
+
             case 'ArrowUp':
                 event.preventDefault();
                 this.selectPrevious();
                 break;
-                
+
             case 'Enter':
                 event.preventDefault();
                 this.insertSelectedVariable();
                 break;
-                
+
             case 'Tab':
                 event.preventDefault();
                 this.insertSelectedVariable();
                 break;
-                
+
             case 'Escape':
                 event.preventDefault();
                 this.hideSuggestions();
@@ -158,7 +158,7 @@ class SmartVariableInput {
     handleFocus(event) {
         const value = event.target.value;
         const cursorPosition = event.target.selectionStart;
-        
+
         if (this.shouldShowSuggestions(value, cursorPosition)) {
             this.filterText = this.extractFilterText(value, cursorPosition);
             this.debouncedLoadSuggestions();
@@ -207,7 +207,7 @@ class SmartVariableInput {
                 if (endPos === -1 || cursorPosition <= endPos) {
                     const content = value.substring(pos + 1, cursorPosition);
                     const dotIndex = content.lastIndexOf('.');
-                    
+
                     if (dotIndex !== -1) {
                         // 嵌套属性模式
                         return {
@@ -245,7 +245,7 @@ class SmartVariableInput {
     extractFilterText(value, cursorPosition) {
         const context = this.getVariableContext(value, cursorPosition);
         if (!context) return '';
-        
+
         if (context.type === 'property') {
             return context.propertyPrefix;
         } else {
@@ -288,10 +288,10 @@ class SmartVariableInput {
 
         try {
             let response, data;
-            
+
             if (this.currentContext && this.currentContext.type === 'property') {
                 // 加载对象属性建议
-                response = await fetch(`/api/executions/${this.options.executionId}/variables/${this.currentContext.variableName}/properties`);
+                response = await fetch(`${window.API_BASE_URL}/executions/${this.options.executionId}/variables/${this.currentContext.variableName}/properties`);
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
@@ -299,17 +299,17 @@ class SmartVariableInput {
                 this.suggestions = data.properties || [];
             } else {
                 // 加载变量建议
-                response = await fetch(`/api/executions/${this.options.executionId}/variable-suggestions`);
+                response = await fetch(`${window.API_BASE_URL}/executions/${this.options.executionId}/variable-suggestions`);
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 data = await response.json();
                 this.suggestions = data.variables || [];
             }
-            
+
             this.filterSuggestions();
             this.renderSuggestions();
-            
+
         } catch (error) {
             console.error('加载变量建议失败:', error);
             this.showErrorState('加载失败，请重试');
@@ -344,7 +344,7 @@ class SmartVariableInput {
         this.dropdown = document.createElement('div');
         this.dropdown.className = 'variable-suggestion-dropdown';
         this.container.appendChild(this.dropdown);
-        
+
         this.showSuggestions = true;
         this.selectedIndex = 0;
     }
@@ -368,9 +368,9 @@ class SmartVariableInput {
         const html = this.filteredSuggestions
             .map((variable, index) => this.renderSuggestionItem(variable, index))
             .join('');
-            
+
         this.dropdown.innerHTML = html;
-        
+
         // 绑定点击事件
         this.bindSuggestionEvents();
     }
@@ -382,7 +382,7 @@ class SmartVariableInput {
         const isSelected = index === this.selectedIndex;
         const selectedClass = isSelected ? 'selected' : '';
         const highlightedName = this.highlightMatch(item.name, this.filterText);
-        
+
         // 区分变量和属性的显示
         if (this.currentContext && this.currentContext.type === 'property') {
             // 属性模式
@@ -424,7 +424,7 @@ class SmartVariableInput {
      */
     highlightMatch(text, filter) {
         if (!filter) return text;
-        
+
         const regex = new RegExp(`(${filter})`, 'gi');
         return text.replace(regex, '<mark>$1</mark>');
     }
@@ -436,15 +436,15 @@ class SmartVariableInput {
         if (preview === null || preview === undefined) {
             return 'null';
         }
-        
+
         if (dataType === 'string') {
             return `"${preview}"`;
         }
-        
+
         if (typeof preview === 'object') {
             return JSON.stringify(preview);
         }
-        
+
         return String(preview);
     }
 
@@ -458,7 +458,7 @@ class SmartVariableInput {
                 this.selectedIndex = index;
                 this.insertSelectedVariable();
             });
-            
+
             item.addEventListener('mouseenter', () => {
                 this.selectedIndex = index;
                 this.updateSelection();
@@ -498,7 +498,7 @@ class SmartVariableInput {
         items.forEach((item, index) => {
             item.classList.toggle('selected', index === this.selectedIndex);
         });
-        
+
         // 滚动到选中项
         const selectedItem = items[this.selectedIndex];
         if (selectedItem) {
@@ -514,48 +514,48 @@ class SmartVariableInput {
      */
     insertSelectedVariable() {
         if (this.filteredSuggestions.length === 0) return;
-        
+
         const selectedItem = this.filteredSuggestions[this.selectedIndex];
         if (!selectedItem) return;
-        
+
         const value = this.input.value;
         const cursorPosition = this.input.selectionStart;
-        
+
         if (!this.currentContext) return;
-        
+
         let newValue, newCursorPos;
-        
+
         if (this.currentContext.type === 'property') {
             // 属性插入模式
             const beforeContent = value.substring(0, this.currentContext.startPos);
             const afterCursor = value.substring(cursorPosition);
             const fullPropertyPath = this.currentContext.variableName + '.' + selectedItem.name;
-            
+
             newValue = beforeContent + fullPropertyPath + '}' + afterCursor;
             newCursorPos = this.currentContext.startPos + fullPropertyPath.length + 1;
         } else {
             // 变量插入模式
             const beforeContent = value.substring(0, this.currentContext.startPos);
             const afterCursor = value.substring(cursorPosition);
-            
+
             newValue = beforeContent + selectedItem.name + '}' + afterCursor;
             newCursorPos = this.currentContext.startPos + selectedItem.name.length + 1;
         }
-        
+
         // 更新输入框
         this.input.value = newValue;
-        
+
         // 设置光标位置
         this.input.setSelectionRange(newCursorPos, newCursorPos);
-        
+
         // 隐藏建议
         this.hideSuggestions();
-        
+
         // 触发onChange回调
         if (this.options.onChange) {
             this.options.onChange(newValue);
         }
-        
+
         // 触发input事件以便其他监听器响应
         this.input.dispatchEvent(new Event('input', { bubbles: true }));
     }
@@ -615,15 +615,15 @@ class SmartVariableInput {
         this.input.removeEventListener('focus', this.handleFocus);
         this.input.removeEventListener('blur', this.handleBlur);
         document.removeEventListener('click', this.handleDocumentClick);
-        
+
         // 清理定时器
         if (this.debounceTimer) {
             clearTimeout(this.debounceTimer);
         }
-        
+
         // 移除DOM元素
         this.hideSuggestions();
-        
+
         // 重置input
         this.input.className = this.input.className.replace(' smart-input', '');
     }
@@ -646,7 +646,7 @@ function createSmartVariableInput(selector, options = {}) {
         console.error('SmartVariableInput: 未找到目标元素');
         return null;
     }
-    
+
     return new SmartVariableInput(element, options);
 }
 

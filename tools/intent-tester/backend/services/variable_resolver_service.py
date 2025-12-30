@@ -12,7 +12,7 @@ from datetime import datetime
 from threading import Lock
 from collections import OrderedDict
 
-from ..models import db, ExecutionVariable, VariableReference
+from backend.models import db, ExecutionVariable, VariableReference
 
 logger = logging.getLogger(__name__)
 

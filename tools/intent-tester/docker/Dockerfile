@@ -26,8 +26,9 @@ COPY api ./api
 COPY assistant-bundles ./assistant-bundles
 
 # 设置环境变量
-ENV PYTHONPATH=/app:${PYTHONPATH}
-ENV FLASK_APP=tools/intent-tester/backend/app.py
+# 设置环境变量
+ENV PYTHONPATH=/app/tools/intent-tester:${PYTHONPATH}
+ENV FLASK_APP=backend.app
 
 # 暴露端口
 EXPOSE 5001
@@ -36,5 +37,8 @@ EXPOSE 5001
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:5001/health')"
 
+# 切换工作目录以便 correctly resolving 'backend' package
+WORKDIR /app/tools/intent-tester
+
 # 启动应用
-CMD ["python", "tools/intent-tester/backend/app.py"]
+CMD ["python", "-m", "backend.app"]

@@ -45,7 +45,7 @@ async function validateVariableReference(reference, executionId = null, stepInde
         }
 
         // 调用后端API进行完整验证
-        const response = await fetch(`/api/v1/executions/${executionId}/variables/validate`, {
+        const response = await fetch(`${window.API_BASE_URL}/v1/executions/${executionId}/variables/validate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -60,13 +60,13 @@ async function validateVariableReference(reference, executionId = null, stepInde
 
         const data = await response.json();
         const result = data.validation_results?.[0];
-        
+
         if (!result) {
             throw new Error('验证结果为空');
         }
 
         return result;
-        
+
     } catch (error) {
         console.warn('变量验证API调用失败:', error);
         // API失败时回退到语法验证
@@ -90,7 +90,7 @@ function validateSyntaxOnly(reference) {
 
     // 基础的变量引用格式验证
     const variablePattern = /^\$\{([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*(?:\[\d+\])*)\}$/;
-    
+
     if (variablePattern.test(reference)) {
         const variablePath = reference.match(variablePattern)[1];
         return {
@@ -123,7 +123,7 @@ async function validateVariableReferences(references, executionId = null, stepIn
     try {
         // 如果有执行上下文，尝试批量验证
         if (executionId && executionId !== 'temp-execution-id') {
-            const response = await fetch(`/api/v1/executions/${executionId}/variables/validate`, {
+            const response = await fetch(`${window.API_BASE_URL}/v1/executions/${executionId}/variables/validate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -140,7 +140,7 @@ async function validateVariableReferences(references, executionId = null, stepIn
 
         // 回退到逐个语法验证
         return references.map(reference => validateSyntaxOnly(reference));
-        
+
     } catch (error) {
         console.warn('批量验证失败，使用语法验证:', error);
         return references.map(reference => validateSyntaxOnly(reference));
@@ -159,7 +159,7 @@ function extractVariableReferences(text) {
 
     const variablePattern = /\$\{[^}]+\}/g;
     const matches = text.match(variablePattern);
-    
+
     return matches ? [...new Set(matches)] : [];
 }
 
@@ -172,7 +172,7 @@ function extractVariableReferences(text) {
  */
 async function validateTextReferences(text, executionId = null, stepIndex = null) {
     const references = extractVariableReferences(text);
-    
+
     if (references.length === 0) {
         return {
             text: text,
@@ -282,13 +282,13 @@ function formatPreviewValue(value, dataType = 'unknown', maxLength = 50) {
                     return `"${strValue.substring(0, maxLength - 3)}..."`;
                 }
                 return `"${strValue}"`;
-                
+
             case 'number':
                 return String(value);
-                
+
             case 'boolean':
                 return value ? 'true' : 'false';
-                
+
             case 'object':
                 if (typeof value === 'object' && value !== null) {
                     if (Array.isArray(value)) {
@@ -305,13 +305,13 @@ function formatPreviewValue(value, dataType = 'unknown', maxLength = 50) {
                     }
                 }
                 return String(value).substring(0, maxLength);
-                
+
             case 'array':
                 if (Array.isArray(value)) {
                     return `[${value.length} items]`;
                 }
                 return String(value).substring(0, maxLength);
-                
+
             default:
                 return String(value).substring(0, maxLength);
         }
@@ -353,19 +353,19 @@ function isNestedReference(reference) {
 function getRootVariableName(reference) {
     const path = parseVariableReference(reference);
     if (!path) return null;
-    
+
     const firstDot = path.indexOf('.');
     const firstBracket = path.indexOf('[');
-    
+
     if (firstDot === -1 && firstBracket === -1) {
         return path;
     }
-    
+
     const endIndex = Math.min(
         firstDot === -1 ? Infinity : firstDot,
         firstBracket === -1 ? Infinity : firstBracket
     );
-    
+
     return path.substring(0, endIndex);
 }
 

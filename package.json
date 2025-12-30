@@ -5,11 +5,11 @@
   "main": "index.js",
   "scripts": {
     "install-deps": "npm install",
-    "test": "python -m pytest tests/ -v",
-    "test:proxy": "jest tests/proxy --verbose",
-    "test:proxy:watch": "jest tests/proxy --watch",
-    "test:proxy:coverage": "jest tests/proxy --coverage",
-    "test:proxy:ci": "jest tests/proxy --coverage --ci --watchAll=false --testResultsProcessor=jest-junit"
+    "test": "python -m pytest tools/intent-tester/tests -v",
+    "test:proxy": "jest tools/intent-tester/tests/proxy --verbose",
+    "test:proxy:watch": "jest tools/intent-tester/tests/proxy --watch",
+    "test:proxy:coverage": "jest tools/intent-tester/tests/proxy --coverage",
+    "test:proxy:ci": "jest tools/intent-tester/tests/proxy --coverage --ci --watchAll=false --testResultsProcessor=jest-junit"
   },
   "dependencies": {
     "@midscene/web": "0.30.9",

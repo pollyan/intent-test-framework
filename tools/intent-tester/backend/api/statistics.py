@@ -8,17 +8,20 @@ from datetime import datetime, timedelta
 from flask import request, jsonify
 from sqlalchemy import func, desc
 
-from . import api_bp
+from flask import Blueprint
+
+statistics_bp = Blueprint('statistics', __name__)
+# from . import api_bp
 from .base import standard_error_response, standard_success_response, log_api_call
 
 # 使用相对导入确保使用同一个db实例
-from ..models import db, TestCase, ExecutionHistory, StepExecution
+from backend.models import db, TestCase, ExecutionHistory, StepExecution
 
 
 # ==================== 报告API ====================
 
 
-@api_bp.route("/reports/failure-analysis", methods=["GET"])
+@statistics_bp.route("/reports/failure-analysis", methods=["GET"])
 @log_api_call
 def get_reports_failure_analysis():
     """获取失败分析报告"""
@@ -165,7 +168,7 @@ def _categorize_error(error_message):
         return "其他错误"
 
 
-@api_bp.route("/reports/stats", methods=["GET"])
+@statistics_bp.route("/reports/stats", methods=["GET"])
 @log_api_call
 def get_reports_stats():
     """获取报告统计数据"""
@@ -220,7 +223,7 @@ def get_reports_stats():
         return standard_error_response(f"获取报告统计失败: {str(e)}")
 
 
-@api_bp.route("/stats/trend", methods=["GET"])
+@statistics_bp.route("/stats/trend", methods=["GET"])
 @log_api_call
 def get_stats_trend():
     """获取趋势数据"""
@@ -275,7 +278,7 @@ def get_stats_trend():
         return standard_error_response(f"获取趋势数据失败: {str(e)}")
 
 
-@api_bp.route("/reports/success-rate", methods=["GET"])
+@statistics_bp.route("/reports/success-rate", methods=["GET"])
 @log_api_call
 def get_reports_success_rate():
     """获取成功率数据"""
@@ -329,7 +332,7 @@ def get_reports_success_rate():
         return standard_error_response(f"获取成功率数据失败: {str(e)}")
 
 
-@api_bp.route("/stats/today", methods=["GET"])
+@statistics_bp.route("/stats/today", methods=["GET"])
 @log_api_call
 def get_stats_today():
     """获取今日统计数据"""
@@ -395,7 +398,7 @@ def get_stats_today():
         return standard_error_response(f"获取今日统计失败: {str(e)}")
 
 
-@api_bp.route("/system/status", methods=["GET"])
+@statistics_bp.route("/system/status", methods=["GET"])
 @log_api_call
 def get_system_status():
     """获取系统状态"""
@@ -490,7 +493,7 @@ def get_system_status():
 # ==================== 统计报告 ====================
 
 
-@api_bp.route("/statistics/overview", methods=["GET"])
+@statistics_bp.route("/statistics/overview", methods=["GET"])
 @log_api_call
 def get_statistics_overview():
     """获取统计概览"""
@@ -573,7 +576,7 @@ def get_statistics_overview():
         return standard_error_response(f"获取统计概览失败: {str(e)}")
 
 
-@api_bp.route("/statistics/execution-trends", methods=["GET"])
+@statistics_bp.route("/statistics/execution-trends", methods=["GET"])
 @log_api_call
 def get_execution_trends():
     """获取执行趋势数据"""
@@ -644,7 +647,7 @@ def get_execution_trends():
         return standard_error_response(f"获取执行趋势失败: {str(e)}")
 
 
-@api_bp.route("/statistics/step-analysis", methods=["GET"])
+@statistics_bp.route("/statistics/step-analysis", methods=["GET"])
 @log_api_call
 def get_step_analysis():
     """获取步骤分析统计"""
@@ -745,7 +748,7 @@ def get_step_analysis():
         return standard_error_response(f"获取步骤分析失败: {str(e)}")
 
 
-@api_bp.route("/statistics/performance", methods=["GET"])
+@statistics_bp.route("/statistics/performance", methods=["GET"])
 @log_api_call
 def get_performance_stats():
     """获取性能统计"""
@@ -839,7 +842,7 @@ def get_performance_stats():
         return standard_error_response(f"获取性能统计失败: {str(e)}")
 
 
-@api_bp.route("/statistics/export", methods=["GET"])
+@statistics_bp.route("/statistics/export", methods=["GET"])
 @log_api_call
 def export_statistics():
     """导出统计报告"""

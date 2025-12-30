@@ -17,7 +17,7 @@ class VariableContextService {
         this.cachedProperties = new Map();
         this.cacheTimeout = 60000; // 1分钟缓存过期
         this.lastCacheTime = new Map();
-        
+
         console.log('VariableContextService初始化:', { testCaseId, executionId });
     }
 
@@ -31,7 +31,7 @@ class VariableContextService {
     async getAvailableVariables(stepIndex, includeProperties = true, limit = null) {
         try {
             const cacheKey = `variables:${stepIndex}:${includeProperties}:${limit}`;
-            
+
             // 检查缓存
             if (this.isCacheValid(cacheKey)) {
                 const cached = this.cachedVariables.get(cacheKey);
@@ -55,10 +55,10 @@ class VariableContextService {
             // 缓存结果
             this.cachedVariables.set(cacheKey, variables);
             this.lastCacheTime.set(cacheKey, Date.now());
-            
+
             console.log('获取变量数据成功:', stepIndex, variables.length, '个变量');
             return variables;
-            
+
         } catch (error) {
             console.error('获取变量数据失败:', error);
             // 返回演示数据作为后备
@@ -71,9 +71,9 @@ class VariableContextService {
      * @private
      */
     async fetchExecutionVariables(stepIndex, includeProperties, limit) {
-        const url = `/api/v1/executions/${this.executionId}/variable-suggestions`;
+        const url = `${window.API_BASE_URL}/v1/executions/${this.executionId}/variable-suggestions`;
         const params = new URLSearchParams();
-        
+
         if (stepIndex !== null && stepIndex !== undefined) {
             params.append('step_index', stepIndex.toString());
         }
@@ -85,11 +85,11 @@ class VariableContextService {
         }
 
         const response = await fetch(`${url}?${params}`);
-        
+
         if (!response.ok) {
             throw new Error(`获取执行变量失败: ${response.status} ${response.statusText}`);
         }
-        
+
         const data = await response.json();
         return data.variables || [];
     }
@@ -100,9 +100,9 @@ class VariableContextService {
      */
     async predictVariables(stepIndex, includeProperties, limit) {
         try {
-            const url = `/api/v1/testcases/${this.testCaseId}/predicted-variables`;
+            const url = `${window.API_BASE_URL}/v1/testcases/${this.testCaseId}/predicted-variables`;
             const params = new URLSearchParams();
-            
+
             if (stepIndex !== null && stepIndex !== undefined) {
                 params.append('step_index', stepIndex.toString());
             }
@@ -114,15 +114,15 @@ class VariableContextService {
             }
 
             const response = await fetch(`${url}?${params}`);
-            
+
             if (!response.ok) {
                 console.warn('预测变量API不可用，使用演示数据');
                 return this.getDemoVariables(stepIndex, includeProperties, limit);
             }
-            
+
             const data = await response.json();
             return data.predicted_variables || [];
-            
+
         } catch (error) {
             console.warn('预测变量失败，使用演示数据:', error);
             return this.getDemoVariables(stepIndex, includeProperties, limit);
@@ -183,9 +183,9 @@ class VariableContextService {
                 created_at: new Date().toISOString(),
                 preview_value: '[3 items]',
                 properties: includeProperties ? [
-                    { name: '0', type: 'object', value: {name: 'Product 1'}, path: 'product_list.0' },
-                    { name: '1', type: 'object', value: {name: 'Product 2'}, path: 'product_list.1' },
-                    { name: '2', type: 'object', value: {name: 'Product 3'}, path: 'product_list.2' }
+                    { name: '0', type: 'object', value: { name: 'Product 1' }, path: 'product_list.0' },
+                    { name: '1', type: 'object', value: { name: 'Product 2' }, path: 'product_list.1' },
+                    { name: '2', type: 'object', value: { name: 'Product 3' }, path: 'product_list.2' }
                 ] : []
             }
         ];
@@ -193,7 +193,7 @@ class VariableContextService {
         // 过滤步骤索引
         let filteredVariables = demoVariables;
         if (stepIndex !== null && stepIndex !== undefined) {
-            filteredVariables = demoVariables.filter(v => 
+            filteredVariables = demoVariables.filter(v =>
                 v.source_step_index < stepIndex
             );
         }
@@ -215,7 +215,7 @@ class VariableContextService {
     async getVariableProperties(variableName, maxDepth = 3) {
         try {
             const cacheKey = `properties:${variableName}:${maxDepth}`;
-            
+
             // 检查缓存
             if (this.isCacheValid(cacheKey)) {
                 const cached = this.cachedProperties.get(cacheKey);
@@ -224,22 +224,22 @@ class VariableContextService {
             }
 
             if (this.executionId && this.executionId !== 'temp-execution-id') {
-                const url = `/api/v1/executions/${this.executionId}/variables/${variableName}/properties`;
+                const url = `${window.API_BASE_URL}/v1/executions/${this.executionId}/variables/${variableName}/properties`;
                 const params = new URLSearchParams();
                 params.append('max_depth', maxDepth.toString());
 
                 const response = await fetch(`${url}?${params}`);
-                
+
                 if (!response.ok) {
                     throw new Error(`获取变量属性失败: ${response.status}`);
                 }
-                
+
                 const data = await response.json();
-                
+
                 // 缓存结果
                 this.cachedProperties.set(cacheKey, data);
                 this.lastCacheTime.set(cacheKey, Date.now());
-                
+
                 return data;
             } else {
                 // 返回演示数据
@@ -248,7 +248,7 @@ class VariableContextService {
                 this.lastCacheTime.set(cacheKey, Date.now());
                 return demoProperties;
             }
-            
+
         } catch (error) {
             console.error('获取变量属性失败:', error);
             return this.getDemoProperties(variableName);
@@ -269,7 +269,8 @@ class VariableContextService {
                     { name: 'price', type: 'number', value: 999, path: 'product_info.price' },
                     { name: 'stock', type: 'number', value: 10, path: 'product_info.stock' },
                     { name: 'category', type: 'string', value: 'Electronics', path: 'product_info.category' },
-                    { name: 'specs', type: 'object', value: {color: 'blue', storage: '128GB'}, path: 'product_info.specs',
+                    {
+                        name: 'specs', type: 'object', value: { color: 'blue', storage: '128GB' }, path: 'product_info.specs',
                         properties: [
                             { name: 'color', type: 'string', value: 'blue', path: 'product_info.specs.color' },
                             { name: 'storage', type: 'string', value: '128GB', path: 'product_info.specs.storage' }
@@ -281,9 +282,9 @@ class VariableContextService {
                 variable_name: 'product_list',
                 data_type: 'array',
                 properties: [
-                    { name: '0', type: 'object', value: {name: 'Product 1'}, path: 'product_list.0' },
-                    { name: '1', type: 'object', value: {name: 'Product 2'}, path: 'product_list.1' },
-                    { name: '2', type: 'object', value: {name: 'Product 3'}, path: 'product_list.2' }
+                    { name: '0', type: 'object', value: { name: 'Product 1' }, path: 'product_list.0' },
+                    { name: '1', type: 'object', value: { name: 'Product 2' }, path: 'product_list.1' },
+                    { name: '2', type: 'object', value: { name: 'Product 3' }, path: 'product_list.2' }
                 ]
             }
         };
@@ -305,7 +306,7 @@ class VariableContextService {
     async searchVariables(query, stepIndex = null, limit = 10) {
         try {
             if (this.executionId && this.executionId !== 'temp-execution-id') {
-                const url = `/api/v1/executions/${this.executionId}/variable-suggestions/search`;
+                const url = `${window.API_BASE_URL}/v1/executions/${this.executionId}/variable-suggestions/search`;
                 const params = new URLSearchParams();
                 params.append('q', query);
                 if (stepIndex !== null) {
@@ -316,17 +317,17 @@ class VariableContextService {
                 }
 
                 const response = await fetch(`${url}?${params}`);
-                
+
                 if (!response.ok) {
                     throw new Error(`搜索变量失败: ${response.status}`);
                 }
-                
+
                 return await response.json();
             } else {
                 // 使用本地搜索逻辑
                 return this.localSearchVariables(query, stepIndex, limit);
             }
-            
+
         } catch (error) {
             console.error('搜索变量失败:', error);
             return this.localSearchVariables(query, stepIndex, limit);
@@ -340,7 +341,7 @@ class VariableContextService {
     async localSearchVariables(query, stepIndex, limit) {
         const variables = await this.getAvailableVariables(stepIndex, false, null);
         const queryLower = query.toLowerCase();
-        
+
         const matches = variables.filter(variable => {
             const nameLower = variable.name.toLowerCase();
             return nameLower.includes(queryLower);
@@ -373,11 +374,11 @@ class VariableContextService {
     calculateMatchScore(name, query) {
         const nameLower = name.toLowerCase();
         const queryLower = query.toLowerCase();
-        
+
         if (nameLower === queryLower) return 1.0;
         if (nameLower.startsWith(queryLower)) return 0.8;
         if (nameLower.includes(queryLower)) return 0.6;
-        
+
         // 计算编辑距离相似度
         const similarity = this.calculateSimilarity(nameLower, queryLower);
         return similarity * 0.4;
@@ -426,7 +427,7 @@ class VariableContextService {
      */
     highlightMatch(text, query) {
         if (!query) return text;
-        
+
         const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
         return text.replace(regex, '<mark>$1</mark>');
     }
@@ -439,10 +440,10 @@ class VariableContextService {
         if (!this.cachedVariables.has(key) && !this.cachedProperties.has(key)) {
             return false;
         }
-        
+
         const cacheTime = this.lastCacheTime.get(key);
         if (!cacheTime) return false;
-        
+
         return Date.now() - cacheTime < this.cacheTimeout;
     }
 

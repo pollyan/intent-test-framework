@@ -426,7 +426,7 @@ class TestDeleteTestCaseAPI:
         assert_api_response(response, 200)
 
         # 验证软删除：记录仍存在但is_active=False
-        from web_gui.models import TestCase
+        from backend.models import TestCase
 
         deleted_testcase = TestCase.query.get(testcase_id)
         assert deleted_testcase is not None
@@ -454,7 +454,7 @@ class TestDeleteTestCaseAPI:
         testcase = create_test_testcase(name="有历史记录的测试用例")
 
         # 创建执行历史记录（提供所有必需字段）
-        from web_gui.models import ExecutionHistory
+        from backend.models import ExecutionHistory
         from datetime import datetime
 
         execution = ExecutionHistory(

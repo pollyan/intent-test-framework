@@ -11,8 +11,8 @@ import uuid
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 
-from ..core.extensions import db, socketio
-from ..models import TestCase, ExecutionHistory, StepExecution
+from backend.extensions import socketio
+from backend.models import db, TestCase, ExecutionHistory, StepExecution
 from .ai_service import get_ai_service
 from .variable_resolver_service import get_variable_manager
 

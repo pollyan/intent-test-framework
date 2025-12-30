@@ -7,7 +7,10 @@ import json
 from datetime import datetime
 from flask import request, jsonify
 
-from . import api_bp
+from flask import Blueprint
+
+templates_bp = Blueprint('templates', __name__)
+# from . import api_bp
 from .base import (
     api_error_handler,
     db_transaction_handler,
@@ -30,7 +33,7 @@ from .base import (
 # ==================== 模板管理 ====================
 
 
-@api_bp.route("/templates", methods=["GET"])
+@templates_bp.route("/templates", methods=["GET"])
 @log_api_call
 def get_templates():
     """获取模板列表（临时简化版本）"""
@@ -42,7 +45,7 @@ def get_templates():
         return jsonify({"code": 500, "message": f"获取模板列表失败: {str(e)}"})
 
 
-@api_bp.route("/templates", methods=["POST"])
+@templates_bp.route("/templates", methods=["POST"])
 @api_error_handler
 @validate_json_data(required_fields=["name", "content"])
 @db_transaction_handler(db)
@@ -73,7 +76,7 @@ def create_template():
     )
 
 
-@api_bp.route("/templates/<int:template_id>", methods=["GET"])
+@templates_bp.route("/templates/<int:template_id>", methods=["GET"])
 @log_api_call
 def get_template(template_id):
     """获取模板详情"""
@@ -88,7 +91,7 @@ def get_template(template_id):
         return standard_error_response(f"获取模板失败: {str(e)}")
 
 
-@api_bp.route("/templates/<int:template_id>", methods=["PUT"])
+@templates_bp.route("/templates/<int:template_id>", methods=["PUT"])
 @require_json
 @log_api_call
 def update_template(template_id):
@@ -127,7 +130,7 @@ def update_template(template_id):
         return standard_error_response(f"更新模板失败: {str(e)}")
 
 
-@api_bp.route("/templates/<int:template_id>", methods=["DELETE"])
+@templates_bp.route("/templates/<int:template_id>", methods=["DELETE"])
 @log_api_call
 def delete_template(template_id):
     """删除模板（软删除）"""
@@ -147,7 +150,7 @@ def delete_template(template_id):
         return standard_error_response(f"删除模板失败: {str(e)}")
 
 
-@api_bp.route("/templates/<int:template_id>/apply", methods=["POST"])
+@templates_bp.route("/templates/<int:template_id>/apply", methods=["POST"])
 @require_json
 @log_api_call
 def apply_template(template_id):
@@ -201,7 +204,7 @@ def apply_template(template_id):
         return standard_error_response(f"应用模板失败: {str(e)}")
 
 
-@api_bp.route("/templates/categories", methods=["GET"])
+@templates_bp.route("/templates/categories", methods=["GET"])
 @log_api_call
 def get_template_categories():
     """获取模板分类列表"""

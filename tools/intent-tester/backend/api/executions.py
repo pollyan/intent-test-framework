@@ -8,7 +8,10 @@ import uuid
 from datetime import datetime
 from flask import request, jsonify
 
-from . import api_bp
+from flask import Blueprint
+
+executions_bp = Blueprint('executions', __name__)
+# from . import api_bp # Refactored to use own blueprint
 from .base import (
     api_error_handler,
     db_transaction_handler,
@@ -25,28 +28,16 @@ from .base import (
 )
 
 # 导入数据模型
-try:
-    from ..models import db, TestCase, ExecutionHistory, StepExecution
-except ImportError:
-    from web_gui.models import db, TestCase, ExecutionHistory, StepExecution
+from backend.models import db, TestCase, ExecutionHistory, StepExecution
 
 # 导入通用代码模式
-try:
-    from ..utils.common_patterns import (
-        safe_api_operation,
-        validate_resource_exists,
-        database_transaction,
-        require_json_data,
-        APIResponseHelper,
-    )
-except ImportError:
-    from web_gui.utils.common_patterns import (
-        safe_api_operation,
-        validate_resource_exists,
-        database_transaction,
-        require_json_data,
-        APIResponseHelper,
-    )
+from backend.utils.common_patterns import (
+    safe_api_operation,
+    validate_resource_exists,
+    database_transaction,
+    require_json_data,
+    APIResponseHelper,
+)
 
 # 变量管理服务已简化 - 核心变量功能在其他服务中实现
 
@@ -54,7 +45,7 @@ except ImportError:
 # ==================== 执行任务管理 ====================
 
 
-@api_bp.route("/executions", methods=["POST"])
+@executions_bp.route("/executions", methods=["POST"])
 @log_api_call
 def create_execution():
     """创建执行任务"""
@@ -109,7 +100,7 @@ def create_execution():
         return jsonify({"code": 500, "message": f"创建执行任务失败: {str(e)}"})
 
 
-@api_bp.route("/executions/<execution_id>", methods=["GET"])
+@executions_bp.route("/executions/<execution_id>", methods=["GET"])
 @log_api_call
 def get_execution_status(execution_id):
     """获取执行状态"""
@@ -137,7 +128,7 @@ def get_execution_status(execution_id):
         return standard_error_response(f"获取执行状态失败: {str(e)}")
 
 
-@api_bp.route("/executions", methods=["GET"])
+@executions_bp.route("/executions", methods=["GET"])
 @log_api_call
 def get_executions():
     """获取执行历史列表"""
@@ -196,7 +187,7 @@ def get_executions():
         return standard_error_response(f"获取执行历史失败: {str(e)}")
 
 
-@api_bp.route("/executions/<execution_id>/stop", methods=["POST"])
+@executions_bp.route("/executions/<execution_id>/stop", methods=["POST"])
 @log_api_call
 def stop_execution(execution_id):
     """停止执行任务"""
@@ -228,7 +219,7 @@ def stop_execution(execution_id):
         return standard_error_response(f"停止执行失败: {str(e)}")
 
 
-@api_bp.route("/executions/<execution_id>", methods=["DELETE"])
+@executions_bp.route("/executions/<execution_id>", methods=["DELETE"])
 @log_api_call
 def delete_execution(execution_id):
     """删除执行记录"""
@@ -253,7 +244,7 @@ def delete_execution(execution_id):
         return standard_error_response(f"删除执行记录失败: {str(e)}")
 
 
-@api_bp.route("/executions/<execution_id>/export", methods=["GET"])
+@executions_bp.route("/executions/<execution_id>/export", methods=["GET"])
 @log_api_call
 def export_execution(execution_id):
     """导出单个执行报告"""
@@ -296,7 +287,7 @@ def export_execution(execution_id):
         return standard_error_response(f"导出执行报告失败: {str(e)}")
 
 
-@api_bp.route("/executions/export-all", methods=["GET"])
+@executions_bp.route("/executions/export-all", methods=["GET"])
 @log_api_call
 def export_all_executions():
     """导出所有执行报告"""
@@ -337,7 +328,7 @@ def export_all_executions():
 # 核心变量功能已集成在执行引擎中，这里保留基础API接口
 
 
-@api_bp.route("/executions/<execution_id>/variable-references", methods=["GET"])
+@executions_bp.route("/executions/<execution_id>/variable-references", methods=["GET"])
 @log_api_call
 def get_variable_references(execution_id):
     """获取变量引用历史"""

@@ -65,10 +65,12 @@
             transform: scale(0.95);
             opacity: 0.7;
         }
+
         50% {
             transform: scale(1.05);
             opacity: 1;
         }
+
         100% {
             transform: scale(0.95);
             opacity: 0.7;
@@ -217,12 +219,12 @@
         <span class="text-xl mr-2">🔗</span>
         <h3 class="card-title mb-0">连接状态</h3>
     </div>
-    
+
     <div id="connection-status" class="status-indicator checking">
         <span class="status-light checking"></span>
         <span>正在检查本地代理服务器连接状态...</span>
     </div>
-    
+
     <button id="check-connection" class="btn btn-ghost" onclick="checkConnection()">
         <span>🔄</span>
         重新检查
@@ -234,12 +236,12 @@
     <div class="flex items-center mb-3">
         <h3 class="card-title mb-0">下载本地代理包</h3>
     </div>
-    
+
     <div class="download-description">
         本地代理包包含了完整的AI测试执行环境，包括MidSceneJS引擎、浏览器驱动和所有必要的依赖。
         下载后无需额外安装，可直接运行。
     </div>
-    
+
     <div class="system-requirements">
         <div class="requirements-title">系统要求</div>
         <ul class="requirements-list">
@@ -257,16 +259,16 @@
             </li>
         </ul>
     </div>
-    
+
     <div class="download-actions">
-        <a href="/api/download-proxy" class="btn btn-primary" id="download-btn">
+        <a href="/intent-tester/api/download-proxy" class="btn btn-primary" id="download-btn">
             立即下载
         </a>
         <button class="btn btn-ghost" onclick="checkVersion()">
             检查版本
         </button>
     </div>
-    
+
     <div class="version-info">
         <span>当前版本：</span>
         <span class="version-badge" id="current-version">v1.0.0</span>
@@ -280,7 +282,7 @@
     <div class="flex items-center mb-3">
         <h3 class="card-title mb-0">使用说明</h3>
     </div>
-    
+
     <ol class="step-list">
         <li class="step-item">
             <div class="step-number">1</div>
@@ -291,7 +293,7 @@
                 </div>
             </div>
         </li>
-        
+
         <li class="step-item">
             <div class="step-number">2</div>
             <div class="step-content">
@@ -301,14 +303,14 @@
                     <div class="code-block">
                         # Windows
                         右键 → 解压到当前文件夹
-                        
+
                         # macOS/Linux
                         unzip local-proxy-package.zip
                     </div>
                 </div>
             </div>
         </li>
-        
+
         <li class="step-item">
             <div class="step-number">3</div>
             <div class="step-content">
@@ -318,7 +320,7 @@
                     <div class="code-block">
                         # 复制配置文件
                         cp .env.example .env
-                        
+
                         # 编辑配置文件，设置您的API密钥
                         OPENAI_API_KEY=sk-your-api-key
                         OPENAI_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
@@ -327,7 +329,7 @@
                 </div>
             </div>
         </li>
-        
+
         <li class="step-item">
             <div class="step-number">4</div>
             <div class="step-content">
@@ -337,14 +339,14 @@
                     <div class="code-block">
                         # Windows
                         start.bat
-                        
+
                         # macOS/Linux
                         ./start.sh
                     </div>
                 </div>
             </div>
         </li>
-        
+
         <li class="step-item">
             <div class="step-number">5</div>
             <div class="step-content">
@@ -362,38 +364,38 @@
 {% block extra_js %}
 <script>
     let connectionCheckInterval;
-    
+
     // 页面加载完成后开始检查连接
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         checkConnection();
         // 每30秒自动检查一次连接状态
         connectionCheckInterval = setInterval(checkConnection, 30000);
     });
-    
+
     // 页面卸载时清除定时器
-    window.addEventListener('beforeunload', function() {
+    window.addEventListener('beforeunload', function () {
         if (connectionCheckInterval) {
             clearInterval(connectionCheckInterval);
         }
     });
-    
+
     // 检查连接状态
     async function checkConnection() {
         const statusElement = document.getElementById('connection-status');
         const statusLight = statusElement.querySelector('.status-light');
         const statusText = statusElement.querySelector('span:last-child');
-        
+
         // 设置检查状态
         statusElement.className = 'status-indicator checking';
         statusLight.className = 'status-light checking';
         statusText.textContent = '正在检查本地代理服务器连接状态...';
-        
+
         try {
             const response = await fetch('http://localhost:3001/health', {
                 method: 'GET',
                 timeout: 5000
             });
-            
+
             if (response.ok) {
                 // 连接成功
                 statusElement.className = 'status-indicator connected';
@@ -409,11 +411,12 @@
             statusText.textContent = '本地代理服务器未连接 - 请确保服务器已启动并运行在端口3001';
         }
     }
-    
+
     // 检查版本信息
     async function checkVersion() {
         try {
-            const response = await axios.get('/api/proxy-version');
+            document.getElementById('download-btn').href = `${window.API_BASE_URL}/download-proxy`;
+            const response = await axios.get(`${window.API_BASE_URL}/proxy-version`);
             if (response.data.code === 200) {
                 const versionInfo = response.data.data;
                 document.getElementById('current-version').textContent = versionInfo.version;
@@ -425,9 +428,9 @@
             showMessage('获取版本信息失败', 'error');
         }
     }
-    
+
     // 下载按钮点击事件
-    document.getElementById('download-btn').addEventListener('click', function(e) {
+    document.getElementById('download-btn').addEventListener('click', function (e) {
         // 添加下载统计
         if (typeof gtag !== 'undefined') {
             gtag('event', 'download', {
@@ -435,7 +438,7 @@
                 event_label: 'local-proxy-package'
             });
         }
-        
+
         showMessage('开始下载本地代理包...', 'info');
     });
 </script>

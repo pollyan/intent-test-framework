@@ -11,7 +11,7 @@ from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
 
 from .variable_resolver_service import VariableManager, get_variable_manager
-from ..models import db, ExecutionHistory, StepExecution
+from backend.models import db, ExecutionHistory, StepExecution
 from midscene_framework import (
     MidSceneDataExtractor,
     DataExtractionMethod,

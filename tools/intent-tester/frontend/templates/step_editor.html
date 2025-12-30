@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>步骤编辑器 - AI4SE工具集</title>
-    
+
     <style>
         * {
             margin: 0;
@@ -347,6 +348,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="header">
         <h1 id="pageTitle">步骤编辑器</h1>
@@ -458,7 +460,7 @@
     <script src="https://unpkg.com/axios@1.6.0/dist/axios.min.js"></script>
     <script>
         // 全局变量
-        const API_BASE = '/api';
+        const API_BASE = window.API_BASE_URL;
         let currentTestcase = null;
         let steps = [];
         let editingStepIndex = -1;
@@ -500,15 +502,19 @@
             ai_scroll: {
                 name: '滚动页面',
                 params: [
-                    { name: 'direction', label: '滚动方向', type: 'select', required: false, options: [
-                        { value: 'down', text: '向下' },
-                        { value: 'up', text: '向上' }
-                    ]},
-                    { name: 'scroll_type', label: '滚动类型', type: 'select', required: false, options: [
-                        { value: 'once', text: '滚动一次' },
-                        { value: 'to_bottom', text: '滚动到底部' },
-                        { value: 'to_top', text: '滚动到顶部' }
-                    ]},
+                    {
+                        name: 'direction', label: '滚动方向', type: 'select', required: false, options: [
+                            { value: 'down', text: '向下' },
+                            { value: 'up', text: '向上' }
+                        ]
+                    },
+                    {
+                        name: 'scroll_type', label: '滚动类型', type: 'select', required: false, options: [
+                            { value: 'once', text: '滚动一次' },
+                            { value: 'to_bottom', text: '滚动到底部' },
+                            { value: 'to_top', text: '滚动到顶部' }
+                        ]
+                    },
                     { name: 'locate_prompt', label: '定位描述', type: 'text', required: false, placeholder: '滚动到指定元素位置（可选）' }
                 ]
             },
@@ -540,9 +546,9 @@
         }
 
         // 全局测试 handleActionTypeChange 函数
-        window.handleActionTypeChange = function(index, newActionType) {
+        window.handleActionTypeChange = function (index, newActionType) {
             console.log('Global handleActionTypeChange called:', index, newActionType);
-            
+
             if (!newActionType || !actionConfigs[newActionType]) {
                 console.log('Invalid action type:', newActionType);
                 return;
@@ -553,10 +559,10 @@
                 console.log('Step not found at index:', index);
                 return;
             }
-            
+
             const oldActionType = currentStep.action;
             console.log('Action type change:', oldActionType, '->', newActionType);
-            
+
             // 如果动作类型没有改变，直接返回
             if (oldActionType === newActionType) {
                 console.log('No action type change needed');
@@ -566,29 +572,29 @@
             // 保存当前参数用于智能保留
             const oldParams = currentStep.params || {};
             console.log('Old params:', oldParams);
-            
+
             // 更新步骤的动作类型
             currentStep.action = newActionType;
-            
+
             // 智能合并参数
             const newParams = mergeParamsOnActionChange(oldActionType, newActionType, oldParams);
             console.log('New params after merge:', newParams);
             currentStep.params = newParams;
-            
+
             // 重新渲染参数表单区域
             const paramsContainer = document.getElementById(`params-container-${index}`);
             if (!paramsContainer) {
                 console.log('Params container not found:', `params-container-${index}`);
                 return;
             }
-            
+
             const newConfig = actionConfigs[newActionType];
             console.log('New config:', newConfig);
-            
+
             const newFormFields = renderParamFields(currentStep, newConfig);
             console.log('New form fields HTML:', newFormFields);
             paramsContainer.innerHTML = newFormFields;
-            
+
             // 确保新的表单字段正确显示参数值
             setTimeout(() => {
                 newConfig.params.forEach(param => {
@@ -606,21 +612,21 @@
                     }
                 });
             }, 10);
-            
+
             console.log('Final step params:', currentStep.params);
-            
+
             // 显示参数更新提示
             showActionTypeChangeNotification(oldActionType, newActionType);
         };
 
         // 页面初始化
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             console.log('DOM loaded, actionConfigs available:', Object.keys(actionConfigs));
             console.log('Global handleActionTypeChange available:', typeof window.handleActionTypeChange);
-            
+
             const urlParams = new URLSearchParams(window.location.search);
             const testcaseId = urlParams.get('id');
-            
+
             if (testcaseId) {
                 loadTestcase(testcaseId);
             } else {
@@ -635,13 +641,13 @@
                 if (response.data.code === 200) {
                     currentTestcase = response.data.data;
                     steps = currentTestcase.steps || [];
-                    
+
                     // 更新页面标题和信息
                     document.getElementById('pageTitle').textContent = `编辑测试用例 - ${currentTestcase.name}`;
                     document.getElementById('testcaseName').textContent = currentTestcase.name;
                     document.getElementById('testcaseDesc').textContent = currentTestcase.description || '无描述';
                     document.getElementById('testcaseInfo').style.display = 'block';
-                    
+
                     renderSteps();
                 } else {
                     alert('加载测试用例失败: ' + response.data.message);
@@ -655,9 +661,9 @@
         function renderSteps() {
             const stepList = document.getElementById('stepList');
             const stepCount = document.getElementById('stepCount');
-            
+
             stepCount.textContent = `${steps.length} 个步骤`;
-            
+
             if (steps.length === 0) {
                 stepList.innerHTML = `
                     <div class="empty-state">
@@ -667,7 +673,7 @@
                 `;
                 return;
             }
-            
+
             stepList.innerHTML = steps.map((step, index) => `
                 <div class="step-item ${editingStepIndex === index ? 'editing' : ''}" id="step-${index}">
                     <div class="step-header">
@@ -693,9 +699,9 @@
         function formatStepParams(step) {
             const params = step.params || {};
             const config = actionConfigs[step.action];
-            
+
             if (!config) return JSON.stringify(params);
-            
+
             return config.params.map(param => {
                 const value = params[param.name];
                 if (value !== undefined && value !== '') {
@@ -708,14 +714,14 @@
         function renderStepForm(step, index) {
             const config = actionConfigs[step.action];
             if (!config) return '';
-            
+
             // 生成动作类型选择器选项
-            const actionOptions = Object.keys(actionConfigs).map(actionType => 
+            const actionOptions = Object.keys(actionConfigs).map(actionType =>
                 `<option value="${actionType}" ${step.action === actionType ? 'selected' : ''}>${actionConfigs[actionType].name}</option>`
             ).join('');
-            
+
             const formFields = renderParamFields(step, config);
-            
+
             return `
                 <div class="step-form">
                     <div class="form-row">
@@ -741,13 +747,13 @@
 
         function renderParamFields(step, config) {
             console.log('renderParamFields called with step:', step, 'config:', config);
-            
+
             return config.params.map(param => {
                 const value = step.params?.[param.name] || '';
                 console.log(`Rendering param ${param.name} with value:`, value);
-                
+
                 if (param.type === 'select') {
-                    const options = param.options.map(opt => 
+                    const options = param.options.map(opt =>
                         `<option value="${opt.value}" ${value === opt.value ? 'selected' : ''}>${opt.text}</option>`
                     ).join('');
                     return `
@@ -783,7 +789,7 @@
                 params: {},
                 description: ''
             };
-            
+
             steps.push(newStep);
             editingStepIndex = steps.length - 1;
             renderSteps();
@@ -807,24 +813,24 @@
         function saveStep(index) {
             const stepForm = document.querySelector(`#step-${index} .step-form`);
             const inputs = stepForm.querySelectorAll('[data-param]');
-            
+
             const params = {};
             let description = '';
-            
+
             inputs.forEach(input => {
                 const paramName = input.dataset.param;
                 const value = input.value.trim();
-                
+
                 if (paramName === 'description') {
                     description = value;
                 } else if (value) {
                     params[paramName] = input.type === 'number' ? parseInt(value) : value;
                 }
             });
-            
+
             steps[index].params = params;
             steps[index].description = description;
-            
+
             editingStepIndex = -1;
             renderSteps();
         }
@@ -855,31 +861,31 @@
         function mergeParamsOnActionChange(oldAction, newAction, oldParams) {
             const oldConfig = actionConfigs[oldAction];
             const newConfig = actionConfigs[newAction];
-            
+
             if (!oldConfig || !newConfig) {
                 return getDefaultParams(newAction);
             }
 
             const newParams = {};
-            
+
             // 1. 先设置新动作类型的默认参数
             const defaultParams = getDefaultParams(newAction);
             Object.assign(newParams, defaultParams);
-            
+
             // 2. 尝试保留兼容的参数
             newConfig.params.forEach(newParam => {
                 const paramName = newParam.name;
-                
+
                 // 检查旧参数中是否有同名参数
                 if (oldParams.hasOwnProperty(paramName)) {
                     const oldValue = oldParams[paramName];
-                    
+
                     // 进行类型兼容性检查
                     if (isParamValueCompatible(oldValue, newParam)) {
                         newParams[paramName] = oldValue;
                     }
                 }
-                
+
                 // 特殊处理常见的参数映射
                 if (!newParams[paramName] || newParams[paramName] === '') {
                     const mappedValue = mapCommonParams(paramName, oldParams, oldAction, newAction);
@@ -888,7 +894,7 @@
                     }
                 }
             });
-            
+
             return newParams;
         }
 
@@ -896,7 +902,7 @@
         function getDefaultParams(actionType) {
             const config = actionConfigs[actionType];
             if (!config) return {};
-            
+
             const params = {};
             config.params.forEach(param => {
                 if (param.type === 'select' && param.options && param.options.length > 0) {
@@ -914,7 +920,7 @@
                     params[param.name] = '';
                 }
             });
-            
+
             return params;
         }
 
@@ -923,7 +929,7 @@
             if (value === null || value === undefined) {
                 return false;
             }
-            
+
             switch (paramConfig.type) {
                 case 'number':
                     return !isNaN(Number(value));
@@ -948,7 +954,7 @@
                     return oldParams.prompt;
                 }
             }
-            
+
             // prompt 参数映射
             if (paramName === 'prompt') {
                 if (oldParams.prompt) {
@@ -959,7 +965,7 @@
                     return oldParams.locate;
                 }
             }
-            
+
             // text 参数特殊处理
             if (paramName === 'text' && newAction === 'ai_input') {
                 if (oldParams.text) {
@@ -967,22 +973,22 @@
                 }
                 return '';
             }
-            
+
             // url 参数处理
             if (paramName === 'url' && oldParams.url) {
                 return oldParams.url;
             }
-            
+
             // query 参数映射
             if (paramName === 'query' && oldParams.query) {
                 return oldParams.query;
             }
-            
+
             // name 参数映射
             if (paramName === 'name' && oldParams.name) {
                 return oldParams.name;
             }
-            
+
             // duration 参数映射
             if (paramName === 'duration') {
                 if (oldParams.duration) {
@@ -992,7 +998,7 @@
                     return oldParams.timeout;
                 }
             }
-            
+
             // timeout 参数映射
             if (paramName === 'timeout') {
                 if (oldParams.timeout) {
@@ -1002,7 +1008,7 @@
                     return oldParams.duration;
                 }
             }
-            
+
             return null;
         }
 
@@ -1010,7 +1016,7 @@
         function showActionTypeChangeNotification(oldAction, newAction) {
             const oldName = actionConfigs[oldAction]?.name || oldAction;
             const newName = actionConfigs[newAction]?.name || newAction;
-            
+
             // 创建通知元素
             const notification = document.createElement('div');
             notification.style.cssText = `
@@ -1027,9 +1033,9 @@
                 transition: all 0.3s ease;
             `;
             notification.textContent = `动作类型已从 "${oldName}" 切换为 "${newName}"，参数已自动更新`;
-            
+
             document.body.appendChild(notification);
-            
+
             // 3秒后自动移除通知
             setTimeout(() => {
                 notification.style.opacity = '0';
@@ -1044,12 +1050,12 @@
                 alert('请先保存正在编辑的步骤');
                 return;
             }
-            
+
             try {
                 const data = {
                     steps: steps
                 };
-                
+
                 let response;
                 if (currentTestcase) {
                     // 更新现有测试用例
@@ -1058,16 +1064,16 @@
                     // 创建新测试用例
                     const name = prompt('请输入测试用例名称:');
                     if (!name) return;
-                    
+
                     data.name = name;
                     data.description = prompt('请输入测试用例描述（可选）:') || '';
                     data.category = '功能测试';
                     data.priority = 3;
                     data.tags = [];
-                    
+
                     response = await axios.post(`${API_BASE}/testcases`, data);
                 }
-                
+
                 if (response.data.code === 200) {
                     alert('保存成功！');
                     if (!currentTestcase) {
@@ -1092,4 +1098,5 @@
         }
     </script>
 </body>
+
 </html>

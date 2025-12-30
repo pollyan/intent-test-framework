@@ -9,12 +9,12 @@ class ApplicationCore {
         this.initialized = false;
         this.modules = new Map();
         this.config = {};
-        
+
         // 核心服务实例
         this.stateManager = null;
         this.eventBus = null;
         this.componentFactory = null;
-        
+
         // 应用状态
         this.status = 'idle'; // idle, initializing, ready, error
         this.errors = [];
@@ -39,28 +39,28 @@ class ApplicationCore {
         try {
             // 初始化核心服务
             await this.initializeCoreServices();
-            
+
             // 加载和初始化模块
             await this.initializeModules();
-            
+
             // 自动发现并初始化组件
             await this.autoDiscoverComponents();
-            
+
             // 绑定全局事件
             this.bindGlobalEvents();
-            
+
             // 设置错误处理
             this.setupErrorHandling();
 
             this.initialized = true;
             this.status = 'ready';
-            
+
             const initTime = Date.now() - this.startTime;
             console.log(`应用程序初始化完成 (${initTime}ms)`);
-            
+
             // 触发初始化完成事件
-            this.eventBus?.emit('app:initialized', { 
-                initTime, 
+            this.eventBus?.emit('app:initialized', {
+                initTime,
                 modules: Array.from(this.modules.keys())
             });
 
@@ -114,7 +114,7 @@ class ApplicationCore {
         }
 
         const results = await Promise.allSettled(modulePromises);
-        
+
         // 检查模块加载结果
         results.forEach((result, index) => {
             const moduleName = Object.keys(this.config.modules)[index];
@@ -132,13 +132,13 @@ class ApplicationCore {
         try {
             // 尝试从全局作用域获取模块
             const moduleClass = window[config.className || name];
-            
+
             if (!moduleClass) {
                 throw new Error(`未找到模块类: ${config.className || name}`);
             }
 
             const instance = new moduleClass(config.options || {});
-            
+
             // 如果模块有初始化方法，调用它
             if (typeof instance.initialize === 'function') {
                 await instance.initialize();
@@ -146,9 +146,9 @@ class ApplicationCore {
 
             this.modules.set(name, instance);
             console.log(`模块加载成功: ${name}`);
-            
+
             return instance;
-            
+
         } catch (error) {
             console.error(`加载模块失败 ${name}:`, error);
             throw error;
@@ -163,13 +163,13 @@ class ApplicationCore {
             try {
                 const discoveredComponents = this.componentFactory.autoDiscoverComponents();
                 console.log(`自动发现了 ${discoveredComponents.length} 个组件`);
-                
+
                 // 更新状态
                 if (this.stateManager) {
-                    this.stateManager.setState('components.activeInstances', 
+                    this.stateManager.setState('components.activeInstances',
                         new Set(discoveredComponents.map(c => c._instanceId)));
                 }
-                
+
             } catch (error) {
                 console.error('自动发现组件失败:', error);
                 this.errors.push(error);
@@ -192,7 +192,7 @@ class ApplicationCore {
                 colno: event.colno,
                 error: event.error
             };
-            
+
             this.eventBus.emit('app:error:uncaught', error);
             this.errors.push(error);
         });
@@ -203,7 +203,7 @@ class ApplicationCore {
                 reason: event.reason,
                 promise: event.promise
             };
-            
+
             this.eventBus.emit('app:error:unhandled-promise', error);
             this.errors.push(error);
         });
@@ -217,7 +217,7 @@ class ApplicationCore {
         document.addEventListener('visibilitychange', () => {
             const isVisible = !document.hidden;
             this.eventBus.emit('app:visibility-change', { isVisible });
-            
+
             if (this.stateManager) {
                 this.stateManager.setState('ui.isVisible', isVisible);
             }
@@ -275,14 +275,14 @@ class ApplicationCore {
                 version: this.version
             };
 
-            await fetch('/api/errors', {
+            await fetch(`${window.API_BASE_URL}/errors`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(errorData)
             });
-            
+
         } catch (reportError) {
             console.error('错误报告发送失败:', reportError);
         }
@@ -297,7 +297,7 @@ class ApplicationCore {
             autoDiscoverComponents: true,
             errorReporting: {
                 enabled: false,
-                endpoint: '/api/errors'
+                endpoint: `${window.API_BASE_URL}/errors`
             },
             modules: {
                 'VariableContextService': {
@@ -395,19 +395,19 @@ class ApplicationCore {
         console.log('Config:', this.config);
         console.log('Modules:', this.modules);
         console.log('Errors:', this.errors);
-        
+
         if (this.stateManager) {
             console.log('State:', this.stateManager.getState());
         }
-        
+
         if (this.eventBus) {
             console.log('Events:', this.eventBus.getStats());
         }
-        
+
         if (this.componentFactory) {
             console.log('Components:', this.componentFactory.getStats());
         }
-        
+
         console.groupEnd();
     }
 }

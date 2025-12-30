@@ -304,7 +304,7 @@ class TestDeleteExecutionAPI:
         assert_api_response(response, 200)
 
         # 验证记录已被删除
-        from web_gui.models import ExecutionHistory
+        from backend.models import ExecutionHistory
 
         deleted_execution = ExecutionHistory.query.filter_by(
             execution_id=execution_id
@@ -327,7 +327,7 @@ class TestDeleteExecutionAPI:
         assert_api_response(response, 200)
 
         # 验证执行记录和步骤执行都被删除
-        from web_gui.models import ExecutionHistory, StepExecution
+        from backend.models import ExecutionHistory, StepExecution
 
         deleted_execution = ExecutionHistory.query.filter_by(
             execution_id=execution.execution_id
@@ -459,7 +459,7 @@ class TestMidSceneIntegrationAPI:
         data = assert_api_response(response, 200)
 
         # 验证创建了执行记录
-        from web_gui.models import ExecutionHistory
+        from backend.models import ExecutionHistory
 
         execution = ExecutionHistory.query.filter_by(
             execution_id=start_data["execution_id"]
@@ -520,7 +520,7 @@ class TestMidSceneIntegrationAPI:
         data = assert_api_response(response, 200)
 
         # 验证执行记录已更新
-        from web_gui.models import ExecutionHistory
+        from backend.models import ExecutionHistory
 
         updated_execution = ExecutionHistory.query.filter_by(
             execution_id="test-exec-result-001"
@@ -557,7 +557,7 @@ class TestMidSceneIntegrationAPI:
         assert_api_response(response, 200)
 
         # 验证创建了步骤执行记录
-        from web_gui.models import StepExecution
+        from backend.models import StepExecution
 
         step_executions = StepExecution.query.filter_by(
             execution_id=result_data["execution_id"]

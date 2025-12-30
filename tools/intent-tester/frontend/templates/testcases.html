@@ -224,7 +224,7 @@
             if (priority) params.append('priority', priority);
             if (status) params.append('status', status);
 
-            const response = await axios.get(`/intent-tester/api/testcases?${params}`);
+            const response = await axios.get(`${window.API_BASE_URL}/testcases?${params}`);
 
             if (response.data.code === 200) {
                 const data = response.data.data;
@@ -470,7 +470,7 @@
         }
 
         try {
-            const response = await axios.delete(`/intent-tester/api/testcases/${id}`);
+            const response = await axios.delete(`${window.API_BASE_URL}/testcases/${id}`);
 
             if (response.data.code === 200) {
                 showMessage('测试用例删除成功', 'success');

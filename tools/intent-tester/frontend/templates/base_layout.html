@@ -713,6 +713,13 @@
 
     <!-- 标准列表组件样式 -->
     <link rel="stylesheet" href="/static/css/list-components.css">
+
+    <!-- 动态配置 API 基础路径 -->
+    <script>
+        // 统一使用 /intent-tester/api 作为 API 基础路径
+        window.API_BASE_URL = '/intent-tester/api';
+        console.log('API Base URL configured as:', window.API_BASE_URL);
+    </script>
 </head>
 
 <body>

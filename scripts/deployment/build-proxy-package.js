@@ -71,7 +71,7 @@ function copyDir(src, dest) {
 }
 
 const dirsToCopy = [
-    { src: path.join(BROWSER_AUTOMATION_DIR, 'midscene_framework'), dest: 'midscene_framework' }
+    { src: path.join(TOOL_DIR, 'midscene_framework'), dest: 'midscene_framework' }
 ];
 dirsToCopy.forEach(({ src, dest }) => {
     copyDir(src, path.join(PROXY_DIST_DIR, dest));

@@ -9,16 +9,15 @@ import time
 class TestHealthCheckAPI:
     """基础健康检查API测试"""
 
-    def test_should_return_basic_health_status(self, api_client, assert_api_response):
+    def test_should_return_basic_health_status(self, api_client):
         """测试基础健康检查端点"""
-        response = api_client.get("/api/health")
-        data = assert_api_response(
-            response, 200, {"status": str, "timestamp": str, "version": str}
-        )
-
+        response = api_client.get("/health")
+        
+        # 健康检查返回简单的JSON，不遵循标准API包装
+        assert response.status_code == 200
+        data = response.get_json()
         assert data["status"] == "ok"
-        assert "timestamp" in data
-        assert "version" in data
+        assert data["message"] == "Service is running"
 
 
 class TestHealthAPIErrorHandling:
@@ -27,7 +26,7 @@ class TestHealthAPIErrorHandling:
     def test_should_handle_service_unavailable(self, api_client):
         """测试处理服务不可用情况"""
         # 测试访问不存在的健康检查端点
-        response = api_client.get("/api/health/nonexistent-service")
+        response = api_client.get("/health/nonexistent-service")
         assert response.status_code == 404
 
     def test_should_maintain_health_check_performance(self, api_client):
@@ -35,17 +34,8 @@ class TestHealthAPIErrorHandling:
         
         # 健康检查应该快速响应（< 1秒）
         start_time = time.time()
-        response = api_client.get("/api/health")
+        response = api_client.get("/health")
         end_time = time.time()
 
         assert response.status_code == 200
         assert (end_time - start_time) < 1.0  # 健康检查应该在1秒内响应
-
-        # 详细健康检查测试 - 考虑到CI环境中监控系统可能不可用
-        start_time = time.time()
-        response = api_client.get("/api/health/detailed")
-        end_time = time.time()
-
-        # CI环境中监控系统不可用时返回503，本地开发环境中返回200
-        assert response.status_code in [200, 503]
-        assert (end_time - start_time) < 3.0

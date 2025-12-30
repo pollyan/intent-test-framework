@@ -9,17 +9,14 @@ from unittest.mock import MagicMock
 TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, TESTS_DIR)
 
-# Ensure we can import from tools/intent-tester/backend
-BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../backend'))
-sys.path.insert(0, BACKEND_DIR)
+# Ensure we can import from tools/intent-tester (for midscene_framework and backend package)
+INTENT_TESTER_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if INTENT_TESTER_DIR not in sys.path:
+    sys.path.insert(0, INTENT_TESTER_DIR)
 
-# Ensure we can import shared modules
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
-sys.path.insert(0, PROJECT_ROOT)
-
-from app import create_app
+from backend.app import create_app
 # from shared.database import db as _db # shared db mismatches with web_gui.models.db used in app
-from web_gui.models import db as _db
+from backend.models import db as _db
 
 @pytest.fixture(scope='function')
 def app():
@@ -322,7 +319,7 @@ def sample_screenshot_step():
 @pytest.fixture
 def create_testcase_with_steps(db_session):
     """创建包含步骤的测试用例工厂函数"""
-    from web_gui.models import TestCase
+    from backend.models import TestCase
 
     def _create_testcase_with_steps(step_count=2, **kwargs):
         # 生成默认步骤
@@ -491,8 +488,8 @@ def sample_execution_result_with_steps():
 @pytest.fixture
 def create_execution_history(db_session):
     """创建执行历史记录的工厂函数"""
-    from web_gui.models import TestCase
-    from web_gui.models import ExecutionHistory
+    from backend.models import TestCase
+    from backend.models import ExecutionHistory
 
     def _create_execution_history(**kwargs):
         from datetime import datetime
@@ -541,7 +538,7 @@ def create_execution_history(db_session):
 @pytest.fixture
 def create_step_execution(db_session):
     """创建步骤执行记录的工厂函数"""
-    from web_gui.models import StepExecution
+    from backend.models import StepExecution
 
     def _create_step_execution(**kwargs):
         from datetime import datetime

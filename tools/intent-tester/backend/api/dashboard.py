@@ -8,7 +8,10 @@ from datetime import datetime, timedelta
 from flask import request, jsonify
 from sqlalchemy import func, desc, and_
 
-from . import api_bp
+from flask import Blueprint
+
+dashboard_bp = Blueprint('dashboard', __name__)
+# from . import api_bp
 from .base import (
     standard_error_response,
     standard_success_response,
@@ -21,22 +24,17 @@ from .base import (
 )
 
 # 导入通用代码模式
-try:
-    from ..utils.common_patterns import safe_api_operation
-except ImportError:
-    from web_gui.utils.common_patterns import safe_api_operation
+# 导入通用代码模式
+from backend.utils.common_patterns import safe_api_operation
 
 # 导入查询优化器
-try:
-    from ..services.query_optimizer import QueryOptimizer
-except ImportError:
-    from web_gui.services.query_optimizer import QueryOptimizer
+from backend.services.query_optimizer import QueryOptimizer
 
 
 # ==================== 仪表板数据 ====================
 
 
-@api_bp.route("/dashboard/summary", methods=["GET"])
+@dashboard_bp.route("/dashboard/summary", methods=["GET"])
 @log_api_call
 @safe_api_operation("获取仪表板摘要数据")
 def get_dashboard_summary():
@@ -50,7 +48,7 @@ def get_dashboard_summary():
     return dashboard_data
 
 
-@api_bp.route("/dashboard/recent-activities", methods=["GET"])
+@dashboard_bp.route("/dashboard/recent-activities", methods=["GET"])
 @log_api_call
 @safe_api_operation("获取最近活动")
 def get_recent_activities():
@@ -83,7 +81,7 @@ def get_recent_activities():
     return {"activities": activities, "total": len(activities)}
 
 
-@api_bp.route("/dashboard/execution-chart", methods=["GET"])
+@dashboard_bp.route("/dashboard/execution-chart", methods=["GET"])
 @log_api_call
 @safe_api_operation("获取执行图表数据")
 def get_execution_chart():
@@ -147,7 +145,7 @@ def get_execution_chart():
     }
 
 
-@api_bp.route("/dashboard/top-testcases", methods=["GET"])
+@dashboard_bp.route("/dashboard/top-testcases", methods=["GET"])
 @log_api_call
 @safe_api_operation("获取热门测试用例")
 def get_top_testcases():
@@ -215,7 +213,7 @@ def get_top_testcases():
     }
 
 
-@api_bp.route("/dashboard/failure-analysis", methods=["GET"])
+@dashboard_bp.route("/dashboard/failure-analysis", methods=["GET"])
 @log_api_call
 @safe_api_operation("获取失败分析数据")
 def get_failure_analysis():
@@ -322,7 +320,7 @@ def get_failure_analysis():
     }
 
 
-@api_bp.route("/dashboard/health-check", methods=["GET"])
+@dashboard_bp.route("/dashboard/health-check", methods=["GET"])
 @log_api_call
 @safe_api_operation("获取系统健康状态")
 def get_system_health():

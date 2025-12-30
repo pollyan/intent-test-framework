@@ -48,6 +48,7 @@ services:
     volumes:
       - ./tools/intent-tester/frontend/static/screenshots:/app/frontend/static/screenshots
       - ./logs:/app/logs
+      - ./tools/intent-tester:/app/tools/intent-tester
     depends_on:
       postgres:
         condition: service_healthy

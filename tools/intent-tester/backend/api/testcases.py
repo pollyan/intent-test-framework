@@ -13,11 +13,8 @@ from flask import Blueprint
 # 提供 testcases_bp 以便 base.register_blueprints 注册
 testcases_bp = Blueprint('testcases', __name__)
 
-# 为向后兼容，保留 api_bp 路由注册（若其他模块仍从 . import api_bp 引用）
-try:
-    from . import api_bp  # 可能不存在，但尽量兼容
-except Exception:
-    api_bp = None
+# api_bp removed
+
 from .base import (
     api_error_handler,
     db_transaction_handler,
@@ -36,28 +33,16 @@ from .base import (
 )
 
 # 导入通用代码模式
-try:
-    from ..utils.common_patterns import (
-        safe_api_operation,
-        validate_resource_exists,
-        database_transaction,
-        require_json_data,
-        get_crud_helper,
-    )
-except ImportError:
-    from web_gui.utils.common_patterns import (
-        safe_api_operation,
-        validate_resource_exists,
-        database_transaction,
-        require_json_data,
-        get_crud_helper,
-    )
+from backend.utils.common_patterns import (
+    safe_api_operation,
+    validate_resource_exists,
+    database_transaction,
+    require_json_data,
+    get_crud_helper,
+)
 
 # 导入查询优化器
-try:
-    from ..services.query_optimizer import QueryOptimizer
-except ImportError:
-    from web_gui.services.query_optimizer import QueryOptimizer
+from backend.services.query_optimizer import QueryOptimizer
 
 # 定义有效的动作类型
 VALID_ACTIONS = {
@@ -80,7 +65,7 @@ VALID_ACTIONS = {
 
 def validate_step_data(data, is_update=False):
     """验证步骤数据"""
-    from ..utils.error_handler import ValidationError
+    from backend.utils.error_handler import ValidationError
 
     action = data.get("action")
 
@@ -309,7 +294,7 @@ def update_testcase(testcase_id):
         return standard_error_response(f"更新失败: {str(e)}")
 
 
-@api_bp.route("/testcases/<int:testcase_id>", methods=["DELETE"])
+@testcases_bp.route("/testcases/<int:testcase_id>", methods=["DELETE"])
 @log_api_call
 def delete_testcase(testcase_id):
     """删除测试用例（软删除）"""
@@ -336,7 +321,7 @@ def delete_testcase(testcase_id):
 # ==================== 测试用例步骤管理 ====================
 
 
-@api_bp.route("/testcases/<int:testcase_id>/steps", methods=["GET"])
+@testcases_bp.route("/testcases/<int:testcase_id>/steps", methods=["GET"])
 @log_api_call
 @safe_api_operation("获取测试用例步骤")
 @validate_resource_exists(TestCase, "testcase_id", "测试用例不存在")
@@ -352,7 +337,7 @@ def get_testcase_steps(testcase_id, testcase):
     }
 
 
-@api_bp.route("/testcases/<int:testcase_id>/steps", methods=["POST"])
+@testcases_bp.route("/testcases/<int:testcase_id>/steps", methods=["POST"])
 @log_api_call
 @safe_api_operation("添加测试用例步骤")
 @validate_resource_exists(TestCase, "testcase_id", "测试用例不存在")
@@ -395,7 +380,7 @@ def add_testcase_step(testcase_id, testcase, data):
     }
 
 
-@api_bp.route("/testcases/<int:testcase_id>/steps/<int:step_index>", methods=["PUT"])
+@testcases_bp.route("/testcases/<int:testcase_id>/steps/<int:step_index>", methods=["PUT"])
 @log_api_call
 @safe_api_operation("更新测试用例步骤")
 @validate_resource_exists(TestCase, "testcase_id", "测试用例不存在")
@@ -409,7 +394,7 @@ def update_testcase_step(testcase_id, step_index, testcase, data):
     steps = json.loads(testcase.steps) if testcase.steps else []
 
     if step_index < 0 or step_index >= len(steps):
-        from ..utils.error_handler import ValidationError
+        from backend.utils.error_handler import ValidationError
 
         raise ValidationError("步骤索引超出范围")
 
@@ -440,7 +425,7 @@ def update_testcase_step(testcase_id, step_index, testcase, data):
     }
 
 
-@api_bp.route("/testcases/<int:testcase_id>/steps/<int:step_index>", methods=["DELETE"])
+@testcases_bp.route("/testcases/<int:testcase_id>/steps/<int:step_index>", methods=["DELETE"])
 @log_api_call
 @safe_api_operation("删除测试用例步骤")
 @validate_resource_exists(TestCase, "testcase_id", "测试用例不存在")
@@ -450,7 +435,7 @@ def delete_testcase_step(testcase_id, step_index, testcase):
     steps = json.loads(testcase.steps) if testcase.steps else []
 
     if step_index < 0 or step_index >= len(steps):
-        from ..utils.error_handler import ValidationError
+        from backend.utils.error_handler import ValidationError
 
         raise ValidationError("步骤索引超出范围")
 
@@ -463,7 +448,7 @@ def delete_testcase_step(testcase_id, step_index, testcase):
     return {"deleted_step": deleted_step, "remaining_steps": len(steps)}
 
 
-@api_bp.route("/testcases/<int:testcase_id>/steps/reorder", methods=["PUT"])
+@testcases_bp.route("/testcases/<int:testcase_id>/steps/reorder", methods=["PUT"])
 @log_api_call
 @safe_api_operation("重新排序测试用例步骤")
 @validate_resource_exists(TestCase, "testcase_id", "测试用例不存在")
@@ -476,13 +461,13 @@ def reorder_testcase_steps(testcase_id, testcase, data):
     steps = json.loads(testcase.steps) if testcase.steps else []
 
     if len(step_orders) != len(steps):
-        from ..utils.error_handler import ValidationError
+        from backend.utils.error_handler import ValidationError
 
         raise ValidationError("步骤索引数量不匹配")
 
     # 验证索引有效性
     if not all(isinstance(idx, int) and 0 <= idx < len(steps) for idx in step_orders):
-        from ..utils.error_handler import ValidationError
+        from backend.utils.error_handler import ValidationError
 
         raise ValidationError("无效的步骤索引")
 
@@ -495,7 +480,7 @@ def reorder_testcase_steps(testcase_id, testcase, data):
     return {"steps": reordered_steps}
 
 
-@api_bp.route(
+@testcases_bp.route(
     "/testcases/<int:testcase_id>/steps/<int:step_index>/duplicate", methods=["POST"]
 )
 @log_api_call
@@ -507,7 +492,7 @@ def duplicate_testcase_step(testcase_id, step_index, testcase):
     steps = json.loads(testcase.steps) if testcase.steps else []
 
     if step_index < 0 or step_index >= len(steps):
-        from ..utils.error_handler import ValidationError
+        from backend.utils.error_handler import ValidationError
 
         raise ValidationError("步骤索引超出范围")
 

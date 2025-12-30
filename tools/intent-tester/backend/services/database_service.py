@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 # 确保导入与Flask应用初始化的相同db实例
 try:
-    from ..models import db, TestCase, ExecutionHistory, StepExecution, Template
+    from backend.models import db, TestCase, ExecutionHistory, StepExecution, Template
 except ImportError:
     from web_gui.models import db, TestCase, ExecutionHistory, StepExecution, Template
 

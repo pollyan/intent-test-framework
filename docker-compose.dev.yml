@@ -1,36 +1,125 @@
-# 本地开发环境配置
-# 使用方式: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
-#
-# 注意：MidScene Server需要手动启动（模拟真实用户场景）
-# 启动命令：node tools/intent-tester/browser-automation/midscene_server.js
-
 version: '3.8'
 
+# 统一的 Docker Compose 配置 (Merged from docker-compose.new.yml)
+# 包含：Nginx 网关、意图测试工具、AI 智能体、PostgreSQL
+
 services:
-  web-app:
+  # PostgreSQL 数据库（共享）
+  postgres:
+    image: postgres:15-alpine
+    container_name: ai4se-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ai4se
+      POSTGRES_USER: ${DB_USER:-ai4se_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change_me_in_production}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-ai4se_user}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ai4se-network
+
+  # 意图测试工具应用
+  intent-tester:
     build:
       context: .
-      dockerfile: Dockerfile
-      # 开发环境可以使用缓存加速构建
-    environment:
-      - FLASK_ENV=development
-      - FLASK_DEBUG=1
-    volumes:
-      # 挂载源代码，支持热重载
-      - ./web_gui:/app/web_gui
-      - ./tools/intent-tester/browser-automation/midscene_python.py:/app/midscene_python.py
-      - ./start.py:/app/start.py
-      - ./api:/app/api
-      - ./tools/intent-tester/browser-automation/midscene_framework:/app/midscene_framework
-    command: python start.py
-    # 开发环境不做健康检查加快启动
-    healthcheck:
-      disable: true
+      dockerfile: tools/intent-tester/docker/Dockerfile
 
-  postgres:
-    ports:
-      # 暴露数据库端口，方便使用GUI工具连接
-      - "5432:5432"
+    container_name: ai4se-intent-tester
+    restart: unless-stopped
     environment:
-      # 开发环境使用简单密码
-      - POSTGRES_PASSWORD=dev_password
+      - DATABASE_URL=postgresql://${DB_USER:-ai4se_user}:${DB_PASSWORD:-change_me_in_production}@postgres:5432/ai4se
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-please-change}
+      - MIDSCENE_SERVER_URL=http://host.docker.internal:3001
+      - FLASK_ENV=${FLASK_ENV:-production}
+      - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2:-false}
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}
+      - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT:-intent-test-framework}
+
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./tools/intent-tester/frontend/static/screenshots:/app/frontend/static/screenshots
+      - ./logs:/app/logs
+      # Mount source code for simpler debugging if needed, but build is preferred
+      - ./tools/intent-tester:/app/tools/intent-tester
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import requests; requests.get('http://localhost:5001/health')" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - ai4se-network
+
+  # AI 智能体应用
+  ai-agents:
+    build:
+      context: .
+      dockerfile: tools/ai-agents/docker/Dockerfile
+
+    container_name: ai4se-agents
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER:-ai4se_user}:${DB_PASSWORD:-change_me_in_production}@postgres:5432/ai4se
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-please-change}
+      - FLASK_ENV=${FLASK_ENV:-production}
+      - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2:-false}
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}
+      - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT:-ai-agents}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.openai.com/v1}
+
+    ports:
+      - "5002:5002"
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import requests; requests.get('http://localhost:5002/health')" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - ai4se-network
+
+  # Nginx 反向代理（统一入口）
+  nginx:
+    image: nginx:alpine
+    container_name: ai4se-gateway
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./tools/frontend/public:/app/tools/frontend/public:ro
+    depends_on:
+      - intent-tester
+      - ai-agents
+    networks:
+      - ai4se-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  ai4se-network:
+    name: ai4se-network
