@@ -16,14 +16,14 @@ def register_api_routes(app):
     from .proxy import proxy_bp
 
     # 注册主API蓝图
-    app.register_blueprint(api_bp)
+    app.register_blueprint(api_bp, url_prefix='/intent-tester/api')
 
     # 注册功能蓝图
-    # 统一挂载到 /api 前缀下
-    app.register_blueprint(testcases_bp, url_prefix='/api')
-    app.register_blueprint(executions_bp, url_prefix='/api')
-    app.register_blueprint(templates_bp, url_prefix='/api')
-    app.register_blueprint(dashboard_bp, url_prefix='/api')
+    # 统一挂载到 /intent-tester/api 前缀下
+    app.register_blueprint(testcases_bp, url_prefix='/intent-tester/api')
+    app.register_blueprint(executions_bp, url_prefix='/intent-tester/api')
+    app.register_blueprint(templates_bp, url_prefix='/intent-tester/api')
+    app.register_blueprint(dashboard_bp, url_prefix='/intent-tester/api')
 
-    app.register_blueprint(midscene_bp, url_prefix='/api')
-    app.register_blueprint(proxy_bp, url_prefix='/api')
+    app.register_blueprint(midscene_bp, url_prefix='/intent-tester/api')
+    app.register_blueprint(proxy_bp, url_prefix='/intent-tester/api')

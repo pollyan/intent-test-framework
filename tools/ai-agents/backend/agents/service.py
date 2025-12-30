@@ -64,7 +64,7 @@ class AdkAssistantService:
             model_config = self.config
         else:
             # 获取默认配置
-            from web_gui.models import RequirementsAIConfig
+            from ..models import RequirementsAIConfig
             
             config = RequirementsAIConfig.get_default_config()
             if not config:

@@ -466,7 +466,7 @@
         try {
             const response = await axios.get('/ai-agents/api/ai-configs');
             if (response.data.code === 200) {
-                const configs = response.data.data.configs;
+                const configs = response.data.data; // API returns array directly in data field
                 renderConfigList(configs);
             } else {
                 console.error('加载配置列表失败:', response.data.message);
@@ -640,7 +640,7 @@
             // 获取配置详情
             const response = await axios.get('/ai-agents/api/ai-configs');
             if (response.data.code === 200) {
-                const configs = response.data.data.configs;
+                const configs = response.data.data; // API returns array directly in data field
                 const config = configs.find(c => c.id === configId);
                 if (config) {
                     setEditMode(config);

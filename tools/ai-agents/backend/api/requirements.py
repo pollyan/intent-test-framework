@@ -10,7 +10,8 @@ import logging
 from datetime import datetime, timedelta
 from pathlib import Path
 from flask import Blueprint, request, jsonify
-from flask_socketio import SocketIO, emit, join_room, leave_room
+
+# SocketIO support removed for cleanup
 from .base import (
     standard_success_response,
     standard_error_response,
@@ -20,22 +21,19 @@ from .base import (
 
 # 导入数据模型和服务
 try:
-    # 优先使用本地 agents 模块
     from ..agents import AdkAssistantService
 except ImportError:
-    try:
-        from web_gui.services.adk_agents import AdkAssistantService
-    except ImportError:
-        AdkAssistantService = None  # Handle dependency missing gracefully
+    AdkAssistantService = None
 
 try:
-    from web_gui.models import db, RequirementsSession, RequirementsMessage
-    from web_gui.utils.error_handler import ValidationError, NotFoundError, DatabaseError
+    from ..models import db, RequirementsSession, RequirementsMessage, RequirementsAIConfig
+    from ..utils.error_handler import ValidationError, NotFoundError, DatabaseError
 except ImportError:
     # 回退定义
     db = None
     RequirementsSession = None
     RequirementsMessage = None
+    RequirementsAIConfig = None
     class ValidationError(Exception):
         def __init__(self, message):
             self.message = message
@@ -83,15 +81,32 @@ def _clear_session_state(session_id: str):
 # 初始化 logger
 logger = logging.getLogger(__name__)
 
-# AI服务实例（延迟初始化）
-ai_service = None
+# ✨ AI服务实例缓存（按session_id缓存）
+_ai_service_cache = {}  # {session_id: {'service': instance, 'last_access': datetime}}
 
-def get_ai_service(assistant_type='alex'):
-    """获取AI服务实例，每次重新检查配置避免缓存问题"""
-    try:
-        from ..models import RequirementsAIConfig
-        from ..services.adk_agents import AdkAssistantService
+def get_ai_service(assistant_type='alex', session_id=None):
+    """获取AI服务实例，支持会话级缓存"""
+    global _ai_service_cache
+    
+    # 清理过期缓存
+    now = datetime.now()
+    expired = [k for k, v in _ai_service_cache.items() 
+              if (now - v['last_access']).total_seconds() > _CACHE_TTL_HOURS * 3600]
+    for k in expired:
+        del _ai_service_cache[k]
         
+    # 尝试从缓存获取
+    if session_id and session_id in _ai_service_cache:
+        cached = _ai_service_cache[session_id]
+        # 检查是否为了同一个assistant_type
+        if cached['service'].assistant_type == assistant_type:
+            cached['last_access'] = now
+            return cached['service']
+            
+    try:
+        if RequirementsAIConfig is None:
+            return None
+            
         # 每次都重新获取默认AI配置，避免缓存问题
         default_config = RequirementsAIConfig.get_default_config()
         if default_config:
@@ -106,17 +121,26 @@ def get_ai_service(assistant_type='alex'):
             
             # 创建AI服务实例
             ai_service = AdkAssistantService(assistant_type=assistant_type, config=config_data)
+            
+            # 缓存实例
+            if session_id:
+                _ai_service_cache[session_id] = {
+                    'service': ai_service,
+                    'last_access': now
+                }
+                
             return ai_service
         else:
-            # 如果没有默认配置，返回None
             return None
     except ImportError as e:
+        logger.error(f"Import error in get_ai_service: {e}")
         return None
     except Exception as e:
+        logger.error(f"Error in get_ai_service: {e}")
         return None
 
 # 创建蓝图
-requirements_bp = Blueprint("requirements", __name__, url_prefix="/api/requirements")
+requirements_bp = Blueprint("requirements", __name__, url_prefix="/ai-agents/api/requirements")
 
 # 全局变量存储active会话
 active_sessions = {}
@@ -395,7 +419,8 @@ def send_message(session_id):
         # 根据助手类型获取对应的AI服务
 
         try:
-            ai_svc = get_ai_service(assistant_type=assistant_type)
+            # 传入 session_id 以启用缓存
+            ai_svc = get_ai_service(assistant_type=assistant_type, session_id=session_id)
             if ai_svc is None:
                 error_msg = f"AI服务初始化失败：未找到有效的AI配置或服务初始化失败。请检查AI服务配置或联系管理员。"
                 logger.error(error_msg)
@@ -690,8 +715,7 @@ def get_assistant_bundle(assistant_type):
                  return standard_error_response(f"不支持的助手类型: {assistant_type} (ADK不可用)", 400)
 
         bundle_file = assistant_info["bundle_file"]
-        bundle_file = assistant_info["bundle_file"]
-        bundle_path = Path(__file__).parent.parent.parent / "assistant-bundles" / bundle_file
+        bundle_path = Path(__file__).resolve().parents[4] / "assistant-bundles" / bundle_file
         
         if bundle_path.exists():
             with open(bundle_path, 'r', encoding='utf-8') as f:
@@ -725,236 +749,8 @@ def get_alex_bundle():
     return get_assistant_bundle('alex')
 
 
-@requirements_bp.route("/sessions/<session_id>/messages/stream", methods=["POST"])
-def send_message_stream(session_id):
-    """
-    流式发送消息到会话（SSE 模式）
-    
-    使用 LangGraph 流式响应，逐块返回 AI 回复。
-    前端通过 EventSource 或 fetch 接收 SSE 数据。
-    """
-    from flask import Response, stream_with_context, current_app
-    import asyncio
-    
-    try:
-        # 验证会话是否存在
-        session = RequirementsSession.query.get(session_id)
-        if not session:
-            return standard_error_response("会话不存在", 404)
-            
-        if session.session_status != "active":
-            return standard_error_response("会话不在活跃状态", 400)
-        
-        # 获取请求数据（支持 JSON 和 Multipart）
-        content = ""
-        attached_files = []
-        
-        if request.content_type and 'multipart/form-data' in request.content_type:
-            # Multipart 模式（支持文件）
-            content = request.form.get('content', '').strip()
-            files = request.files.getlist('files')
-            if files:
-                try:
-                    attached_files = process_uploaded_files(files)
-                    # 构建包含文件内容的完整消息
-                    content = build_message_with_files(content, attached_files)
-                except Exception as e:
-                    return standard_error_response(f"文件处理失败: {str(e)}", 400)
-        elif request.is_json:
-            # JSON 模式
-            data = request.get_json()
-            content = data.get("content", "").strip()
-        else:
-            return standard_error_response("请求格式错误：需要JSON或multipart/form-data格式", 400)
-        
-        if not content:
-            return standard_error_response("消息内容不能为空", 400)
-        
-        # 在生成器外部提取会话数据（避免 SQLAlchemy detached instance 错误）
-        user_context = json.loads(session.user_context or "{}")
-        assistant_type = user_context.get("assistant_type", "alex")
-        project_name = session.project_name
-        current_stage = session.current_stage
-        
-        # 检查是否是激活消息（仅依靠内容特征，不依赖长度）
-        # 1. Bundle + 激活指令组合
-        # 2. YAML格式配置 + agent定义  
-        # 3. 关键操作指令的组合模式
-        is_activation_message = (
-            # Bundle激活模式：包含明确的Bundle标识和激活指令
-            ("Bundle" in content and ("activation-instructions" in content or "persona:" in content)) or
-            # YAML配置模式：包含YAML格式的agent配置
-            ("```yaml" in content and "agent:" in content) or
-            # 操作指令模式：包含关键操作指令的组合
-            ("你的关键操作指令" in content and "请严格按照" in content and "persona执行" in content)
-        )
-        
-        # 字符长度限制：支持环境变量覆盖
-        max_len_env = os.getenv('REQUIREMENTS_MESSAGE_MAX_LEN')
-        is_testing_env = os.getenv('TESTING', '').lower() in ['1', 'true', 'yes']
-        if max_len_env and max_len_env.isdigit():
-            max_length = int(max_len_env)
-        else:
-            if is_activation_message:
-                max_length = 50000
-            else:
-                max_length = 2000 if is_testing_env else 10000
-                
-        if len(content) > max_length:
-            message = (
-                f"激活消息内容不能超过{max_length}字符"
-                if is_activation_message
-                else f"消息内容不能超过{max_length}字符"
-            )
-            return standard_error_response(message, 400)
-        
-        # 保存用户消息
-        user_message = RequirementsMessage(
-            session_id=session_id,
-            message_type="system" if is_activation_message else "user",
-            content=content,
-            message_metadata=json.dumps({
-                "stage": current_stage,
-                "char_count": len(content),
-                "source": "http_stream",
-                "is_activation": is_activation_message,
-                "has_attachments": len(attached_files) > 0
-            })
-        )
-        db.session.add(user_message)
-        db.session.commit()
-        
-        # 获取 Flask app 用于在生成器中创建应用上下文
-        app = current_app._get_current_object()
-        
-        import sys
-        
-        def generate_stream():
-            """生成 SSE 流"""
-            full_response = []
-            
-            try:
-                # 导入 ADK 服务
-                from ..services.adk_agents import AdkAssistantService
-                
-                # 创建服务实例
-                service = AdkAssistantService(
-                    assistant_type=assistant_type
-                )
-                
-            except ImportError as import_err:
-                logger.error(f"ADK 导入失败: {import_err}")
-                if is_testing_env:
-                   import traceback
-                   traceback.print_exc()
-                # ADK失败则直接报错，不再回退到LangGraph
-                raise import_err
-            except Exception as create_err:
-                logger.error(f"ADK 服务创建失败: {create_err}")
-                if is_testing_env:
-                   import traceback
-                   traceback.print_exc()
-                # ADK失败则直接报错，不再回退到LangGraph
-                raise create_err
-                
-            try:
-                async def stream_async():
-                    await service.initialize()
-                    
-                    # 从缓存中获取激活状态
-                    is_activated = _get_session_activated(session_id)
-                    logger.info(f"会话 {session_id[:8]} 激活状态: {is_activated}")
-                    
-                    async for chunk in service.stream_message(
-                        session_id=session_id,
-                        user_message=content,
-                        project_name=project_name,
-                        is_activated=is_activated  # 传递激活状态
-                    ):
-                        yield chunk
-                
-                # 在同步环境中运行异步代码
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                
-                try:
-                    async_gen = stream_async()
-                    while True:
-                        try:
-                            chunk = loop.run_until_complete(async_gen.__anext__())
-                            full_response.append(chunk)
-                            # SSE 格式：data: <内容>\n\n
-                            yield f"data: {json.dumps({'chunk': chunk, 'type': 'content'})}\n\n"
-                        except StopAsyncIteration:
-                            break
-                finally:
-                    loop.close()
-                
-                # 流式完成后保存完整的 AI 回复
-                complete_response = "".join(full_response)
-                
-                if complete_response:
-                    # ✨ 清理 JSON 元数据
-                    # ✨ 清理 JSON 元数据
-                    # 简单的内联清理逻辑，替代之前的 extract_natural_response
-                    if isinstance(complete_response, str):
-                        # 移除可能的 markdown 代码块标记
-                        cleaned_response = complete_response.strip()
-                        if cleaned_response.startswith('```json'):
-                            cleaned_response = cleaned_response[7:]
-                        elif cleaned_response.startswith('```'):
-                            cleaned_response = cleaned_response[3:]
-                        
-                        if cleaned_response.endswith('```'):
-                            cleaned_response = cleaned_response[:-3]
-                        
-                        cleaned_response = cleaned_response.strip()
-                    else:
-                        cleaned_response = str(complete_response)
-                    
-                    # 在应用上下文中保存消息（保存清理后的内容）
-                    with app.app_context():
-                        ai_message = RequirementsMessage(
-                            session_id=session_id,
-                            message_type='ai',
-                            content=cleaned_response,  # 使用清理后的内容
-                            message_metadata=json.dumps({
-                                'stage': current_stage,
-                                'assistant_type': assistant_type,
-                                'source': 'langgraph_stream'
-                            })
-                        )
-                        db.session.add(ai_message)
-                        db.session.commit()
-                        message_id = ai_message.id
-                    
-                    # ✨ 标记会话为已激活（首次响应后）
-                    _set_session_activated(session_id, True)
-                    
-                    # 发送完成信号
-                    yield f"data: {json.dumps({'type': 'done', 'message_id': message_id})}\n\n"
-                else:
-                    yield f"data: {json.dumps({'type': 'error', 'message': '未能获取 AI 回复'})}\n\n"
-                    
-            except Exception as e:
-                logger.error(f"流式处理失败: {str(e)}")
-                import traceback
-                traceback.print_exc()
-                yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
-        
-        return Response(
-            stream_with_context(generate_stream()),
-            mimetype='text/event-stream',
-            headers={
-                'Cache-Control': 'no-cache',
-                'X-Accel-Buffering': 'no',  # 禁用 Nginx 缓冲
-                'Connection': 'keep-alive'
-            }
-        )
-        
-    except Exception as e:
-        logger.error(f"流式端点错误: {str(e)}")
-        return standard_error_response(f"发送消息失败: {str(e)}", 500)
+# Stream endpoint removed for cleanup
+
 
 
 @requirements_bp.route("/sessions/<session_id>/poll-messages", methods=["GET"])
@@ -1095,209 +891,3 @@ def refresh_message(session_id, message_id):
     except Exception as e:
         db.session.rollback()
         return standard_error_response(f"刷新消息失败: {str(e)}", 500)
-
-
-def register_requirements_socketio(socketio: SocketIO):
-    """注册需求分析相关的WebSocket事件处理器"""
-    
-    @socketio.on('join_requirements_session')
-    def on_join_session(data):
-        """用户加入需求分析会话"""
-        session_id = data.get('session_id')
-        if not session_id:
-            emit('error', {'message': '缺少session_id参数'})
-            return
-            
-        # 验证会话存在
-        session = RequirementsSession.query.get(session_id)
-        if not session:
-            emit('error', {'message': '会话不存在'})
-            return
-            
-        # 加入房间
-        join_room(f'requirements_{session_id}')
-        active_sessions[request.sid] = session_id
-        
-        emit('joined_session', {
-            'session_id': session_id,
-            'session_info': session.to_dict()
-        })
-        
-
-    
-    @socketio.on('leave_requirements_session')
-    def on_leave_session(data):
-        """用户离开需求分析会话"""
-        session_id = data.get('session_id')
-        if session_id:
-            leave_room(f'requirements_{session_id}')
-            
-        if request.sid in active_sessions:
-            del active_sessions[request.sid]
-            
-        emit('left_session', {'session_id': session_id})
-
-    
-    @socketio.on('requirements_message')
-    def on_requirements_message(data):
-        """处理需求分析消息"""
-        try:
-            session_id = data.get('session_id')
-            content = data.get('content', '').strip()
-            
-            if not session_id or not content:
-                emit('error', {'message': '缺少session_id或content参数'})
-                return
-                
-            # 检查是否是激活消息（与HTTP逻辑保持一致，仅依靠内容特征）
-            is_activation_message = (
-                # Bundle激活模式：包含明确的Bundle标识和激活指令
-                ("Bundle" in content and ("activation-instructions" in content or "persona:" in content)) or
-                # YAML配置模式：包含YAML格式的agent配置
-                ("```yaml" in content and "agent:" in content) or
-                # 操作指令模式：包含关键操作指令的组合
-                ("你的关键操作指令" in content and "请严格按照" in content and "persona执行" in content)
-            )
-            max_length = 50000 if is_activation_message else 10000
-            
-            if len(content) > max_length:
-                message = f"激活消息内容不能超过{max_length}字符" if is_activation_message else "消息内容不能超过10000字符"
-                emit('error', {'message': message})
-                return
-            
-            # 验证会话
-            session = RequirementsSession.query.get(session_id)
-            if not session or session.session_status != 'active':
-                emit('error', {'message': '会话不存在或不在活跃状态'})
-                return
-            
-            # 保存用户消息
-            user_message = RequirementsMessage(
-                session_id=session_id,
-                message_type='user',
-                content=content,
-                message_metadata=json.dumps({
-                    'stage': session.current_stage,
-                    'char_count': len(content),
-                    'source': 'websocket'
-                })
-            )
-            
-            db.session.add(user_message)
-            db.session.commit()
-            
-            # 广播用户消息到房间内所有客户端
-            socketio.emit('new_message', {
-                'message': user_message.to_dict(),
-                'session_id': session_id
-            }, room=f'requirements_{session_id}')
-            
-            # 调用AI助手服务处理用户消息
-            ai_svc = get_ai_service()
-            if ai_svc is None:
-                emit('error', {'message': 'AI服务暂不可用，请稍后重试'})
-                return
-            
-            try:
-                # 构建会话上下文
-                session_context = {
-                    'user_context': json.loads(session.user_context) if session.user_context else {},
-                    'ai_context': json.loads(session.ai_context) if session.ai_context else {},
-                    'consensus_content': json.loads(session.consensus_content) if session.consensus_content else {}
-                }
-                
-                # 调用智能助手分析服务
-
-                ai_result = ai_svc.analyze_user_requirement(
-                    user_message=content,
-                    session_context=session_context,
-                    project_name=session.project_name,
-                    current_stage=session.current_stage
-                )
-                
-                # 创建AI响应消息
-                ai_message = RequirementsMessage(
-                    session_id=session_id,
-                    message_type='ai',
-                    content=ai_result['ai_response'],
-                    message_metadata=json.dumps({
-                        'stage': ai_result.get('stage', session.current_stage),
-                        'identified_requirements': ai_result.get('identified_requirements', []),
-                        'information_gaps': ai_result.get('information_gaps', []),
-                        'clarification_questions': ai_result.get('clarification_questions', []),
-                        'analysis_summary': ai_result.get('analysis_summary', ''),
-                        'assistant_type': assistant_type
-                    })
-                )
-                
-                # 更新会话上下文和共识内容
-                session.ai_context = json.dumps(ai_result.get('ai_context', session_context['ai_context']))
-                session.consensus_content = json.dumps(ai_result.get('consensus_content', {}))
-                session.current_stage = ai_result.get('stage', session.current_stage)
-                session.updated_at = datetime.utcnow()
-                
-                db.session.add(ai_message)
-                db.session.commit()
-                
-                # 广播AI回应到房间内所有客户端
-                socketio.emit('new_message', {
-                    'message': ai_message.to_dict(),
-                    'session_id': session_id
-                }, room=f'requirements_{session_id}')
-                
-                # 发送共识内容更新
-                socketio.emit('consensus_updated', {
-                    'session_id': session_id,
-                    'consensus_content': ai_result.get('consensus_content', {}),
-                    'identified_requirements': ai_result.get('identified_requirements', []),
-                    'information_gaps': ai_result.get('information_gaps', []),
-                    'clarification_questions': ai_result.get('clarification_questions', []),
-                    'current_stage': session.current_stage
-                }, room=f'requirements_{session_id}')
-                
-
-                
-            except Exception as ai_error:
-                logger.error(f"AI服务调用失败: {str(ai_error)}")
-                # 发送AI服务错误消息
-                error_message = RequirementsMessage(
-                    session_id=session_id,
-                    message_type='system',
-                    content=f"抱歉，AI分析服务遇到了问题：{str(ai_error)}。请稍后重试，或重新描述您的需求。",
-                    message_metadata=json.dumps({
-                        'error_type': 'ai_service_error',
-                        'error_details': str(ai_error),
-                        'stage': session.current_stage
-                    })
-                )
-                
-                db.session.add(error_message)
-                db.session.commit()
-                
-                socketio.emit('new_message', {
-                    'message': error_message.to_dict(),
-                    'session_id': session_id
-                }, room=f'requirements_{session_id}')
-            
-        except Exception as e:
-            logger.error(f"处理需求分析消息时出错: {str(e)}")
-            emit('error', {'message': f'处理消息失败: {str(e)}'})
-    
-    @socketio.on('disconnect')
-    def on_disconnect():
-        """客户端断开连接时清理"""
-        if request.sid in active_sessions:
-            session_id = active_sessions[request.sid]
-            leave_room(f'requirements_{session_id}')
-            del active_sessions[request.sid]
-
-
-
-# 注意：根据BMAD架构原则，以下函数已移除
-# 所有业务逻辑决策（包括AI响应内容生成、共识提取等）都应该由AI服务处理
-# Web层只负责数据传输和存储，不做任何内容生成或业务逻辑判断
-
-# 真实实现中，应该有一个独立的AI服务端点，比如：
-# POST /ai/requirements/analyze
-# 参数：用户消息、会话上下文、当前阶段
-# 返回：AI响应内容、更新的共识、新的阶段状态

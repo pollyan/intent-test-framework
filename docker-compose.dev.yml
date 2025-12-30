@@ -50,6 +50,8 @@ services:
       - ./logs:/app/logs
       # Mount source code for simpler debugging if needed, but build is preferred
       - ./tools/intent-tester:/app/tools/intent-tester
+      - ./tools/shared:/app/tools/shared
+      - ./assistant-bundles:/app/assistant-bundles
     depends_on:
       postgres:
         condition: service_healthy
@@ -75,7 +77,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://${DB_USER:-ai4se_user}:${DB_PASSWORD:-change_me_in_production}@postgres:5432/ai4se
       - SECRET_KEY=${SECRET_KEY:-dev-secret-key-please-change}
-      - FLASK_ENV=${FLASK_ENV:-production}
+      - FLASK_ENV=development
       - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2:-false}
       - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}
       - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT:-ai-agents}
@@ -86,6 +88,10 @@ services:
       - "5002:5002"
     volumes:
       - ./logs:/app/logs
+      - ./tools/ai-agents:/app/tools/ai-agents
+      - ./tools/shared:/app/tools/shared
+      - ./tools/frontend:/app/tools/frontend
+      - ./assistant-bundles:/app/assistant-bundles
     depends_on:
       postgres:
         condition: service_healthy

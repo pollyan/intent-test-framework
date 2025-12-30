@@ -18,14 +18,14 @@ from .base import (
 
 # 导入数据模型
 try:
-    from web_gui.models import db, RequirementsAIConfig
+    from ..models import db, RequirementsAIConfig
 except ImportError:
     # 如果无法导入，延迟导入
     db = None
     RequirementsAIConfig = None
 
 # 创建蓝图
-ai_configs_bp = Blueprint("ai_configs", __name__, url_prefix="/api/ai-configs")
+ai_configs_bp = Blueprint("ai_configs", __name__, url_prefix="/ai-agents/api/ai-configs")
 
 # AI 配置常用模板（仅供参考）
 AI_CONFIG_EXAMPLES = {
@@ -56,7 +56,7 @@ def _get_model():
     """获取数据模型（延迟导入）"""
     global db, RequirementsAIConfig
     if RequirementsAIConfig is None:
-        from web_gui.models import db as _db, RequirementsAIConfig as _config
+        from ..models import db as _db, RequirementsAIConfig as _config
         db = _db
         RequirementsAIConfig = _config
     return db, RequirementsAIConfig
@@ -339,13 +339,10 @@ def test_config(config_id):
             raise NotFoundError("配置不存在")
         
         try:
-            # 优先使用本地 agents 模块
+            # 使用本地 agents 模块
             from ..agents import AdkAssistantService
         except ImportError:
-            try:
-                from web_gui.services.adk_agents import AdkAssistantService
-            except ImportError:
-                return standard_error_response("ADK library not installed", 503)
+            return standard_error_response("ADK library not installed", 503)
         
         import time
         import asyncio

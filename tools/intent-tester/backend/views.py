@@ -3,14 +3,17 @@ from flask import Blueprint, render_template, redirect
 views_bp = Blueprint('views', __name__)
 
 @views_bp.route('/')
+@views_bp.route('/intent-tester/')
 def index():
-    return redirect('testcases')
+    return redirect('/intent-tester/testcases')
 
 @views_bp.route('/testcases')
+@views_bp.route('/intent-tester/testcases')
 def testcases():
     return render_template('testcases.html')
 
 @views_bp.route('/testcases/create')
+@views_bp.route('/intent-tester/testcases/create')
 def create_testcase():
     # 创建模式：传递空的 testcase 对象
     empty_testcase = {
@@ -36,6 +39,8 @@ def create_testcase():
 
 @views_bp.route('/testcases/<int:testcase_id>')
 @views_bp.route('/testcases/<int:testcase_id>/edit')
+@views_bp.route('/intent-tester/testcases/<int:testcase_id>')
+@views_bp.route('/intent-tester/testcases/<int:testcase_id>/edit')
 def edit_testcase(testcase_id):
     from .models import TestCase, db
     import json
@@ -59,10 +64,13 @@ def edit_testcase(testcase_id):
 
 @views_bp.route('/execution')
 @views_bp.route('/executions/<int:execution_id>')
+@views_bp.route('/intent-tester/execution')
+@views_bp.route('/intent-tester/executions/<int:execution_id>')
 def view_execution(execution_id=None):
     return render_template('execution.html', execution_id=execution_id)
 
 @views_bp.route('/local-proxy')
+@views_bp.route('/intent-tester/local-proxy')
 def local_proxy():
     from datetime import datetime
     return render_template(

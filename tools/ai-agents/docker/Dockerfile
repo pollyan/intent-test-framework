@@ -15,19 +15,21 @@ COPY tools/ai-agents/requirements.txt .
 RUN pip install --no-cache-dir -i https://mirrors.aliyun.com/pypi/simple/ -r requirements.txt
 
 # 复制共享模块
+# 复制共享模块
 COPY tools/shared ./tools/shared
 
 # 复制应用代码
 COPY tools/ai-agents ./tools/ai-agents
-
-# 复制旧代码（临时，直到完全拆分）
-COPY web_gui ./web_gui
+COPY tools/frontend ./tools/frontend
 
 COPY assistant-bundles ./assistant-bundles
 
 # 设置环境变量
-ENV PYTHONPATH=/app:${PYTHONPATH}
-ENV FLASK_APP=tools/ai-agents/backend/app.py
+ENV PYTHONPATH=/app/tools/ai-agents:/app:${PYTHONPATH}
+ENV FLASK_APP=backend/app.py
+
+# 设置工作目录
+WORKDIR /app/tools/ai-agents
 
 # 暴露端口
 EXPOSE 5002
@@ -37,4 +39,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:5002/health')"
 
 # 启动应用
-CMD ["python", "tools/ai-agents/backend/app.py"]
+CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=5002"]

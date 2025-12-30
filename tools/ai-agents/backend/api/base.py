@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 # 导入统一错误处理工具
 try:
-    from web_gui.utils.error_handler import (
+    from ..utils.error_handler import (
         ValidationError,
         NotFoundError,
         DatabaseError,

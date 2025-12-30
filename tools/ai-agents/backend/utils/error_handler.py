@@ -76,7 +76,7 @@ def api_error_handler(f):
 
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        error_logger = logging.getLogger("web_gui.api.error")
+        error_logger = logging.getLogger("backend.api.error")
         start_time = time.time()
 
         # 生成请求ID用于追踪
@@ -276,7 +276,3 @@ def log_api_call(f):
             raise
 
     return decorated_function
-
-
-# 导入time模块用于日志装饰器
-import time

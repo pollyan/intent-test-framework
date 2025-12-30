@@ -66,11 +66,13 @@ def create_app():
     # 根路径重定向到标准路径
     from flask import redirect
     @app.route('/redirect-to-testcases')
+    @app.route('/intent-tester/redirect-to-testcases')
     def root_redirect():
-        return redirect('/testcases')
+        return redirect('/intent-tester/testcases')
 
     # 健康检查
     @app.route('/health')
+    @app.route('/intent-tester/health')
     def health_check():
         return {"status": "ok", "message": "Service is running"}
     

@@ -389,10 +389,10 @@ class MidSceneAI:
         """
         # 确保截图保存到正确的静态文件目录
         screenshot_filename = f"{title}.png"
-        screenshot_path = f"web_gui/static/screenshots/{screenshot_filename}"
+        screenshot_path = f"frontend/static/screenshots/{screenshot_filename}"
 
         # 确保目录存在
-        os.makedirs("web_gui/static/screenshots", exist_ok=True)
+        os.makedirs("frontend/static/screenshots", exist_ok=True)
 
         print(f"📸 截图: {screenshot_path}")
         result = self._make_request("/screenshot", data={"path": screenshot_path})

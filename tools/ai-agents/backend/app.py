@@ -15,7 +15,7 @@ def create_app():
     app = Flask(
         __name__,
         template_folder='../frontend/templates',
-        static_folder='../frontend/static',
+        static_folder='../../frontend/public/static',
         static_url_path='/static'
     )
     
@@ -27,8 +27,16 @@ def create_app():
     app.config.update(get_database_config())
     
     # 初始化数据库
-    from web_gui.models import db
+    from backend.models import db
     db.init_app(app)
+    
+    with app.app_context():
+        # 确保数据库表存在
+        try:
+            db.create_all()
+            print("✅ 数据库表验证完成")
+        except Exception as e:
+            print(f"⚠️ 数据库表创建失败: {e}")
     
     # 添加时区格式化过滤器
     @app.template_filter('utc_to_local')
@@ -42,10 +50,8 @@ def create_app():
             return ""
     
     # 注册 AI 智能体相关的蓝图
-    # 目前仍使用 web_gui.api 模块，后续将逐步迁移到本地 api 模块
     try:
-        from web_gui.api.requirements import requirements_bp
-        from web_gui.api.ai_configs import ai_configs_bp
+        from backend.api import requirements_bp, ai_configs_bp
         app.register_blueprint(requirements_bp)
         app.register_blueprint(ai_configs_bp)
         print("✅ API 蓝图注册成功")
@@ -58,15 +64,19 @@ def create_app():
     from flask import render_template
     
     @app.route('/')
+    @app.route('/ai-agents/')
     def index():
         return render_template('requirements_analyzer.html')
     
     @app.route('/config')
     @app.route('/config-management')
+    @app.route('/ai-agents/config')
+    @app.route('/ai-agents/config-management')
     def config():
         return render_template('config_management.html')
     
     @app.route('/health')
+    @app.route('/ai-agents/health')
     def health():
         return {"status": "ok", "service": "ai-agents"}
     
