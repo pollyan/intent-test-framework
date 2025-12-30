@@ -710,3 +710,120 @@ class TestReorderStepsAPI:
         )
 
         assert_api_response(response, 404)
+
+
+class TestDuplicateStepAPI:
+    """复制步骤API测试 (POST /api/testcases/<testcase_id>/steps/<step_index>/duplicate)"""
+
+    def test_should_duplicate_step_successfully(
+        self, api_client, create_testcase_with_steps, assert_api_response
+    ):
+        """测试成功复制步骤"""
+        testcase = create_testcase_with_steps(step_count=2)
+
+        response = api_client.post(
+            f"/api/testcases/{testcase.id}/steps/0/duplicate",
+            json={},
+        )
+
+        data = assert_api_response(response, 200)
+
+        assert data["original_index"] == 0
+        assert data["duplicate_index"] == 1
+        assert data["total_steps"] == 3  # 2 + 1 = 3
+
+    def test_should_insert_duplicate_after_original(
+        self, api_client, create_testcase_with_steps, assert_api_response
+    ):
+        """测试复制的步骤插入到原步骤后面"""
+        testcase = create_testcase_with_steps(step_count=3)
+
+        # 复制第一个步骤
+        response = api_client.post(
+            f"/api/testcases/{testcase.id}/steps/0/duplicate",
+            json={},
+        )
+
+        data = assert_api_response(response, 200)
+
+        # 验证复制的步骤位置正确
+        assert data["duplicate_index"] == 1
+
+        # 获取所有步骤验证顺序
+        get_response = api_client.get(f"/api/testcases/{testcase.id}/steps")
+        steps_data = assert_api_response(get_response, 200)
+
+        assert steps_data["total"] == 4  # 3 + 1 = 4
+
+    def test_should_append_copy_suffix_to_description(
+        self, api_client, create_testcase_with_steps, assert_api_response
+    ):
+        """测试复制的步骤描述添加'(副本)'后缀"""
+        testcase = create_testcase_with_steps(step_count=1)
+
+        response = api_client.post(
+            f"/api/testcases/{testcase.id}/steps/0/duplicate",
+            json={},
+        )
+
+        data = assert_api_response(response, 200)
+
+        # 验证复制的步骤描述包含"副本"或"复制"
+        duplicate_step = data["duplicate_step"]
+        assert "(副本)" in duplicate_step["description"] or "复制" in duplicate_step["description"]
+
+    def test_should_duplicate_last_step(
+        self, api_client, create_testcase_with_steps, assert_api_response
+    ):
+        """测试复制最后一个步骤"""
+        testcase = create_testcase_with_steps(step_count=3)
+
+        response = api_client.post(
+            f"/api/testcases/{testcase.id}/steps/2/duplicate",
+            json={},
+        )
+
+        data = assert_api_response(response, 200)
+
+        assert data["original_index"] == 2
+        assert data["duplicate_index"] == 3
+        assert data["total_steps"] == 4
+
+    def test_should_return_400_for_invalid_step_index(
+        self, api_client, create_testcase_with_steps, assert_api_response
+    ):
+        """测试无效步骤索引返回400"""
+        testcase = create_testcase_with_steps(step_count=2)
+
+        # 尝试复制不存在的步骤索引
+        response = api_client.post(
+            f"/api/testcases/{testcase.id}/steps/10/duplicate",
+            json={},
+        )
+
+        assert_api_response(response, 400)
+
+    def test_should_return_404_for_nonexistent_testcase(
+        self, api_client, assert_api_response
+    ):
+        """测试不存在的测试用例返回404"""
+        response = api_client.post(
+            "/api/testcases/99999/steps/0/duplicate",
+            json={},
+        )
+
+        assert_api_response(response, 404)
+
+    def test_should_return_404_for_inactive_testcase(
+        self, api_client, create_test_testcase, assert_api_response
+    ):
+        """测试已删除的测试用例返回404"""
+        testcase = create_test_testcase(name="已删除测试用例", is_active=False)
+
+        response = api_client.post(
+            f"/api/testcases/{testcase.id}/steps/0/duplicate",
+            json={},
+        )
+
+        assert_api_response(response, 404)
+

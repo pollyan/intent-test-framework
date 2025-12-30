@@ -143,16 +143,6 @@ def get_executions():
         if testcase_id:
             query = query.filter(ExecutionHistory.test_case_id == testcase_id)
 
-        # 按状态过滤
-        status = request.args.get("status")
-        if status:
-            query = query.filter(ExecutionHistory.status == status)
-
-        # 按执行者过滤
-        executed_by = request.args.get("executed_by")
-        if executed_by:
-            query = query.filter(ExecutionHistory.executed_by == executed_by)
-
         # 排序
         query = query.order_by(ExecutionHistory.start_time.desc())
 

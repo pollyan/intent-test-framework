@@ -612,3 +612,119 @@ class TestMidSceneIntegrationAPI:
         )
 
         assert_api_response(response, 400)
+
+
+class TestStopExecutionAPI:
+    """停止执行API测试 (POST /api/executions/<execution_id>/stop)"""
+
+    def test_should_stop_pending_execution(
+        self, api_client, create_execution_history, assert_api_response
+    ):
+        """测试停止pending状态的执行"""
+        execution = create_execution_history(
+            status="pending", end_time=None, duration=None
+        )
+
+        response = api_client.post(
+            f"/api/executions/{execution.execution_id}/stop",
+            json={},
+        )
+
+        data = assert_api_response(response, 200)
+
+        assert data["status"] == "stopped"
+        assert data["error_message"] == "用户手动停止执行"
+
+    def test_should_stop_running_execution(
+        self, api_client, create_execution_history, assert_api_response
+    ):
+        """测试停止running状态的执行"""
+        execution = create_execution_history(
+            status="running", end_time=None, duration=None
+        )
+
+        response = api_client.post(
+            f"/api/executions/{execution.execution_id}/stop",
+            json={},
+        )
+
+        data = assert_api_response(response, 200)
+
+        assert data["status"] == "stopped"
+        assert data["end_time"] is not None
+
+    def test_should_return_400_for_completed_execution(
+        self, api_client, create_execution_history, assert_api_response
+    ):
+        """测试停止已完成的执行返回400"""
+        execution = create_execution_history(status="success")
+
+        response = api_client.post(
+            f"/api/executions/{execution.execution_id}/stop",
+            json={},
+        )
+
+        assert_api_response(response, 400)
+
+    def test_should_return_400_for_failed_execution(
+        self, api_client, create_execution_history, assert_api_response
+    ):
+        """测试停止已失败的执行返回400"""
+        execution = create_execution_history(status="failed")
+
+        response = api_client.post(
+            f"/api/executions/{execution.execution_id}/stop",
+            json={},
+        )
+
+        assert_api_response(response, 400)
+
+    def test_should_return_400_for_already_stopped_execution(
+        self, api_client, create_execution_history, assert_api_response
+    ):
+        """测试停止已停止的执行返回400"""
+        execution = create_execution_history(status="stopped")
+
+        response = api_client.post(
+            f"/api/executions/{execution.execution_id}/stop",
+            json={},
+        )
+
+        assert_api_response(response, 400)
+
+    def test_should_return_404_for_nonexistent_execution(
+        self, api_client, assert_api_response
+    ):
+        """测试停止不存在的执行返回404"""
+        response = api_client.post(
+            "/api/executions/nonexistent-execution-id/stop",
+            json={},
+        )
+
+        assert_api_response(response, 404)
+
+    def test_should_update_execution_end_time(
+        self, api_client, create_execution_history, db_session, assert_api_response
+    ):
+        """测试停止执行后end_time被正确设置"""
+        from backend.models import ExecutionHistory
+
+        execution = create_execution_history(
+            status="running", end_time=None, duration=None
+        )
+
+        response = api_client.post(
+            f"/api/executions/{execution.execution_id}/stop",
+            json={},
+        )
+
+        assert_api_response(response, 200)
+
+        # 验证数据库中的end_time已更新
+        updated_execution = ExecutionHistory.query.filter_by(
+            execution_id=execution.execution_id
+        ).first()
+
+        assert updated_execution.end_time is not None
+        assert updated_execution.status == "stopped"
+
