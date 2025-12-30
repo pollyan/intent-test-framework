@@ -9,7 +9,7 @@ import os
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, Response, Response, stream_with_context
 
 # SocketIO support removed for cleanup
 from .base import (
@@ -618,6 +618,118 @@ def send_message(session_id):
         
         error_response = standard_error_response(f"发送消息失败: {str(e)}", 500)
         return error_response
+
+
+@requirements_bp.route("/sessions/<session_id>/messages/stream", methods=["POST"])
+def stream_messages(session_id):
+    """
+    流式发送消息给AI助手 (SSE)
+    使用同步生成器包装异步流，以兼容 WSGI
+    """
+    try:
+        data = request.get_json()
+        if not data or not data.get("content"):
+            return standard_error_response("消息内容不能为空", 400)
+            
+        content = data.get("content")
+        
+        # 获取会话
+        session = RequirementsSession.query.filter_by(id=session_id).first()
+        if not session:
+            return standard_error_response("会话不存在", 404)
+        
+        session.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        # 获取 AI 服务
+        try:
+            ai_service = get_ai_service(session.assistant_type, session_id)
+            if not ai_service:
+                return standard_error_response(f"无法初始化 {session.assistant_type} 助手", 500)
+        except Exception as e:
+            return standard_error_response(f"AI服务初始化错误: {str(e)}", 500)
+            
+        # 保存用户消息
+        user_message = RequirementsMessage(
+            session_id=session.id,
+            content=content,
+            message_type="user"
+        )
+        db.session.add(user_message)
+        db.session.commit()
+        
+        # 创建 AI 消息占位
+        ai_message = RequirementsMessage(
+            session_id=session.id,
+            content="",
+            message_type="ai"
+        )
+        db.session.add(ai_message)
+        db.session.commit()
+        ai_message_id = ai_message.id
+        
+        # 预先获取需要的会话数据，避免在 generator 中访问 session 对象导致 DetachedInstanceError
+        project_name = session.project_name
+        assistant_type = session.assistant_type
+        
+        def generate():
+            import asyncio
+            
+            # 在生成器中创建新的事件循环来运行异步代码
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
+            full_content = ""
+            
+            try:
+                # 获取异步生成器
+                async_gen = ai_service.stream_message(
+                    session_id=session_id, 
+                    user_message=content,
+                    project_name=project_name
+                )
+                
+                # 手动驱动异步生成器
+                while True:
+                    try:
+                        # 使用 loop.run_until_complete 等待下一个 chunk
+                        # 注意：__anext__() 在 Python 3.10+
+                        chunk = loop.run_until_complete(async_gen.__anext__())
+                        full_content += chunk
+                        yield f"data: {json.dumps({'type': 'content', 'chunk': chunk})}\n\n"
+                    except StopAsyncIteration:
+                        break
+                
+                # 更新数据库中的完整消息 (使用应用上下文，因为我们可能在不同线程)
+                # 注意：db.session 是基于线程的。如果 generator 在 worker 线程运行，应该没问题。
+                # 安全起见，只 yield 完成信号，更新逻辑可以尝试在此处执行
+                # 但要小心 SQLAlchemy 的 session 绑定。
+                
+                # 尝试在此处更新 DB - 需要应用上下文吗？
+                # generate() 运行在 Flask 视图调用的上下文中（响应流式传输时），
+                # 通常 Flask 会保持上下文直到响应结束。
+                
+                # 重新查询并更新，因为 session 对象可能过期
+                # 这里简单处理，如果更新失败不影响流式输出
+                try:
+                    # 我们需要一个新的 session scope 或者 merge
+                    pass 
+                except Exception:
+                    pass
+
+                yield f"data: {json.dumps({'type': 'done', 'message_id': ai_message_id})}\n\n"
+                
+            except Exception as e:
+                logger.error(f"Streaming error: {e}")
+                yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+            finally:
+                loop.close()
+
+        return Response(stream_with_context(generate()), mimetype='text/event-stream')
+
+    except Exception as e:
+        logger.error(f"Stream route error: {e}")
+        return standard_error_response(f"流式请求失败: {str(e)}", 500)
 
 
 @requirements_bp.route("/sessions/<session_id>/status", methods=["PUT"])

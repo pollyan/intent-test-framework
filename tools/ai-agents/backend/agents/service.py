@@ -19,7 +19,6 @@ class AdkAssistantService:
     """
     Google ADK 智能体服务
     
-    替代 LangGraphAssistantService，提供相同的接口。
     """
     
     SUPPORTED_ASSISTANTS = {

@@ -64,6 +64,17 @@ class RequirementsSession(db.Model):
             ),
         }
 
+    @property
+    def assistant_type(self):
+        """获取助手类型"""
+        try:
+            if not self.user_context:
+                return "alex"
+            ctx = json.loads(self.user_context)
+            return ctx.get("assistant_type", "alex")
+        except:
+            return "alex"
+
     @classmethod
     def from_dict(cls, data):
         """从字典创建实例"""
