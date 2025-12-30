@@ -25,7 +25,7 @@ class AdkAssistantService:
         "alex": {
             "name": "Alex",
             "title": "需求分析专家",
-            "bundle_file": "intelligent-requirements-analyst-bundle.txt",
+            "bundle_file": "alex_v1_bundle.txt",
             "description": "专业的软件需求分析师，擅长澄清需求、识别模糊点并生成详细的需求文档。"
         },
         "lisa": {

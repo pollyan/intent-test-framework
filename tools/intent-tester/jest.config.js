@@ -8,8 +8,8 @@ module.exports = {
 
   // 测试文件匹配模式
   testMatch: [
-    '**/tools/intent-tester/tests/proxy/**/*.test.js',
-    '**/tools/intent-tester/tests/proxy/**/*.spec.js'
+    '**/tests/proxy/**/*.test.js',
+    '**/tests/proxy/**/*.spec.js'
   ],
 
   // 忽略的文件和目录
@@ -22,7 +22,7 @@ module.exports = {
   // 覆盖率配置
   collectCoverage: false, // 默认关闭，通过命令行参数控制
   collectCoverageFrom: [
-    'tools/intent-tester/browser-automation/midscene_server.js',
+    'browser-automation/midscene_server.js',
     '!**/node_modules/**',
     '!**/dist/**',
     '!**/build/**',
@@ -52,7 +52,7 @@ module.exports = {
   // },
 
   setupFilesAfterEnv: [
-    '<rootDir>/tools/intent-tester/tests/proxy/setup.js'
+    './tests/proxy/setup.js'
   ],
 
   // 测试超时时间 (30秒)

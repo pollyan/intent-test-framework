@@ -827,7 +827,16 @@ def get_assistant_bundle(assistant_type):
                  return standard_error_response(f"不支持的助手类型: {assistant_type} (ADK不可用)", 400)
 
         bundle_file = assistant_info["bundle_file"]
-        bundle_path = Path(__file__).resolve().parents[4] / "assistant-bundles" / bundle_file
+        # 动态解析 bundle 路径 (相对于 backend/agents/...)
+        base_agents_path = Path(__file__).resolve().parents[1] / "agents"
+        
+        if assistant_type == "alex":
+            bundle_path = base_agents_path / "alex" / "alex_v1_bundle.txt"
+        elif assistant_type == "lisa":
+             bundle_path = base_agents_path / "lisa" / "lisa_v5_bundle.txt"
+        else:
+             # Fallback to old behavior if needed or error
+             bundle_path = Path(__file__).resolve().parents[4] / "assistant-bundles" / bundle_file
         
         if bundle_path.exists():
             with open(bundle_path, 'r', encoding='utf-8') as f:

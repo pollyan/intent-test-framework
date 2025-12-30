@@ -22,8 +22,6 @@ COPY tools/shared ./tools/shared
 COPY tools/ai-agents ./tools/ai-agents
 COPY tools/frontend ./tools/frontend
 
-COPY assistant-bundles ./assistant-bundles
-
 # 设置环境变量
 ENV PYTHONPATH=/app/tools/ai-agents:/app:${PYTHONPATH}
 ENV FLASK_APP=backend/app.py

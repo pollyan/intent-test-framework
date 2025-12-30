@@ -20,11 +20,6 @@ COPY tools/shared ./tools/shared
 # 复制应用代码
 COPY tools/intent-tester ./tools/intent-tester
 
-# 复制旧代码（临时，直到完全拆分）
-
-
-COPY assistant-bundles ./assistant-bundles
-
 # 设置环境变量
 # 设置环境变量
 ENV PYTHONPATH=/app/tools/intent-tester:${PYTHONPATH}

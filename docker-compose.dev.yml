@@ -91,7 +91,6 @@ services:
       - ./tools/ai-agents:/app/tools/ai-agents
       - ./tools/shared:/app/tools/shared
       - ./tools/frontend:/app/tools/frontend
-      - ./assistant-bundles:/app/assistant-bundles
     depends_on:
       postgres:
         condition: service_healthy
