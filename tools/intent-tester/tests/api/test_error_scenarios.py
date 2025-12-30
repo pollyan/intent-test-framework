@@ -399,7 +399,7 @@ class TestRecoveryScenarios:
         )
 
         # 模拟系统负载高的情况
-        with patch("web_gui.models.db.session.commit") as mock_commit:
+        with patch("backend.models.db.session.commit") as mock_commit:
             # 前几次提交失败
             mock_commit.side_effect = [
                 Exception("Temporary failure"),
@@ -431,7 +431,7 @@ class TestRecoveryScenarios:
         )
 
         # 模拟在执行过程中系统崩溃恢复
-        with patch("web_gui.models.ExecutionHistory.query.filter_by") as mock_filter:
+        with patch("backend.models.ExecutionHistory.query.filter_by") as mock_filter:
             mock_filter.return_value.first.return_value = None  # 模拟找不到执行记录
 
             response = api_client.get(f'/api/executions/{execution["execution_id"]}')

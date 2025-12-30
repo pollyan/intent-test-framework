@@ -86,7 +86,6 @@ _ai_service_cache = {}  # {session_id: {'service': instance, 'last_access': date
 
 def get_ai_service(assistant_type='alex', session_id=None):
     """获取AI服务实例，支持会话级缓存"""
-    global _ai_service_cache
     
     # 清理过期缓存
     now = datetime.now()

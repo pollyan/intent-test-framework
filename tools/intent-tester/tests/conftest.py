@@ -50,22 +50,29 @@ def api_client(client):
     class APIClient:
         def __init__(self, client):
             self.client = client
+            self.prefix = '/intent-tester'
             
-        def get(self, *args, **kwargs):
-            return self.client.get(*args, **kwargs)
+        def _get_path(self, path):
+            # Prepend prefix if not present and matches API or health routes
+            if path.startswith('/api') or path.startswith('/health'):
+                return f"{self.prefix}{path}"
+            return path
+
+        def get(self, path, *args, **kwargs):
+            return self.client.get(self._get_path(path), *args, **kwargs)
             
-        def post(self, *args, **kwargs):
+        def post(self, path, *args, **kwargs):
             if 'json' in kwargs:
                 kwargs['content_type'] = 'application/json'
-            return self.client.post(*args, **kwargs)
+            return self.client.post(self._get_path(path), *args, **kwargs)
             
-        def put(self, *args, **kwargs):
+        def put(self, path, *args, **kwargs):
             if 'json' in kwargs:
                 kwargs['content_type'] = 'application/json'
-            return self.client.put(*args, **kwargs)
+            return self.client.put(self._get_path(path), *args, **kwargs)
             
-        def delete(self, *args, **kwargs):
-            return self.client.delete(*args, **kwargs)
+        def delete(self, path, *args, **kwargs):
+            return self.client.delete(self._get_path(path), *args, **kwargs)
             
     return APIClient(client)
 
