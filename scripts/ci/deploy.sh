@@ -67,9 +67,9 @@ if [ "$ENVIRONMENT" = "production" ] || [ "$ENVIRONMENT" = "prod" ] || [ "$ENVIR
         log_info "✅ 检测到现有的代理包 artifact，跳过重新构建"
     else
         # 只有在缺失时才构建
-        if [ -f "scripts/deployment/build-proxy-package.js" ]; then
+        if [ -f "scripts/ci/build-proxy-package.js" ]; then
             if command -v node &> /dev/null; then
-                node scripts/deployment/build-proxy-package.js
+                node scripts/ci/build-proxy-package.js
                 log_info "✅ 本地代理包构建完成"
             else
                 log_warn "⚠️ Node.js未安装，跳过代理包构建"
@@ -78,9 +78,9 @@ if [ "$ENVIRONMENT" = "production" ] || [ "$ENVIRONMENT" = "prod" ] || [ "$ENVIR
     fi
 else
     # 本地环境始终尝试构建
-    if [ -f "scripts/deployment/build-proxy-package.js" ]; then
+    if [ -f "scripts/ci/build-proxy-package.js" ]; then
         if command -v node &> /dev/null; then
-            node scripts/deployment/build-proxy-package.js
+            node scripts/ci/build-proxy-package.js
             log_info "✅ 本地代理包构建完成"
         fi
     elif [ -f "scripts/build-proxy-package.js" ]; then
@@ -127,11 +127,11 @@ sleep 3
 # 强制清理残留容器和网络（本地和生产环境都需要）
 log_info "清理残留资源..."
 if [ "$BACKUP_ENABLED" = true ]; then
-    sudo docker ps -a | grep intent-test | awk '{print $1}' | xargs sudo docker rm -f 2>/dev/null || true
-    sudo docker network ls | grep intent-test | awk '{print $1}' | xargs sudo docker network rm 2>/dev/null || true
+    sudo docker ps -a | grep -E "(intent-test|ai4se)" | awk '{print $1}' | xargs sudo docker rm -f 2>/dev/null || true
+    sudo docker network ls | grep -E "(intent-test|ai4se)" | awk '{print $1}' | xargs sudo docker network rm 2>/dev/null || true
 else
-    docker ps -a | grep intent-test | awk '{print $1}' | xargs docker rm -f 2>/dev/null || true
-    docker network ls | grep intent-test | awk '{print $1}' | xargs docker network rm 2>/dev/null || true
+    docker ps -a | grep -E "(intent-test|ai4se)" | awk '{print $1}' | xargs docker rm -f 2>/dev/null || true
+    docker network ls | grep -E "(intent-test|ai4se)" | awk '{print $1}' | xargs docker network rm 2>/dev/null || true
 fi
 
 log_info "✅ 服务已停止"

@@ -61,6 +61,10 @@ else
     docker-compose -f docker-compose.dev.yml up -d --build
 fi
 
+# 4. 重启 Nginx (确保获取最新的 Upstream IP)
+echo "🔄 重启 Nginx 以刷新 DNS 解析..."
+docker-compose -f docker-compose.dev.yml restart nginx
+
 # ========================================
 # 3. 状态检查
 # ========================================

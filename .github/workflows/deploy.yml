@@ -36,14 +36,14 @@ jobs:
         # 使用内存数据库运行新版 intent-tester 测试
         export PYTHONPATH=$PYTHONPATH:.
         # 排除需要AI配置的测试（如果环境变量未设置）或运行所有测试但允许skip
-        pytest tools/intent-tester/tests/api/ -v --cov=web_gui --cov-report=term
+        pytest tools/intent-tester/tests/api/ -v --cov=tools/intent-tester/backend --cov-report=term
         echo "::endgroup::"
     
     - name: 📊 Code quality check
       run: |
         echo "::group::Code Quality Analysis"
         pip install flake8
-        flake8 web_gui --count --select=E9,F63,F7,F82 --show-source --statistics || true
+        flake8 tools/intent-tester/backend tools/ai-agents/backend --count --select=E9,F63,F7,F82 --show-source --statistics || true
         echo "::endgroup::"
 
   # ====================================
@@ -64,7 +64,7 @@ jobs:
     
     - name: 📦 Install dependencies
       run: |
-        npm ci
+        cd tools/intent-tester && npm ci
     
     - name: 🧪 Run proxy tests
       run: |
@@ -301,7 +301,7 @@ jobs:
         echo "✅ API 测试已通过"
         echo "✅ 代码已通过 SCP 推送到腾讯云服务器"
         echo "✅ 服务已重启并通过健康检查"
-        echo "🌐 访问地址: http://${{ secrets.SERVER_HOST }}:5001"
+        echo "🌐 访问地址: http://${{ secrets.SERVER_HOST }} (通过 Nginx 80 端口)"
         echo "=========================================="
     
     - name: 📊 Deployment Failed
