@@ -169,6 +169,15 @@ jobs:
         echo "✅ 代理包构建完成"
         ls -lh dist/intent-test-proxy.zip
     
+    - name: ⚛️ Build React frontend (AI Agents)
+      run: |
+        echo "构建 React 前端..."
+        cd tools/ai-agents/frontend
+        npm ci
+        npm run build
+        echo "✅ React 前端构建完成"
+        ls -lh dist/
+    
     - name: 📦 Prepare deployment package
       run: |
         echo "准备部署包..."
