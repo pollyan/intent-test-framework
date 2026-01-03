@@ -46,9 +46,17 @@ class OpenAICompatibleLlm(BaseLlm):
         # 转换 ADK 请求到 OpenAI 格式
         messages = []
         
-        # 处理 System Instruction (如果 wrapper 传递了)
-        # 注意: BaseLlm 没有标准字段存储 system instruction，通常由 Agent 负责。
-        # 这里只处理 LlmRequest 中的内容。
+        # [Critical Fix] 处理 System Instruction - 从 llm_request.config 提取
+        # ADK 的 LlmAgent 会将 instruction 放入 config.system_instruction
+        if llm_request.config and llm_request.config.system_instruction:
+            system_text = llm_request.config.system_instruction
+            # 如果是 Content 对象，提取文本
+            if hasattr(system_text, 'parts'):
+                system_text = "".join(p.text for p in system_text.parts if p.text)
+            messages.append({
+                "role": "system",
+                "content": system_text
+            })
         
         for content in llm_request.contents:
             role = "user" if content.role == "user" else "assistant"
