@@ -10,7 +10,7 @@ interface AnalysisResultPanelProps {
 
 const AnalysisResultPanel: React.FC<AnalysisResultPanelProps> = ({ result, isProcessing, hasStarted }) => {
   return (
-    <div className="lg:w-1/2 bg-surface-light dark:bg-surface-dark rounded-xl shadow-lg border border-border-light dark:border-border-dark flex flex-col h-full overflow-hidden">
+    <div className="w-full bg-surface-light dark:bg-surface-dark rounded-xl shadow-lg border border-border-light dark:border-border-dark flex flex-col h-full overflow-hidden">
       <div className="px-6 py-4 border-b border-border-light dark:border-border-dark bg-gray-50 dark:bg-gray-800/50">
         <h2 className="font-semibold text-lg text-gray-800 dark:text-white flex items-center gap-2">
           <BarChart2 className="text-secondary" size={24} />
@@ -20,7 +20,7 @@ const AnalysisResultPanel: React.FC<AnalysisResultPanelProps> = ({ result, isPro
 
       <div className="flex-grow flex flex-col p-6 overflow-y-auto bg-gray-50/50 dark:bg-gray-900/20">
         {!hasStarted && (
-           <div className="flex flex-col items-center justify-center h-full text-center">
+          <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-6">
               <Search className="text-gray-300 dark:text-gray-500" size={48} />
             </div>
@@ -31,21 +31,21 @@ const AnalysisResultPanel: React.FC<AnalysisResultPanelProps> = ({ result, isPro
         )}
 
         {hasStarted && (
-           <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none">
-             {result ? (
-               <ReactMarkdown>{result}</ReactMarkdown>
-             ) : (
-               isProcessing && <div className="animate-pulse flex space-x-4">
-                 <div className="flex-1 space-y-4 py-1">
-                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                   <div className="space-y-2">
-                     <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                     <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
-                   </div>
-                 </div>
-               </div>
-             )}
-           </div>
+          <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none">
+            {result ? (
+              <ReactMarkdown>{result}</ReactMarkdown>
+            ) : (
+              isProcessing && <div className="animate-pulse flex space-x-4">
+                <div className="flex-1 space-y-4 py-1">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>

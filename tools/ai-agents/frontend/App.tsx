@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Layout from './components/Layout';
 import AssistantPanel from './components/AssistantPanel';
 import AnalysisResultPanel from './components/AnalysisResultPanel';
@@ -139,27 +139,102 @@ const App: React.FC = () => {
     }
   }, []);
 
+  const [leftWidth, setLeftWidth] = useState<number>(50); // percentage
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [isDesktop, setIsDesktop] = useState<boolean>(typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging || !containerRef.current) return;
+
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const newLeftWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+
+    // Limit width between 20% and 80%
+    if (newLeftWidth >= 20 && newLeftWidth <= 80) {
+      setLeftWidth(newLeftWidth);
+    }
+  }, [isDragging]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none'; // Disable text selection while dragging
+    } else {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'default';
+      document.body.style.userSelect = 'auto';
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'default';
+      document.body.style.userSelect = 'auto';
+    };
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
   return (
     <Layout>
       <h1 className="text-3xl font-light text-gray-800 dark:text-gray-100 mb-8 border-l-4 border-primary pl-4 hidden md:block">
         智能助手
       </h1>
 
-      <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-140px)] md:h-[calc(100vh-220px)] min-h-[600px]">
-        <AssistantPanel
-          assistants={ASSISTANTS}
-          selectedAssistantId={selectedAssistantId}
-          onSelectAssistant={handleSelectAssistant}
-          messages={messages}
-          onSubmit={handleSubmit}
-          isProcessing={isProcessing}
-        />
+      <div
+        ref={containerRef}
+        className="flex flex-col lg:flex-row h-[calc(100vh-140px)] md:h-[calc(100vh-220px)] min-h-[600px] overflow-hidden"
+      >
+        <div
+          className="h-full flex-shrink-0 transition-[width] duration-0 ease-linear"
+          style={{ width: isDesktop ? `${leftWidth}%` : '100%' }}
+        >
+          <AssistantPanel
+            assistants={ASSISTANTS}
+            selectedAssistantId={selectedAssistantId}
+            onSelectAssistant={handleSelectAssistant}
+            messages={messages}
+            onSubmit={handleSubmit}
+            isProcessing={isProcessing}
+          />
+        </div>
 
-        <AnalysisResultPanel
-          result={analysisResult}
-          isProcessing={isProcessing}
-          hasStarted={!!analysisResult}
-        />
+        {/* Divider - only visible on desktop */}
+        <div
+          className="hidden lg:flex w-4 cursor-col-resize items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0 z-10 -ml-2 -mr-2 relative"
+          onMouseDown={handleMouseDown}
+        >
+          <div className="w-1 h-12 bg-gray-300 dark:bg-gray-600 rounded-full" />
+        </div>
+
+        <div
+          className="h-full flex-shrink-0 transition-[width] duration-0 ease-linear"
+          style={{ width: isDesktop ? `${100 - leftWidth}%` : '100%' }}
+        >
+          <AnalysisResultPanel
+            result={analysisResult}
+            isProcessing={isProcessing}
+            hasStarted={!!analysisResult}
+          />
+        </div>
       </div>
     </Layout>
   );

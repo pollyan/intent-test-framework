@@ -62,7 +62,7 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({
   // If no assistant selected, show selection screen
   if (!selectedAssistantId) {
     return (
-      <div className="lg:w-1/2 flex flex-col bg-surface-light dark:bg-surface-dark rounded-xl shadow-lg border border-border-light dark:border-border-dark overflow-hidden h-full">
+      <div className="w-full flex flex-col bg-surface-light dark:bg-surface-dark rounded-xl shadow-lg border border-border-light dark:border-border-dark overflow-hidden h-full">
         <div className="px-6 py-4 border-b border-border-light dark:border-border-dark bg-gray-50 dark:bg-gray-800/50">
           <h2 className="font-semibold text-lg text-gray-800 dark:text-white flex items-center gap-2">
             <Bot className="text-primary" size={24} />
@@ -90,7 +90,7 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({
   }
 
   return (
-    <div className="lg:w-1/2 flex flex-col bg-surface-light dark:bg-surface-dark rounded-xl shadow-lg border border-border-light dark:border-border-dark overflow-hidden h-full">
+    <div className="w-full flex flex-col bg-surface-light dark:bg-surface-dark rounded-xl shadow-lg border border-border-light dark:border-border-dark overflow-hidden h-full">
       {/* Header */}
       <div className="px-6 py-4 border-b border-border-light dark:border-border-dark flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 shrink-0">
         <div className="flex items-center gap-3">
