@@ -8,27 +8,17 @@ AI 智能体测试配置
 import pytest
 import sys
 import os
-import json
 from unittest.mock import MagicMock, AsyncMock
 
-# 添加测试目录到路径
+# Ensure we can import from tools/ai-agents/backend/tests (for test helpers)
 TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, TESTS_DIR)
 
-# 添加 ai-agents 模块到路径
-AI_AGENTS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+# Ensure we can import from tools/ai-agents (for backend package)
+# Note: backend/tests -> backend -> ai-agents, so we need '../..'
+AI_AGENTS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 if AI_AGENTS_DIR not in sys.path:
     sys.path.insert(0, AI_AGENTS_DIR)
-
-# 添加 tools 目录到路径（用于 shared 模块）
-TOOLS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
-if TOOLS_DIR not in sys.path:
-    sys.path.insert(0, TOOLS_DIR)
-
-# 添加项目根目录到路径
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
-if PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, PROJECT_ROOT)
 
 from backend.app import create_app
 

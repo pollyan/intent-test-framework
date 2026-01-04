@@ -75,12 +75,36 @@ jobs:
         pip install -r requirements.txt
         pip install pytest pytest-cov
     
-    - name: 🧪 Run AI Agents tests
+    - name: 🧪 Run AI Agents Backend Tests
       run: |
-        echo "::group::Running AI Agents API Tests"
+        echo "::group::Running AI Agents Backend Tests"
         export PYTHONPATH=$PYTHONPATH:$(pwd):$(pwd)/tools/ai-agents
-        python -m pytest tools/ai-agents/tests/ -v --cov=tools/ai-agents/backend --cov-report=term
+        python -m pytest tools/ai-agents/backend/tests/ -v --cov=tools/ai-agents/backend --cov-report=term
         echo "::endgroup::"
+  
+  # ====================================
+  # 阶段 1b-2: AI Agents Frontend 测试
+  # ====================================
+  ai-agents-frontend-test:
+    name: AI Agents Frontend Tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v3
+
+    - name: 🟢 Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+
+    - name: 📦 Install and Test
+      run: |
+        echo "::group::Running Frontend Tests"
+        cd tools/ai-agents/frontend
+        npm ci
+        npm run test -- --run
+        echo "::endgroup::"
+
 
   # ====================================
   # 阶段 1c: 代码质量检查
@@ -146,7 +170,7 @@ jobs:
   # ====================================
   deploy-to-production:
     name: Build and Deploy to Tencent Cloud
-    needs: [intent-tester-test, ai-agents-test, proxy-test]  # 必须等待所有测试完成且成功
+    needs: [intent-tester-test, ai-agents-test, ai-agents-frontend-test, proxy-test]  # 必须等待所有测试完成且成功
     runs-on: ubuntu-latest
     environment:
       name: production

@@ -79,12 +79,12 @@ run_api_tests() {
         return 1
     fi
 
-    # 运行 AI Agents 测试
-    log_info "运行 AI Agents API 测试..."
-    if python3 -m pytest tools/ai-agents/tests/ -v --cov=tools/ai-agents/backend --cov-report=term; then
-        log_info "✅ AI Agents 测试通过"
+    # 运行 AI Agents Backend 测试
+    log_info "运行 AI Agents Backend 测试..."
+    if python3 -m pytest tools/ai-agents/backend/tests/ -v --cov=tools/ai-agents/backend --cov-report=term; then
+        log_info "✅ AI Agents Backend 测试通过"
     else
-        log_error "❌ AI Agents 测试失败"
+        log_error "❌ AI Agents Backend 测试失败"
         return 1
     fi
 }
@@ -153,6 +153,44 @@ run_proxy_tests() {
     fi
     
     cd "$PROJECT_ROOT"
+    cd "$PROJECT_ROOT"
+}
+
+# ==========================================
+# Frontend 测试 (React)
+# ==========================================
+run_frontend_tests() {
+    log_section "⚛️ Frontend Tests"
+
+    # 检查 Node.js 环境
+    if ! command -v node &> /dev/null; then
+        log_error "Node.js 未安装"
+        return 1
+    fi
+
+    log_info "Node.js 版本: $(node --version)"
+
+    # 切换到 frontend 目录
+    cd "$PROJECT_ROOT/tools/ai-agents/frontend"
+
+    # 安装依赖 (如果需要)
+    log_info "检查依赖..."
+    if [ ! -d "node_modules" ]; then
+        log_info "安装 Frontend依赖..."
+        npm ci --silent 2>/dev/null || npm install --silent
+    fi
+
+    # 运行测试
+    log_info "运行 Frontend 测试..."
+    if npm run test -- --run; then
+        log_info "✅ Frontend 测试通过"
+    else
+        log_error "❌ Frontend 测试失败"
+        cd "$PROJECT_ROOT"
+        return 1
+    fi
+
+    cd "$PROJECT_ROOT"
 }
 
 # ==========================================
@@ -176,6 +214,7 @@ case "$TEST_TYPE" in
         run_api_tests || FAILED=1
         run_lint || true  # lint 失败不中断
         run_proxy_tests || FAILED=1
+        run_frontend_tests || FAILED=1
         ;;
     *)
         log_error "未知测试类型: $TEST_TYPE"
