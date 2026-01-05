@@ -1,29 +1,23 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Layout from './components/Layout';
-import AssistantPanel from './components/AssistantPanel';
+import { AssistantChat } from './components/chat';
+import AssistantCard from './components/AssistantCard';
 import AnalysisResultPanel from './components/AnalysisResultPanel';
 import { ASSISTANTS } from './constants';
-import { AssistantId, ChatMessage } from './types';
-import { createSession, sendMessageStream } from './services/backendService';
+import { AssistantId, Assistant } from './types';
+import { Bot } from 'lucide-react';
+import '@assistant-ui/styles/index.css';
 
 const App: React.FC = () => {
   const [selectedAssistantId, setSelectedAssistantId] = useState<AssistantId | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [analysisResult, setAnalysisResult] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
-  // Store the backend session ID instead of a ChatSession object
-  const sessionIdRef = useRef<string | null>(null);
-
-  const handleSelectAssistant = async (id: AssistantId) => {
-    // If clicking the same assistant, do nothing
-    // If id is empty (back button), clear selection
+  const handleSelectAssistant = (id: AssistantId) => {
     if (!id) {
       setSelectedAssistantId(null);
-      sessionIdRef.current = null;
       return;
     }
-
     if (id === selectedAssistantId) return;
 
     const assistant = ASSISTANTS.find(a => a.id === id);
@@ -31,115 +25,15 @@ const App: React.FC = () => {
 
     setSelectedAssistantId(id);
     setAnalysisResult('');
-
-    // Show thinking indicator while waiting for AI welcome message
-    const welcomeMsgTimestamp = Date.now();
-    setMessages([{
-      role: 'model',
-      text: '',
-      timestamp: welcomeMsgTimestamp,
-      isThinking: true
-    }]);
-    setIsProcessing(true);
-
-    // Create a new session with the backend
-    try {
-      const session = await createSession('AI4SE Project', id);
-      sessionIdRef.current = session.sessionId;
-
-      // Send hidden welcome request to get AI-generated welcome message
-      await sendMessageStream(
-        session.sessionId,
-        '请显示欢迎语',  // Hidden command, not shown to user
-        (fullText) => {
-          // Update the welcome message with AI response
-          setMessages([{
-            role: 'model',
-            text: fullText,
-            timestamp: welcomeMsgTimestamp,
-            isThinking: false
-          }]);
-        }
-      );
-    } catch (error) {
-      console.error('Failed to create session or get welcome:', error);
-      setMessages([{
-        role: 'model',
-        text: '抱歉，无法连接到后端服务。请确保服务已启动。',
-        timestamp: welcomeMsgTimestamp,
-        isThinking: false
-      }]);
-    } finally {
-      setIsProcessing(false);
-    }
   };
 
-  const handleSubmit = useCallback(async (inputText: string) => {
-    if (!sessionIdRef.current) {
-      console.error('No session ID available');
-      return;
-    }
+  const handleBack = () => {
+    setSelectedAssistantId(null);
+  };
 
-    // Add user message
-    const userMsg: ChatMessage = { role: 'user', text: inputText, timestamp: Date.now() };
-    setMessages(prev => [...prev, userMsg]);
+  const selectedAssistant = ASSISTANTS.find(a => a.id === selectedAssistantId);
 
-    setIsProcessing(true);
-
-    // Add placeholder for bot message
-    const botMsgTimestamp = Date.now();
-    setMessages(prev => [...prev, { role: 'model', text: '', timestamp: botMsgTimestamp, isThinking: true }]);
-
-    try {
-      await sendMessageStream(
-        sessionIdRef.current,
-        inputText,
-        (fullText) => {
-          // Parsing logic for Artifacts
-          // Format: :::artifact \n content \n :::
-          // We want to extract content for the right panel, and remove the whole block from the left panel
-
-          const artifactRegex = /:::artifact\s*([\s\S]*?)(\s*:::|$)/;
-          const match = fullText.match(artifactRegex);
-
-          let displayMessage = fullText;
-
-          if (match) {
-            const artifactContent = match[1];
-            setAnalysisResult(artifactContent);
-
-            // Remove the artifact block from the chat display
-            displayMessage = fullText.replace(artifactRegex, '\n*(已更新右侧分析成果)*\n');
-          }
-
-          setMessages(prev => {
-            const newMessages = [...prev];
-            const lastMsg = newMessages[newMessages.length - 1];
-            if (lastMsg.role === 'model' && lastMsg.timestamp === botMsgTimestamp) {
-              lastMsg.text = displayMessage;
-              lastMsg.isThinking = false;
-            }
-            return newMessages;
-          });
-        }
-      );
-    } catch (error) {
-      console.error('Message send failed:', error);
-      setMessages(prev => {
-        const newMessages = [...prev];
-        const lastMsg = newMessages[newMessages.length - 1];
-        if (lastMsg.role === 'model' && lastMsg.timestamp === botMsgTimestamp) {
-          lastMsg.text = "抱歉，由于网络或服务原因，我无法完成回复。请稍后再试。";
-          lastMsg.isThinking = false;
-        }
-        return newMessages;
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  }, []);
-
-  const [leftWidth, setLeftWidth] = useState<number>(40); // percentage
+  const [leftWidth, setLeftWidth] = useState<number>(40);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isDesktop, setIsDesktop] = useState<boolean>(typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -163,7 +57,6 @@ const App: React.FC = () => {
     const containerRect = containerRef.current.getBoundingClientRect();
     const newLeftWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
 
-    // Limit width between 20% and 80%
     if (newLeftWidth >= 20 && newLeftWidth <= 80) {
       setLeftWidth(newLeftWidth);
     }
@@ -178,7 +71,7 @@ const App: React.FC = () => {
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
       document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none'; // Disable text selection while dragging
+      document.body.style.userSelect = 'none';
     } else {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
@@ -192,6 +85,34 @@ const App: React.FC = () => {
       document.body.style.userSelect = 'auto';
     };
   }, [isDragging, handleMouseMove, handleMouseUp]);
+
+  // 助手选择面板
+  const AssistantSelectionPanel = () => (
+    <div className="w-full flex flex-col bg-surface-light dark:bg-surface-dark rounded-xl shadow-lg border border-border-light dark:border-border-dark overflow-hidden h-full">
+      <div className="px-6 py-4 border-b border-border-light dark:border-border-dark bg-gray-50 dark:bg-gray-800/50 h-16 flex items-center">
+        <h2 className="font-semibold text-lg text-gray-800 dark:text-white flex items-center gap-2">
+          <Bot className="text-primary" size={24} />
+          选择智能助手
+        </h2>
+      </div>
+      <div className="flex-grow overflow-y-auto p-6 flex flex-col justify-center">
+        <div className="text-center mb-8">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">选择您的智能助手</h3>
+          <p className="text-gray-500 dark:text-gray-400">请选择一位专业的AI助手开始对话：</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {ASSISTANTS.map((assistant) => (
+            <AssistantCard
+              key={assistant.id}
+              assistant={assistant}
+              isSelected={selectedAssistantId === assistant.id}
+              onSelect={handleSelectAssistant}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <Layout>
@@ -207,14 +128,14 @@ const App: React.FC = () => {
           className="h-full flex-shrink-0 transition-[width] duration-0 ease-linear"
           style={{ width: isDesktop ? `${leftWidth}%` : '100%' }}
         >
-          <AssistantPanel
-            assistants={ASSISTANTS}
-            selectedAssistantId={selectedAssistantId}
-            onSelectAssistant={handleSelectAssistant}
-            messages={messages}
-            onSubmit={handleSubmit}
-            isProcessing={isProcessing}
-          />
+          {selectedAssistant ? (
+            <AssistantChat
+              assistant={selectedAssistant}
+              onBack={handleBack}
+            />
+          ) : (
+            <AssistantSelectionPanel />
+          )}
         </div>
 
         {/* Divider - only visible on desktop */}
