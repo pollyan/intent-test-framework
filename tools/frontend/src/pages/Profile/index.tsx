@@ -66,24 +66,7 @@ const Profile: React.FC = () => {
                     </ul>
                 </div>
 
-                {/* 核心技能 */}
-                <div className="profile-highlight">
-                    <h2 className="profile-section-title">核心技能</h2>
-                    <div className="competencies-grid">
-                        <div className="competency-item">
-                            <div className="competency-title">AI 技术栈</div>
-                            <div className="competency-content">LLM 应用落地、Prompt Engineering、RAG、AI Agent 设计、AI4SE 工具链规划</div>
-                        </div>
-                        <div className="competency-item">
-                            <div className="competency-title">产品技能</div>
-                            <div className="competency-content">产品战略与投资组合管理、竞品分析、用户故事（User Story）、MVP 规划、产品路线图（Roadmap）、数据度量体系建设</div>
-                        </div>
-                        <div className="competency-item">
-                            <div className="competency-title">研发管理</div>
-                            <div className="competency-content">Scrum/Kanban/SAFe、BizDevOps、百人团队管理、跨国协作</div>
-                        </div>
-                    </div>
-                </div>
+
 
                 {/* 重点 AI 与技术成果 */}
                 <div className="achievements-section">

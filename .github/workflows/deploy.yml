@@ -33,10 +33,10 @@ jobs:
     
     steps:
     - name: 📥 Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: 🐍 Set up Python 3.11
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
     
@@ -52,7 +52,7 @@ jobs:
         export PYTHONPATH=$PYTHONPATH:$(pwd):$(pwd)/tools/intent-tester
         python -m pytest tools/intent-tester/tests/ -v --cov=tools/intent-tester/backend --cov-report=term
         echo "::endgroup::"
-
+  
   # ====================================
   # 阶段 1b: AI Agents API 测试
   # ====================================
@@ -62,10 +62,10 @@ jobs:
     
     steps:
     - name: 📥 Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: 🐍 Set up Python 3.11
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
     
@@ -90,10 +90,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: 📥 Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: 🟢 Set up Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '20'
 
@@ -113,10 +113,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: 📥 Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: 🟢 Set up Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '20'
 
@@ -139,10 +139,10 @@ jobs:
     
     steps:
     - name: 📥 Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: 🐍 Set up Python 3.11
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
     
@@ -165,7 +165,7 @@ jobs:
     
     steps:
     - name: 📥 Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: '.' # Checkout to current dir (redundant but explicit)
     
@@ -175,7 +175,7 @@ jobs:
         cd $GITHUB_WORKSPACE
         
     - name: 🟢 Set up Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '20'
     
@@ -203,10 +203,10 @@ jobs:
     
     steps:
     - name: 📥 Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: 🟢 Set up Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '20'
     
