@@ -18,8 +18,12 @@ import type {
 } from '@assistant-ui/react';
 import { Bot, Send, User, ChevronLeft } from 'lucide-react';
 import { MarkdownText } from './MarkdownText';
+import { AttachmentList } from './AttachmentList';
+import { AttachmentButton } from './AttachmentButton';
+import { MessageAttachments } from './MessageAttachments';
 import { createSession, sendMessageStream } from '../../services/backendService';
-import { Assistant, AssistantId } from '../../types';
+import { Assistant, AssistantId, PendingAttachment, MessageAttachment } from '../../types';
+import { processFile, buildMessageWithAttachments } from '../../utils/attachmentUtils';
 
 interface AssistantChatProps {
     assistant: Assistant;
@@ -32,6 +36,7 @@ interface BackendMessage {
     text: string;
     timestamp: number;
     isThinking?: boolean;
+    attachments?: MessageAttachment[];  // 新增
 }
 
 function convertToThreadMessage(msg: BackendMessage, index: number) {
@@ -47,6 +52,11 @@ function convertToThreadMessage(msg: BackendMessage, index: number) {
             role: 'user' as const,
             content: [{ type: 'text' as const, text: msg.text }],
             attachments: [],
+            metadata: {
+                custom: {
+                    attachments: msg.attachments,  // 传递附件元数据
+                },
+            },
         };
     } else {
         return {
@@ -66,6 +76,22 @@ function useChatState(assistantId: AssistantId) {
     const [isRunning, setIsRunning] = useState(false);
     const sessionIdRef = useRef<string | null>(null);
     const [isInitialized, setIsInitialized] = useState(false);
+
+    // 新增：附件状态
+    const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([]);
+
+    // 新增：处理文件选择
+    const handleFilesSelected = async (files: File[]) => {
+        const processedFiles = await Promise.all(
+            files.map(file => processFile(file))
+        );
+        setPendingAttachments(prev => [...prev, ...processedFiles]);
+    };
+
+    // 新增：删除附件
+    const removeAttachment = (id: string) => {
+        setPendingAttachments(prev => prev.filter(a => a.id !== id));
+    };
 
     // 初始化会话
     useEffect(() => {
@@ -131,16 +157,42 @@ function useChatState(assistantId: AssistantId) {
                 .map(part => part.text)
                 .join('');
 
-        // 添加用户消息
+        // 检查消息内容或有效附件
+        const hasContent = userText.trim().length > 0;
+        const hasValidAttachments = pendingAttachments.some(
+            a => a.content && !a.error
+        );
+
+        if (!hasContent && !hasValidAttachments) {
+            setPendingAttachments([]);
+            return;
+        }
+
+        // 构建包含文件内容的完整消息
+        const fullMessageText = buildMessageWithAttachments(userText, pendingAttachments);
+
+        // 提取附件元数据用于显示
+        const attachmentMetadata: MessageAttachment[] = pendingAttachments
+            .filter(a => a.content && !a.error)
+            .map(a => ({
+                filename: a.filename,
+                size: a.size,
+            }));
+
+        // 添加用户消息（包含附件元数据）
         const userMsg: BackendMessage = {
             role: 'user',
-            text: userText,
+            text: userText,  // 原始用户文本
             timestamp: Date.now(),
+            attachments: attachmentMetadata,  // 附件元数据
         };
         setMessages(prev => [...prev, userMsg]);
         setIsRunning(true);
 
-        // 添加AI占位消息
+        // 清空待发送附件
+        setPendingAttachments([]);
+
+        // 添加 AI 占位消息
         const botMsgTimestamp = Date.now();
         setMessages(prev => [...prev, {
             role: 'model',
@@ -152,7 +204,7 @@ function useChatState(assistantId: AssistantId) {
         try {
             await sendMessageStream(
                 sessionIdRef.current,
-                userText,
+                fullMessageText,  // 发送包含文件内容的完整消息
                 (fullText) => {
                     // 处理 Artifact 格式（右侧面板内容）
                     const artifactRegex = /:::artifact\s*([\s\S]*?)(\s*:::|$)/;
@@ -196,12 +248,28 @@ function useChatState(assistantId: AssistantId) {
         }
     };
 
-    return { messages, isRunning, onNew, isInitialized };
+    return {
+        messages,
+        isRunning,
+        onNew,
+        isInitialized,
+        pendingAttachments,
+        handleFilesSelected,
+        removeAttachment,
+    };
 }
 
 // 主组件
 export function AssistantChat({ assistant, onBack }: AssistantChatProps) {
-    const { messages, isRunning, onNew, isInitialized } = useChatState(assistant.id);
+    const {
+        messages,
+        isRunning,
+        onNew,
+        isInitialized,
+        pendingAttachments,
+        handleFilesSelected,
+        removeAttachment
+    } = useChatState(assistant.id);
 
     // 创建 External Store 适配器
     const adapter: ExternalStoreAdapter = {
@@ -257,7 +325,19 @@ export function AssistantChat({ assistant, onBack }: AssistantChatProps) {
 
                     {/* Composer */}
                     <div className="p-4 border-t border-border-light dark:border-border-dark bg-gray-50 dark:bg-gray-800/30 shrink-0">
+                        {/* 附件列表 */}
+                        <AttachmentList
+                            attachments={pendingAttachments}
+                            onRemove={removeAttachment}
+                        />
+
                         <ComposerPrimitive.Root className="relative flex items-center gap-2">
+                            {/* 附件按钮 */}
+                            <AttachmentButton
+                                onFilesSelected={handleFilesSelected}
+                                disabled={isRunning}
+                            />
+
                             <ComposerPrimitive.Input
                                 autoFocus
                                 placeholder="请输入..."
@@ -276,6 +356,11 @@ export function AssistantChat({ assistant, onBack }: AssistantChatProps) {
 
 // 自定义用户消息组件
 function CustomUserMessage() {
+    const message = useMessage();
+
+    // 从消息元数据中提取附件
+    const attachments = message.metadata?.custom?.attachments as MessageAttachment[] | undefined;
+
     return (
         <MessagePrimitive.Root className="flex gap-3 flex-row-reverse">
             <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
@@ -285,6 +370,10 @@ function CustomUserMessage() {
                 <div className="px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm bg-primary text-white rounded-tr-none">
                     <MessagePrimitive.Content />
                 </div>
+                {/* 显示附件 */}
+                {attachments && attachments.length > 0 && (
+                    <MessageAttachments attachments={attachments} />
+                )}
             </div>
         </MessagePrimitive.Root>
     );
