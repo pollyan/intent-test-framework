@@ -3,3 +3,4 @@
  */
 export { AssistantChat } from './AssistantChat';
 export { MarkdownText } from './MarkdownText';
+export { MermaidBlock } from './MermaidBlock';
