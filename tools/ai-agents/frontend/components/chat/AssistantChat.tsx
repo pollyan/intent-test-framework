@@ -10,13 +10,14 @@ import {
     ComposerPrimitive,
     MessagePrimitive,
     useMessage,
+    ActionBarPrimitive,
 } from '@assistant-ui/react';
 import type {
     ExternalStoreAdapter,
     ThreadMessage,
     AppendMessage,
 } from '@assistant-ui/react';
-import { Bot, Send, User, ChevronLeft } from 'lucide-react';
+import { Bot, Send, User, ChevronLeft, Copy, Check, RefreshCw } from 'lucide-react';
 import { MarkdownText } from './MarkdownText';
 import { AttachmentList } from './AttachmentList';
 import { AttachmentButton } from './AttachmentButton';
@@ -32,6 +33,7 @@ interface AssistantChatProps {
 
 // 将后端消息格式转换为 Assistant-ui 格式
 interface BackendMessage {
+    id: string;  // 新增：消息 ID
     role: 'user' | 'model';
     text: string;
     timestamp: number;
@@ -41,7 +43,7 @@ interface BackendMessage {
 
 function convertToThreadMessage(msg: BackendMessage, index: number) {
     const baseMessage = {
-        id: `msg-${index}-${msg.timestamp}`,
+        id: msg.id,  // 使用 BackendMessage 的原始 ID
         createdAt: new Date(msg.timestamp),
         metadata: { custom: {} },
     };
@@ -107,6 +109,7 @@ function useChatState(assistantId: AssistantId) {
                 // 发送隐藏的欢迎请求获取AI欢迎消息
                 const welcomeMsgTimestamp = Date.now();
                 setMessages([{
+                    id: `msg-welcome-${welcomeMsgTimestamp}`,
                     role: 'model',
                     text: '',
                     timestamp: welcomeMsgTimestamp,
@@ -119,6 +122,7 @@ function useChatState(assistantId: AssistantId) {
                     '请显示欢迎语',
                     (fullText) => {
                         setMessages([{
+                            id: `msg-welcome-${welcomeMsgTimestamp}`,
                             role: 'model',
                             text: fullText,
                             timestamp: welcomeMsgTimestamp,
@@ -131,10 +135,12 @@ function useChatState(assistantId: AssistantId) {
                 setIsInitialized(true);
             } catch (error) {
                 console.error('Failed to initialize session:', error);
+                const errorTimestamp = Date.now();
                 setMessages([{
+                    id: `msg-error-${errorTimestamp}`,
                     role: 'model',
                     text: '抱歉，无法连接到后端服务。请确保服务已启动。',
-                    timestamp: Date.now(),
+                    timestamp: errorTimestamp,
                     isThinking: false,
                 }]);
                 setIsRunning(false);
@@ -180,10 +186,12 @@ function useChatState(assistantId: AssistantId) {
             }));
 
         // 添加用户消息（包含附件元数据）
+        const userMsgTimestamp = Date.now();
         const userMsg: BackendMessage = {
+            id: `msg-user-${userMsgTimestamp}`,
             role: 'user',
             text: userText,  // 原始用户文本
-            timestamp: Date.now(),
+            timestamp: userMsgTimestamp,
             attachments: attachmentMetadata,  // 附件元数据
         };
         setMessages(prev => [...prev, userMsg]);
@@ -195,6 +203,7 @@ function useChatState(assistantId: AssistantId) {
         // 添加 AI 占位消息
         const botMsgTimestamp = Date.now();
         setMessages(prev => [...prev, {
+            id: `msg-bot-${botMsgTimestamp}`,
             role: 'model',
             text: '',
             timestamp: botMsgTimestamp,
@@ -252,6 +261,106 @@ function useChatState(assistantId: AssistantId) {
         messages,
         isRunning,
         onNew,
+        onReload: async (parentId: string | null) => {
+            console.log('[Reload] parentId:', parentId);
+            console.log('[Reload] messages:', messages);
+
+            // parentId 是要重试的消息的父消息 ID（用户消息）
+            if (!parentId) {
+                console.log('[Reload] No parentId, aborting');
+                return;
+            }
+
+            // 找到父消息（用户消息）的索引
+            const parentIndex = messages.findIndex(m => m.id === parentId);
+            console.log('[Reload] parentIndex:', parentIndex);
+
+            if (parentIndex === -1) {
+                console.log('[Reload] Parent message not found, aborting');
+                return;
+            }
+
+            const userMsg = messages[parentIndex];
+            if (!userMsg || userMsg.role !== 'user') {
+                console.log('[Reload] Parent is not a user message, aborting');
+                return;
+            }
+
+            // 保留用户消息，只删除 AI 回复及其后的所有消息
+            setMessages(prev => prev.slice(0, parentIndex + 1));
+
+            // 使用用户消息重新生成 AI 回复
+            const userText = userMsg.text;
+            const attachments = userMsg.attachments || [];
+
+            // 构建包含文件内容的完整消息
+            const fullMessageText = attachments.length > 0
+                ? buildMessageWithAttachments(userText, attachments.map(a => ({
+                    id: `att-${Date.now()}`,
+                    filename: a.filename,
+                    size: a.size,
+                    content: `File: ${a.filename}`, // 简化处理
+                    type: 'text/plain'
+                  })))
+                : userText;
+
+            // 添加新的 AI 占位消息
+            const botMsgTimestamp = Date.now();
+            setMessages(prev => [...prev, {
+                id: `msg-reload-${botMsgTimestamp}`,
+                role: 'model',
+                text: '',
+                timestamp: botMsgTimestamp,
+                isThinking: true,
+            }]);
+
+            setIsRunning(true);
+
+            try {
+                await sendMessageStream(
+                    sessionIdRef.current!,
+                    fullMessageText,
+                    (fullText) => {
+                        const artifactRegex = /:::artifact\s*([\s\S]*?)(\s*:::|$)/;
+                        const match = fullText.match(artifactRegex);
+                        let displayMessage = fullText;
+
+                        if (match) {
+                            displayMessage = fullText.replace(artifactRegex, '\n*(已更新右侧分析成果)*\n');
+                        }
+
+                        setMessages(prev => {
+                            const newMessages = [...prev];
+                            const lastIdx = newMessages.length - 1;
+                            if (newMessages[lastIdx]?.role === 'model' && newMessages[lastIdx]?.timestamp === botMsgTimestamp) {
+                                newMessages[lastIdx] = {
+                                    ...newMessages[lastIdx],
+                                    text: displayMessage,
+                                    isThinking: false,
+                                };
+                            }
+                            return newMessages;
+                        });
+                    }
+                );
+            } catch (error) {
+                console.error('Message reload failed:', error);
+                setMessages(prev => {
+                    const newMessages = [...prev];
+                    const lastIdx = newMessages.length - 1;
+                    if (newMessages[lastIdx]?.role === 'model') {
+                        newMessages[lastIdx] = {
+                            ...newMessages[lastIdx],
+                            text: '抱歉，重试失败。请稍后再试。',
+                            isThinking: false,
+                        };
+                    }
+                    return newMessages;
+                });
+            } finally {
+                setIsRunning(false);
+            }
+        },
         isInitialized,
         pendingAttachments,
         handleFilesSelected,
@@ -265,6 +374,7 @@ export function AssistantChat({ assistant, onBack }: AssistantChatProps) {
         messages,
         isRunning,
         onNew,
+        onReload,
         isInitialized,
         pendingAttachments,
         handleFilesSelected,
@@ -276,6 +386,7 @@ export function AssistantChat({ assistant, onBack }: AssistantChatProps) {
         isRunning,
         messages: messages.map(convertToThreadMessage) as unknown as readonly ThreadMessage[],
         onNew,
+        onReload,
     };
 
     const runtime = useExternalStoreRuntime(adapter);
@@ -362,7 +473,7 @@ function CustomUserMessage() {
     const attachments = message.metadata?.custom?.attachments as MessageAttachment[] | undefined;
 
     return (
-        <MessagePrimitive.Root className="flex gap-3 flex-row-reverse">
+        <MessagePrimitive.Root className="flex gap-3 flex-row-reverse group">
             <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
                 <User size={16} />
             </div>
@@ -374,6 +485,21 @@ function CustomUserMessage() {
                 {attachments && attachments.length > 0 && (
                     <MessageAttachments attachments={attachments} />
                 )}
+
+                {/* 操作栏 */}
+                <ActionBarPrimitive.Root className="gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ActionBarPrimitive.Copy
+                        className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-600 dark:text-gray-400"
+                        title="复制消息"
+                    >
+                        <MessagePrimitive.If copied={false}>
+                            <Copy size={14} />
+                        </MessagePrimitive.If>
+                        <MessagePrimitive.If copied>
+                            <Check size={14} className="text-green-500" />
+                        </MessagePrimitive.If>
+                    </ActionBarPrimitive.Copy>
+                </ActionBarPrimitive.Root>
             </div>
         </MessagePrimitive.Root>
     );
@@ -398,7 +524,7 @@ function CustomAssistantMessage({ assistant }: { assistant: Assistant }) {
         (message.content.length === 1 && message.content[0].type === 'text' && !message.content[0].text);
 
     return (
-        <MessagePrimitive.Root className="flex gap-3 flex-row">
+        <MessagePrimitive.Root className="flex gap-3 flex-row group">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 text-white ${assistant.id === 'alex' ? 'bg-primary' : 'bg-secondary'}`}>
                 <Bot size={16} />
             </div>
@@ -407,6 +533,29 @@ function CustomAssistantMessage({ assistant }: { assistant: Assistant }) {
                     <MessagePrimitive.Content components={{ Text: MarkdownText }} />
                     {isInProgress && hasNoContent && <TypingIndicator />}
                 </div>
+
+                {/* 操作栏 */}
+                <ActionBarPrimitive.Root className="gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ActionBarPrimitive.Reload
+                        className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-600 dark:text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="重新生成"
+                        disabled={isInProgress}
+                    >
+                        <RefreshCw size={14} className={isInProgress ? 'animate-spin' : ''} />
+                    </ActionBarPrimitive.Reload>
+
+                    <ActionBarPrimitive.Copy
+                        className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-600 dark:text-gray-400"
+                        title="复制消息"
+                    >
+                        <MessagePrimitive.If copied={false}>
+                            <Copy size={14} />
+                        </MessagePrimitive.If>
+                        <MessagePrimitive.If copied>
+                            <Check size={14} className="text-green-500" />
+                        </MessagePrimitive.If>
+                    </ActionBarPrimitive.Copy>
+                </ActionBarPrimitive.Root>
             </div>
         </MessagePrimitive.Root>
     );
