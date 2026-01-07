@@ -15,6 +15,7 @@ from .shared import (
 )
 
 from .intent_router import INTENT_ROUTING_PROMPT
+from .clarify_intent import CLARIFY_INTENT_MESSAGE
 
 __all__ = [
     # 共享组件
@@ -27,4 +28,7 @@ __all__ = [
     "RESPONSE_TEMPLATE",
     # 意图路由
     "INTENT_ROUTING_PROMPT",
+    # 意图澄清
+    "CLARIFY_INTENT_MESSAGE",
 ]
+
