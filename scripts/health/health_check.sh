@@ -126,6 +126,12 @@ check_database() {
         if echo "$response" | grep -q '"status".*"ok"'; then
             log_info "Intent Tester 服务健康"
             
+            # 生产环境如果 HTTP 检查通过，直接认为数据库正常，不再尝试 docker exec（避免权限问题）
+            if [ "$ENVIRONMENT" = "production" ] || [ "$ENVIRONMENT" = "prod" ] || [ "$ENVIRONMENT" = "remote" ]; then
+                log_info "PostgreSQL 数据库: 根据 API 状态判定正常 (生产环境)"
+                return 0
+            fi
+
             # 直接通过 Docker 检查数据库
             local db_check=$(docker exec "$DB_CONTAINER" pg_isready -U ai4se_user 2>/dev/null || \
                            docker exec "ai4se-db" pg_isready -U ai4se_user 2>/dev/null || \
@@ -279,7 +285,11 @@ main() {
     sleep 10
     
     # 执行所有检查
-    check_containers || true
+    if [ "$ENVIRONMENT" = "production" ] || [ "$ENVIRONMENT" = "prod" ] || [ "$ENVIRONMENT" = "remote" ]; then
+        log_warn "生产环境跳过容器状态检查 (check_containers)"
+    else
+        check_containers || true
+    fi
     check_database || true
     check_pages || true
     check_apis || true
