@@ -161,22 +161,24 @@ log_info "等待服务启动..."
 sleep 10
 
 # 健康检查
-log_info "健康检查..."
+log_info "执行部署后健康检查..."
+
+# 首先进行快速基础检查
 MAX_RETRIES=10
 RETRY_COUNT=0
 
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
     if curl -f -s --max-time 5 http://localhost:5001/health > /dev/null 2>&1; then
-        log_info "✅ 健康检查通过"
+        log_info "✅ 基础服务响应正常"
         break
     fi
     
     RETRY_COUNT=$((RETRY_COUNT + 1))
     if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-        log_warn "健康检查失败，重试 $RETRY_COUNT/$MAX_RETRIES..."
+        log_warn "等待服务响应，重试 $RETRY_COUNT/$MAX_RETRIES..."
         sleep 3
     else
-        log_error "健康检查失败"
+        log_error "基础服务无响应"
         
         # 生产环境失败时回滚
         if [ "$BACKUP_ENABLED" = true ] && [ -d "$BACKUP_DIR" ]; then
@@ -189,6 +191,30 @@ while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
         exit 1
     fi
 done
+
+# 执行完整健康检查脚本
+if [ -f "scripts/health/health_check.sh" ]; then
+    chmod +x scripts/health/health_check.sh
+    log_info "执行完整健康检查..."
+    
+    if bash scripts/health/health_check.sh "$ENVIRONMENT"; then
+        log_info "✅ 完整健康检查通过"
+    else
+        log_error "完整健康检查失败"
+        
+        # 生产环境失败时回滚
+        if [ "$BACKUP_ENABLED" = true ] && [ -d "$BACKUP_DIR" ]; then
+            log_error "开始回滚..."
+            rsync -a --delete "$BACKUP_DIR/" "$DEPLOY_DIR/"
+            $DOCKER_CMD -f "$COMPOSE_FILE" up -d
+            log_info "已回滚到上一版本"
+        fi
+        
+        exit 1
+    fi
+else
+    log_warn "健康检查脚本不存在，跳过完整检查"
+fi
 
 # 显示服务状态
 log_info "=========================================="

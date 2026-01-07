@@ -120,26 +120,59 @@ echo "🔄 重启 Nginx 以刷新 DNS 解析..."
 docker-compose -f docker-compose.dev.yml restart nginx
 
 # ========================================
-# 3. 状态检查
+# 3. 健康检查
 # ========================================
 
 echo ""
-echo "⏳ 等待服务健康检查..."
-# 简单休眠等待 docker完成启动
+echo "⏳ 等待服务启动..."
 sleep 5
 
 docker-compose -f docker-compose.dev.yml ps
 
 echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "✅ 服务启动完成！"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "📍 访问入口:"
-echo "   🏠 主页: http://localhost"
-echo "   🤖 AI 智能体: http://localhost/ai-agents"
-echo "   🧪 意图测试: http://localhost/intent-tester"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "💡 常用命令:"
-echo "   查看日志: docker-compose -f docker-compose.dev.yml logs -f"
-echo "   停止服务: docker-compose -f docker-compose.dev.yml down"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🏥 执行部署后健康检查..."
+echo ""
+
+# 执行健康检查脚本
+if [ -f "$PROJECT_ROOT/scripts/health/health_check.sh" ]; then
+    chmod +x "$PROJECT_ROOT/scripts/health/health_check.sh"
+    if bash "$PROJECT_ROOT/scripts/health/health_check.sh" local; then
+        echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "✅ 部署成功！健康检查通过"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "📍 访问入口:"
+        echo "   🏠 主页: http://localhost"
+        echo "   🤖 AI 智能体: http://localhost/ai-agents"
+        echo "   🧪 意图测试: http://localhost/intent-tester"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "💡 常用命令:"
+        echo "   查看日志: docker-compose -f docker-compose.dev.yml logs -f"
+        echo "   停止服务: docker-compose -f docker-compose.dev.yml down"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    else
+        echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "❌ 部署失败！健康检查未通过"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "💡 请检查日志: docker-compose -f docker-compose.dev.yml logs"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        exit 1
+    fi
+else
+    echo "⚠️  健康检查脚本不存在，跳过检查"
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "✅ 服务启动完成！"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "📍 访问入口:"
+    echo "   🏠 主页: http://localhost"
+    echo "   🤖 AI 智能体: http://localhost/ai-agents"
+    echo "   🧪 意图测试: http://localhost/intent-tester"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "💡 常用命令:"
+    echo "   查看日志: docker-compose -f docker-compose.dev.yml logs -f"
+    echo "   停止服务: docker-compose -f docker-compose.dev.yml down"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+fi
+
