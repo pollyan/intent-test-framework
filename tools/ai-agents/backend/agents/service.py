@@ -324,6 +324,7 @@ class LangchainAssistantService:
         cleaned_response = full_response
         if self.assistant_type in ("lisa", "song", "alex", "chen") and full_response:
             from .shared.progress_utils import parse_progress_update, parse_plan, clean_response_text
+            from .shared.artifact_utils import parse_all_artifacts
 
             # 解析动态 Plan (LLM 首次规划工作阶段)
             parsed_plan = parse_plan(full_response)
@@ -339,7 +340,16 @@ class LangchainAssistantService:
                 state["current_stage_id"] = stage_id
                 logger.info(f"进度更新: current_stage_id -> {stage_id}")
             
-            # 清理 XML 标签
+            # 解析产出物 (统一处理 <artifact> 标签)
+            artifacts = parse_all_artifacts(full_response)
+            if artifacts:
+                if "artifacts" not in state:
+                    state["artifacts"] = {}
+                for artifact in artifacts:
+                    state["artifacts"][artifact["key"]] = artifact["content"]
+                    logger.info(f"产出物已保存: {artifact['key']} ({len(artifact['content'])} 字符)")
+            
+            # 清理 XML 标签 (包括 plan, update_status, artifact)
             cleaned_response = clean_response_text(full_response)
         
         # 将清理后的响应添加到消息历史

@@ -78,16 +78,9 @@ def get_initial_state() -> LisaState:
     Returns:
         LisaState: 初始化后的状态字典
     """
-    return {
-        "messages": [],
-        "current_workflow": None,
-        "workflow_stage": None,
-        "plan": [],  # 空 plan，由 LLM 动态生成
-        "current_stage_id": None,
-        "artifacts": {},
-        "pending_clarifications": [],
-        "consensus_items": [],
-    }
+    # 使用共享模块的基础初始状态
+    from ..shared.state import get_base_initial_state
+    return get_base_initial_state()
 
 
 def clear_workflow_state(state: LisaState) -> LisaState:
@@ -102,16 +95,9 @@ def clear_workflow_state(state: LisaState) -> LisaState:
     Returns:
         LisaState: 清空工作流状态后的新状态
     """
-    return {
-        **state,
-        "current_workflow": None,
-        "workflow_stage": None,
-        "plan": [],  # 清空 plan，由新工作流的 LLM 动态生成
-        "current_stage_id": None,
-        "artifacts": {},
-        "pending_clarifications": [],
-        "consensus_items": [],
-    }
+    # 使用共享模块的清空函数
+    from ..shared.state import clear_workflow_state as base_clear
+    return base_clear(state)
 
 
 # Artifact 命名常量

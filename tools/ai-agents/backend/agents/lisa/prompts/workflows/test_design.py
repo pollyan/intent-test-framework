@@ -93,7 +93,26 @@ WORKFLOW_TEST_DESIGN_SYSTEM = """
 例如，完成 clarify 阶段后：
 <update_status stage="strategy">active</update_status>
 
-**注意**: 这些标签将被系统自动处理，不会显示给用户。
+### 产出物输出规则 (生成文档时使用)
+
+当你生成产出物文档时，请使用 artifact 标签包裹内容：
+<artifact key="产出物Key">
+产出物内容 (Markdown 格式)
+</artifact>
+
+**产出物 Key 映射**:
+- clarify 阶段: `test_design_requirements`
+- strategy 阶段: `test_design_strategy`
+- cases 阶段: `test_design_cases`
+- delivery 阶段: `test_design_final`
+
+**示例**:
+<artifact key="test_design_requirements">
+# 需求分析文档
+...内容...
+</artifact>
+
+**注意**: 所有 XML 标签 (plan, update_status, artifact) 将被系统自动处理，不会显示给用户。
 """
 
 # ═══════════════════════════════════════════════════════════════════════════════

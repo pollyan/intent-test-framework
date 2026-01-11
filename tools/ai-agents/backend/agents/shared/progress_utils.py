@@ -28,6 +28,7 @@ PLAN_PATTERN = re.compile(
 CLEANUP_PATTERNS = [
     re.compile(r'<update_status[^>]*>.*?</update_status>', re.IGNORECASE | re.DOTALL),
     re.compile(r'<plan>.*?</plan>', re.IGNORECASE | re.DOTALL),
+    re.compile(r'<artifact[^>]*>.*?</artifact>', re.IGNORECASE | re.DOTALL),
 ]
 
 

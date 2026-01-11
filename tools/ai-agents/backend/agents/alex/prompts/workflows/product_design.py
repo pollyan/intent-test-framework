@@ -50,6 +50,27 @@ WORKFLOW_PRODUCT_DESIGN_SYSTEM = """
 
 例如，完成 elevator 阶段后：
 <update_status stage="persona">active</update_status>
+
+### 产出物输出规则 (生成文档时使用)
+
+当你生成产出物文档时，请使用 artifact 标签包裹内容：
+<artifact key="产出物Key">
+产出物内容 (Markdown 格式)
+</artifact>
+
+**产出物 Key 映射**:
+- elevator 阶段: `product_elevator`
+- persona 阶段: `product_persona`
+- journey 阶段: `product_journey`
+- brd 阶段: `product_brd`
+
+**示例**:
+<artifact key="product_elevator">
+# 电梯演讲
+...内容...
+</artifact>
+
+**注意**: 所有 XML 标签 (plan, update_status, artifact) 将被系统自动处理，不会显示给用户。
 """
 
 # ═══════════════════════════════════════════════════════════════════════════════

@@ -42,13 +42,7 @@ def get_initial_state() -> AlexState:
     """
     获取 AlexState 的初始状态
     """
-    return {
-        "messages": [],
-        "current_workflow": None,
-        "workflow_stage": None,
-        "plan": [],
-        "current_stage_id": None,
-        "artifacts": {},
-        "pending_clarifications": [],
-        "consensus_items": [],
-    }
+    # 使用共享模块的基础初始状态
+    from ..shared.state import get_base_initial_state
+    return get_base_initial_state()
+
