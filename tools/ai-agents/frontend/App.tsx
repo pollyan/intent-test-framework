@@ -119,9 +119,6 @@ const App: React.FC = () => {
 
   return (
     <Layout>
-      <h1 className="text-3xl font-light text-gray-800 dark:text-gray-100 mb-8 border-l-4 border-primary pl-4 hidden md:block">
-        智能助手
-      </h1>
 
       <div
         ref={containerRef}
