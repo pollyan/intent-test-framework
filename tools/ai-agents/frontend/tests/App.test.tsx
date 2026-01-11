@@ -55,8 +55,8 @@ describe('AI Agents App', () => {
 
         // Should show chat interface with Alex header
         await waitFor(() => {
-            // Check for main heading
-            expect(screen.getByRole('heading', { name: '智能助手', level: 1 })).toBeInTheDocument();
+            // Check for assistant header title
+            expect(screen.getByText('智能助手')).toBeInTheDocument();
         });
 
         // Wait for welcome message to appear

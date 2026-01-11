@@ -1,5 +1,9 @@
-import '@testing-library/jest-dom';
-import { beforeAll, afterEach, afterAll, vi } from 'vitest';
+import '@testing-library/jest-dom/vitest';
+import { beforeAll, afterEach, afterAll, vi, expect } from 'vitest';
+import * as matchers from '@testing-library/jest-dom/matchers';
+
+// Expand Vitest matches with jest-dom
+expect.extend(matchers);
 import { server } from './mocks/server';
 import { cleanup } from '@testing-library/react';
 
