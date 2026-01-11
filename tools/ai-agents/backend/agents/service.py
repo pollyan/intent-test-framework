@@ -158,6 +158,8 @@ class LangchainAssistantService:
     async def test_connection(self, messages: list) -> str:
         """
         测试连接
+        
+        如果连接失败会抛出异常，调用方需要处理。
         """
         if not self.agent:
             await self.initialize()
@@ -167,16 +169,25 @@ class LangchainAssistantService:
         # 构建消息
         input_messages = [HumanMessage(content=user_msg)]
         
-        # 调用 Agent
-        result = await self.agent.ainvoke({"messages": input_messages})
-        
-        # 提取响应
-        if result and "messages" in result:
-            last_message = result["messages"][-1]
-            if hasattr(last_message, "content"):
-                return last_message.content
-        
-        return ""
+        try:
+            # 调用 Agent（不捕获异常，让调用方处理）
+            result = await self.agent.ainvoke({"messages": input_messages})
+            
+            # 提取响应
+            if result and "messages" in result:
+                last_message = result["messages"][-1]
+                if hasattr(last_message, "content"):
+                    content = last_message.content
+                    if content and len(content.strip()) > 0:
+                        return content
+            
+            # 如果没有有效响应，抛出异常
+            raise Exception("LLM 未返回有效响应")
+            
+        except Exception as e:
+            # 记录详细错误信息并向上抛出
+            logger.error(f"测试连接失败: {type(e).__name__}: {str(e)}")
+            raise
     
     async def stream_message(
         self,

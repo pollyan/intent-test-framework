@@ -381,3 +381,74 @@ def test_config(config_id):
         return standard_error_response(e.message, 404)
     except Exception as e:
         return standard_error_response(f"测试配置失败: {str(e)}", 500)
+
+
+@ai_configs_bp.route("/test", methods=["POST"])
+@require_json
+@log_api_call
+def test_new_config():
+    """测试新建配置（未保存到数据库的配置）"""
+    try:
+        data = request.get_json()
+        
+        # 验证必要字段
+        api_key = data.get("api_key")
+        base_url = data.get("base_url")
+        model_name = data.get("model_name")
+        
+        if not api_key:
+            raise ValidationError("缺少必要字段: api_key")
+        if not base_url:
+            raise ValidationError("缺少必要字段: base_url")
+        if not model_name:
+            raise ValidationError("缺少必要字段: model_name")
+        
+        # 使用本地 agents 模块
+        from ..agents import LangchainAssistantService
+        
+        import time
+        import asyncio
+        
+        # 构造临时配置数据
+        config_data = {
+            "api_key": api_key.strip(),
+            "base_url": base_url.strip(),
+            "model_name": model_name.strip(),
+        }
+        
+        temp_ai_service = LangchainAssistantService(assistant_type="alex", config=config_data)
+        
+        start_time = time.time()
+        messages = [{"role": "user", "content": "你好"}]
+        
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            response = loop.run_until_complete(temp_ai_service.test_connection(messages))
+        finally:
+            loop.close()
+        
+        duration = time.time() - start_time
+        
+        if response and len(response.strip()) > 0:
+            return standard_success_response(
+                data={
+                    "config_name": data.get("config_name", "新配置"),
+                    "model_name": model_name,
+                    "test_success": True,
+                    "duration_ms": round(duration * 1000, 2),
+                    "ai_response": response.strip(),
+                    "tested_at": datetime.utcnow().isoformat()
+                },
+                message="配置测试成功"
+            )
+        else:
+            return standard_error_response(
+                f"AI 未返回有效响应", 422
+            )
+            
+    except ValidationError as e:
+        return standard_error_response(e.message, 400)
+    except Exception as e:
+        return standard_error_response(f"测试配置失败: {str(e)}", 500)
+
